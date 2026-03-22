@@ -1372,6 +1372,10 @@ function buildLogDOM(lid,projData){
       var t=getTimeVal(r),n=getNoteVal(r);
       return t?(t+' - '+n):n;
     }).filter(function(s){return s.trim();}).join('\n');
+    // Also persist structured entries so they reload correctly
+    logs[lid].scratchpadEntries=rows.map(function(r){
+      return{t:getTimeVal(r),n:getNoteVal(r)};
+    }).filter(function(e){return e.t||e.n;});
     saveLogs();
   }
 
