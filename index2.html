@@ -185,7 +185,7 @@ var store={
   visitorOrgs:{},affiliations:{},projects:[],
   fieldOptions:{proj:[],phase:[],loc:[],well:[],miles:[],atlasscope:[],contractorscope:[],office:[],pm:[]},
   equip:{items:['Atlas Vehicle','MultiRae Lite','RKI GX-3R 4-gas meter'],checked:['Atlas Vehicle','MultiRae Lite','RKI GX-3R 4-gas meter']},
-  quickPhrases:['H&S tailgate conducted','Work suspended - weather']
+  quickPhrases:['H&S tailgate conducted','Work suspended - weather','Scope change:']
 };
 
 /* ── DOM helpers ── */
@@ -280,7 +280,7 @@ async function loadStore(){
   if(!store.names.atlas)store.names.atlas=[];if(!store.names.sub)store.names.sub=[];if(!store.names.visitor)store.names.visitor=[];if(!store.names.client)store.names.client=[];
   if(!store.visitorOrgs)store.visitorOrgs={};if(!store.affiliations)store.affiliations={};if(!store.fieldOptions)store.fieldOptions={};
   ['proj','phase','loc','well','miles','atlasscope','contractorscope','office','pm'].forEach(function(k){if(!store.fieldOptions[k])store.fieldOptions[k]=[];});
-  if(!store.quickPhrases)store.quickPhrases=['H&S tailgate conducted','Work suspended - weather'];
+  if(!store.quickPhrases)store.quickPhrases=['H&S tailgate conducted','Work suspended - weather','Scope change:'];
   if(!store.equip.items)store.equip.items=[];if(!store.equip.checked)store.equip.checked=[];
 }
 async function persist(){try{await storageSet('atlas-store-v2',JSON.stringify(store));}catch(e){}}
@@ -333,7 +333,7 @@ function getEquipStr(lid){var oo=logs[lid]?logs[lid].oneOffEquip||[]:[];return g
 
 /* ── pills (crew / field options) ── */
 function makeCrewRow(val){var r=div('crew-row');var i=el('input');i.type='text';i.value=val||'';i.placeholder='Name';i.autocomplete='off';capBind(i,'w');var x=btn('×','btn-sm btn-danger');x.style.cssText='padding:4px 8px;flex-shrink:0';x.addEventListener('click',function(){r.remove();});r.appendChild(i);r.appendChild(x);return r;}
-function makeVisitorRow(name,org){var r=div('crew-row');var i1=el('input');i1.type='text';i1.value=name||'';i1.placeholder='Name';i1.autocomplete='off';capBind(i1,'w');var i2=el('input');i2.type='text';i2.value=org||'';i2.placeholder='Organization (e.g. CalGEM)';i2.autocomplete='off';capBind(i2,'w');var x=btn('×','btn-sm btn-danger');x.style.cssText='padding:4px 8px;flex-shrink:0';x.addEventListener('click',function(){r.remove();});r.appendChild(i1);r.appendChild(i2);r.appendChild(x);return r;}
+function makeVisitorRow(name,org){var r=div('crew-row');var i1=el('input');i1.type='text';i1.value=name||'';i1.placeholder='Name';i1.autocomplete='off';capBind(i1,'w');var i2=el('input');i2.type='text';i2.value=org||'';i2.placeholder='Organization';i2.autocomplete='off';capBind(i2,'w');var x=btn('×','btn-sm btn-danger');x.style.cssText='padding:4px 8px;flex-shrink:0';x.addEventListener('click',function(){r.remove();});r.appendChild(i1);r.appendChild(i2);r.appendChild(x);return r;}
 function makePill(labelTxt,onTap,onEdit,onDel){
   var p=div('pill');var span=el('span');span.textContent=labelTxt;
   if(onTap)p.addEventListener('click',function(e){if(!e.target.classList.contains('pill-edit')&&!e.target.classList.contains('pill-del'))onTap();});
@@ -364,7 +364,7 @@ function renderAllFieldPills(lid){
   ['proj','loc','well','office','pm'].forEach(function(k){renderFieldPills(lid,k,'l'+lid+'-'+k+'-pills');});
 }
 function mkClientField(lid){
-  var clientInp=inp('','e.g. CalGEM','w');clientInp.id='l'+lid+'-client';
+  var clientInp=inp('','e.g. Client name','w');clientInp.id='l'+lid+'-client';
   function saveClient(){var v=capWords(clientInp.value.trim());if(!v)return;if(!store.names.client.includes(v)){store.names.client.push(v);persist();renderClientPills(lid);showSavedFlash(clientInp);}}
   clientInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();saveClient();}});
   clientInp._savePill=saveClient;
@@ -461,29 +461,36 @@ function showWelcome(){
     var logoEl=document.querySelector('.app-header img');var logoSrc=logoEl?logoEl.src:'';
     var img=document.createElement('img');img.src=logoSrc;img.alt='Atlas';
     var h1=document.createElement('h1');h1.textContent='Atlas Daily Field Log';
-    var sub=document.createElement('p');sub.textContent='CalGEM / Environmental Field Reporting';sub.style.cssText='font-size:13px;color:var(--color-text-secondary,#666);margin:0';
+    var sub=document.createElement('p');sub.textContent='Environmental Field Reporting';sub.style.cssText='font-size:13px;color:var(--color-text-secondary,#666);margin:0';
+    // Brief 5-step summary
     var instructions=document.createElement('div');
     instructions.style.cssText='text-align:left;background:var(--color-background-secondary,#f0f0ee);border-radius:10px;padding:1rem 1.2rem;max-width:320px;width:100%;font-size:13px;line-height:1.7;color:var(--color-text-primary,#1a1a1a)';
     instructions.innerHTML='<div style="font-weight:600;margin-bottom:8px;font-size:14px">How to use</div>'
-      +'<div><b>1 · Header</b> — Date, project info, weather. Fill once per day.</div>'
-      +'<div><b>2 · Notes</b> — Your main working page. Log activities throughout the day. Use the timestamp button to add the current time.</div>'
-      +'<div><b>3 · Personnel</b> — Crew, subs, visitors, scope, equipment. Fill at end of day.</div>'
-      +'<div><b>4 · Review</b> — Review and edit entries. Add photos.</div>'
-      +'<div><b>5 · Report</b> — Build and print or email the final PDF.</div>'
-      +'<div style="margin-top:8px;font-size:12px;color:var(--color-text-secondary,#666)">📝 The Notes button (bottom right) takes you back to your entries from any page.</div>';
-    var newBtn=document.createElement('button');newBtn.className='welcome-btn welcome-btn-primary';newBtn.textContent='+ Start New Log';
+      +'<div><b>1 · Project Info</b> — Date, project, location, weather.</div>'
+      +'<div><b>2 · Notes</b> — Your main working page all day.</div>'
+      +'<div><b>3 · Field Details</b> — Crew, scope, equipment, samples.</div>'
+      +'<div><b>4 · Review</b> — Edit entries, add photos.</div>'
+      +'<div><b>5 · Report</b> — Build, print or email the PDF.</div>';
+
+    // Full guide chip
+    var guideChip=document.createElement('button');
+    guideChip.style.cssText='background:none;border:1.5px solid #1a3a5c;border-radius:20px;padding:7px 16px;font-size:13px;font-weight:500;color:#1a3a5c;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px';
+    guideChip.innerHTML='📖 Full guide';
+    guideChip.addEventListener('click',function(){showFullGuide();});
+
+        var newBtn=document.createElement('button');newBtn.className='welcome-btn welcome-btn-primary';newBtn.textContent='+ Start New Log';
     newBtn.addEventListener('click',function(){showMainUI();createLog('Log 1',null);});
     var libBtn=document.createElement('button');libBtn.className='welcome-btn welcome-btn-secondary';libBtn.textContent='Go to Library';
     libBtn.addEventListener('click',function(){showMainUI();switchToLibrary();});
     var btnWrap=document.createElement('div');btnWrap.style.cssText='display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px';
     btnWrap.appendChild(newBtn);btnWrap.appendChild(libBtn);
-    ws.appendChild(img);ws.appendChild(h1);ws.appendChild(sub);ws.appendChild(instructions);ws.appendChild(btnWrap);
+    ws.appendChild(img);ws.appendChild(h1);ws.appendChild(sub);ws.appendChild(instructions);ws.appendChild(guideChip);ws.appendChild(btnWrap);
   }
 }
 function showMainUI(){document.getElementById('log-container').style.display='';document.getElementById('top-nav').style.display='';document.getElementById('welcome-screen').classList.add('hidden');}
 function doCloseLog(lid){var idx=logOrder.indexOf(lid);logOrder.splice(idx,1);delete logs[lid];var p=document.getElementById('l'+lid+'-pane');if(p)p.remove();renderTabs();if(logOrder.length===0){showWelcome();}else{switchToLog(logOrder[Math.min(idx,logOrder.length-1)]);}saveLogs();}
 function getCurrentStage(lid){for(var si=1;si<=5;si++){var sp=document.getElementById('l'+lid+'-stage-'+si);if(sp&&!sp.classList.contains('hidden'))return si;}return 1;}
-var stageNames=['Header','Notes','Personnel','Review','Report'];
+var stageNames=['Project Info','Notes','Field Details','Review','Report'];
 function goStage(lid,n){
   [1,2,3,4,5].forEach(function(i){var s=document.getElementById('l'+lid+'-stage-'+i);if(s)s.classList.toggle('hidden',i!==n);});
   // Update compact nav
@@ -844,16 +851,103 @@ function createLog(label,projData){
   buildLogDOM(lid,projData);renderTabs();switchToLog(lid);saveLogs();return lid;
 }
 
+/* ── quick field details modal ── */
+function showQuickFieldDetails(lid){
+  var ov=div('modal-bg'),box=div('modal-box');box.style.maxWidth='420px';
+  var title=div('modal-title');title.textContent='Quick — Field Details';box.appendChild(title);
+
+  // Atlas crew quick-add
+  var atlasD=div('divider');atlasD.textContent='Add Atlas rep';box.appendChild(atlasD);
+  var atlasRow=div('crew-row');
+  var atlasInp=el('input');atlasInp.type='text';atlasInp.placeholder='Name';atlasInp.autocomplete='off';atlasInp.style.flex='1';capBind(atlasInp,'w');
+  var atlasAdd=btn('Add','btn-sm btn-primary');
+  atlasAdd.addEventListener('click',function(){
+    var v=atlasInp.value.trim();if(!v)return;
+    var crew=document.getElementById('l'+lid+'-atlas-crew');
+    if(crew){crew.appendChild(makeCrewRow(v));syncQuickNames(lid,'atlas');}
+    atlasInp.value='';atlasInp.focus();
+  });
+  atlasRow.appendChild(atlasInp);atlasRow.appendChild(atlasAdd);box.appendChild(atlasRow);
+
+  // Sub quick-add
+  var subD=div('divider');subD.textContent='Add subcontractor';box.appendChild(subD);
+  var subRow=div('crew-row');
+  var subInp=el('input');subInp.type='text';subInp.placeholder='Name';subInp.autocomplete='off';subInp.style.flex='1';capBind(subInp,'w');
+  var subAdd=btn('Add','btn-sm btn-primary');
+  subAdd.addEventListener('click',function(){
+    var v=subInp.value.trim();if(!v)return;
+    var crew=document.getElementById('l'+lid+'-sub-crew');
+    if(crew){crew.appendChild(makeCrewRow(v));syncQuickNames(lid,'sub');}
+    subInp.value='';subInp.focus();
+  });
+  subRow.appendChild(subInp);subRow.appendChild(subAdd);box.appendChild(subRow);
+
+  // Visitor quick-add
+  var visD=div('divider');visD.textContent='Add visitor';box.appendChild(visD);
+  var visRow=div();visRow.style.cssText='display:flex;gap:6px;margin-bottom:6px';
+  var visNameInp=el('input');visNameInp.type='text';visNameInp.placeholder='Name';visNameInp.autocomplete='off';visNameInp.style.flex='1';capBind(visNameInp,'w');
+  var visOrgInp=el('input');visOrgInp.type='text';visOrgInp.placeholder='Organization';visOrgInp.autocomplete='off';visOrgInp.style.flex='1';capBind(visOrgInp,'w');
+  var visAdd=btn('Add','btn-sm btn-primary');
+  visAdd.addEventListener('click',function(){
+    var n=visNameInp.value.trim();if(!n)return;
+    var crew=document.getElementById('l'+lid+'-visitor-crew');
+    if(crew){crew.appendChild(makeVisitorRow(n,visOrgInp.value.trim()));}
+    saveLogs();visNameInp.value='';visOrgInp.value='';visNameInp.focus();
+  });
+  visRow.appendChild(visNameInp);visRow.appendChild(visOrgInp);visRow.appendChild(visAdd);box.appendChild(visRow);
+
+  // Custom scope quick-add
+  var scopeD=div('divider');scopeD.textContent='Add scope item';box.appendChild(scopeD);
+  var scopeRow=div('crew-row');
+  var scopeInp=el('input');scopeInp.type='text';scopeInp.placeholder='e.g. Soil sampling, Well testing';scopeInp.autocomplete='off';scopeInp.style.flex='1';capBind(scopeInp,'w');
+  var scopeAdd=btn('Add','btn-sm btn-primary');
+  scopeAdd.addEventListener('click',function(){
+    var v=capWords(scopeInp.value.trim());if(!v)return;
+    if(!logs[lid].customScopes)logs[lid].customScopes=[];
+    if(!logs[lid].customScopes.includes(v)){
+      logs[lid].customScopes.push(v);saveLogs();
+      // Re-render custom scope pills on the header page
+      var scopeDiv=document.querySelector('#l'+lid+'-stage-1 .scopes');
+      if(scopeDiv){
+        scopeDiv.querySelectorAll('.custom-scope-pill').forEach(function(e){e.remove();});
+        logs[lid].customScopes.forEach(function(item,idx){
+          var p=div('pill custom-scope-pill');p.style.cssText='background:#EDE9FF;border-color:#7C5CBF;color:#4B2EA0';
+          var span=el('span');span.textContent=item;
+          var x=el('span','pill-del');x.textContent='×';
+          x.addEventListener('click',function(e){e.stopPropagation();logs[lid].customScopes.splice(idx,1);saveLogs();p.remove();});
+          p.appendChild(span);p.appendChild(x);scopeDiv.appendChild(p);
+        });
+      }
+    }
+    scopeInp.value='';scopeInp.focus();showSavedFlash(scopeInp);
+  });
+  scopeRow.appendChild(scopeInp);scopeRow.appendChild(scopeAdd);box.appendChild(scopeRow);
+
+  var closeBar=div('action-bar');
+  var closeBtn=btn('Done','btn-primary');closeBtn.addEventListener('click',function(){ov.remove();});
+  closeBar.appendChild(closeBtn);box.appendChild(closeBar);
+  ov.appendChild(box);
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+  document.body.appendChild(ov);
+  setTimeout(function(){atlasInp.focus();},100);
+}
+function syncQuickNames(lid,type){
+  var arr=type==='atlas'?getCrew('l'+lid+'-atlas-crew'):getCrew('l'+lid+'-sub-crew');
+  var key=type==='atlas'?'atlas':'sub';
+  arr.forEach(function(n){if(n&&!store.names[key].includes(n))store.names[key].push(n);});
+  saveLogs();
+}
+
 /* ── build log DOM ── */
 function buildLogDOM(lid,projData){
   var F=projData||{};
   var pane=div('hidden');pane.id='l'+lid+'-pane';
 
   // ── Compact stage nav ──
-  var stageLabels=['Header','Notes','Personnel','Review','Report'];
+  var stageLabels=['Project Info','Notes','Field Details','Review','Report'];
   var stageNav=div('stage-nav');
   var prevArrow=el('button','stage-nav-arrow');prevArrow.textContent='‹';prevArrow.id='l'+lid+'-prev-arrow';prevArrow.type='button';prevArrow.disabled=true;
-  var stageLabelEl=el('span','stage-nav-label');stageLabelEl.id='l'+lid+'-stage-label';stageLabelEl.textContent='1 · Header';
+  var stageLabelEl=el('span','stage-nav-label');stageLabelEl.id='l'+lid+'-stage-label';stageLabelEl.textContent='1 · Project Info';
   var dotsWrap=div('stage-nav-dots');dotsWrap.id='l'+lid+'-stage-dots';
   for(var di=0;di<5;di++){var dot=div('stage-dot'+(di===0?' active':''));dot.id='l'+lid+'-dot-'+(di+1);dotsWrap.appendChild(dot);}
   var nextArrow=el('button','stage-nav-arrow');nextArrow.textContent='›';nextArrow.id='l'+lid+'-next-arrow';nextArrow.type='button';
@@ -886,7 +980,7 @@ function buildLogDOM(lid,projData){
   var dateInp=document.createElement('input');dateInp.type='date';dateInp.id='l'+lid+'-date';dateInp.value=today;
   dateInp.addEventListener('change',function(){updateBanner(lid);});
 
-  var projInp=inp(F.proj||'','e.g. CALGEM2401','w');projInp.id='l'+lid+'-proj';
+  var projInp=inp(F.proj||'','e.g. 2401','w');projInp.id='l'+lid+'-proj';
   projInp.addEventListener('input',function(){updateBanner(lid);renderTabs();});
   mkFieldPills(lid,'proj',projInp,'l'+lid+'-proj-pills');
 
@@ -930,7 +1024,7 @@ function buildLogDOM(lid,projData){
   customScopeInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addCustomScope();}});
   customScopeWrap.appendChild(customScopeInp);customScopeWrap.appendChild(customScopeBtn);
 
-  var hCard=div('card');hCard.innerHTML='<div class="card-title">Report header</div>';
+  var hCard=div('card');hCard.innerHTML='<div class="card-title">Project info</div>';
 
   var dateFg=div('fg');dateFg.appendChild(lbl('Date'));dateFg.appendChild(dateInp);hCard.appendChild(dateFg);
 
@@ -1000,7 +1094,7 @@ function buildLogDOM(lid,projData){
 
   // Page 1 nav
   var p1NavWrap=div('page-nav-bar');
-  var toNotesBtn=btn('Next: Field Notes →','btn-primary');
+  var toNotesBtn=btn('Next: Notes →','btn-primary');
   toNotesBtn.addEventListener('click',function(){goStage(lid,2);});
   p1NavWrap.appendChild(toNotesBtn);
 
@@ -1104,6 +1198,12 @@ function buildLogDOM(lid,projData){
   var toolbar=div('ta-footer');toolbar.style.cssText='display:flex;gap:8px;align-items:center;padding:6px 8px';
   toolbar.appendChild(tsBtn);toolbar.appendChild(addBtn);
 
+  // Quick-add Field Details button
+  var quickAddBtn=btn('👤 + Field Details','btn-sm');
+  quickAddBtn.style.cssText='flex:1;font-size:12px;padding:10px 8px;min-height:48px;background:#EDE9FF;border-color:#7C5CBF;color:#4B2EA0';
+  quickAddBtn.addEventListener('click',function(){showQuickFieldDetails(lid);});
+  toolbar.appendChild(quickAddBtn);
+
   var notesWrap=div();notesWrap.style.cssText='border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:8px;overflow:hidden';
   notesWrap.appendChild(entryList);notesWrap.appendChild(toolbar);notesWrap.appendChild(scratch);
 
@@ -1164,8 +1264,8 @@ function buildLogDOM(lid,projData){
 
   // Page 2 nav
   var p2NavWrap=div('page-nav-bar');
-  var p2BackBtn=btn('← Header');p2BackBtn.addEventListener('click',function(){goStage(lid,1);});
-  var p2FwdBtn=btn('Next: Personnel →','btn-primary');p2FwdBtn.addEventListener('click',function(){goStage(lid,3);});
+  var p2BackBtn=btn('← Project Info');p2BackBtn.addEventListener('click',function(){goStage(lid,1);});
+  var p2FwdBtn=btn('Next: Field Details →','btn-primary');p2FwdBtn.addEventListener('click',function(){goStage(lid,3);});
   p2NavWrap.appendChild(p2BackBtn);p2NavWrap.appendChild(p2FwdBtn);
 
   s2.appendChild(notesCard);s2.appendChild(p2NavWrap);
@@ -1207,7 +1307,7 @@ function buildLogDOM(lid,projData){
     });
     card.appendChild(hdr);card.appendChild(body);
   }
-  var perCard=div('card');perCard.innerHTML='<div class="card-title">Personnel</div>';
+  var perCard=div('card');perCard.innerHTML='<div class="card-title">Field details</div>';
   makeAccSection(perCard,'Atlas Representatives',function(body){
     body.style.paddingTop='10px';
     body.appendChild(atlasCrew);body.appendChild(addAtlasLink);
@@ -1218,7 +1318,7 @@ function buildLogDOM(lid,projData){
     body.appendChild(subCrew);body.appendChild(addSubLink);
     var subSaveRow=div('action-bar');subSaveRow.style.marginTop='4px';subSaveRow.appendChild(subMsg);subSaveRow.appendChild(saveSubBtn);body.appendChild(subSaveRow);
   },false);
-  makeAccSection(perCard,'Visitors / Other (CalGEM, client reps)',function(body){
+  makeAccSection(perCard,'Visitors / Other',function(body){
     body.style.paddingTop='10px';
     body.appendChild(visitorCrew);body.appendChild(addVisitorLink);
   },false);
@@ -1249,7 +1349,7 @@ function buildLogDOM(lid,projData){
   var saveInfoBtn=btn('Save','btn-sm');saveInfoBtn.addEventListener('click',function(){saveLogs();showMsg('l'+lid+'-site-msg','Saved!','ok',2000);});
   var siteMsg=div('ok hidden');siteMsg.id='l'+lid+'-site-msg';
 
-  var siteCard=div('card');siteCard.innerHTML='<div class="card-title">Site details</div>';
+  var siteCard=div('card');siteCard.innerHTML='<div class="card-title">Field details</div>';
   makeAccSection(siteCard,'Scope of Work',function(body){
     body.style.paddingTop='10px';
     body.appendChild(fg('Atlas scope of work',atlasScopeTa));
@@ -1311,7 +1411,7 @@ function buildLogDOM(lid,projData){
   var rvList=div();rvList.id='l'+lid+'-review-list';rvCard.appendChild(rvList);
 
   var p4NavWrap=div('page-nav-bar');
-  var p4BackBtn=btn('← Personnel');p4BackBtn.addEventListener('click',function(){goStage(lid,3);});
+  var p4BackBtn=btn('← Field Details');p4BackBtn.addEventListener('click',function(){goStage(lid,3);});
   var buildBtn=btn('Build report →','btn-primary');buildBtn.addEventListener('click',function(){buildReport(lid);});
   p4NavWrap.appendChild(p4BackBtn);p4NavWrap.appendChild(buildBtn);
 
@@ -1387,12 +1487,12 @@ function showMoveModal(fromLid){
 /* ── PDF export ── */
 function exportPDF(lid){
   var el=document.getElementById('l'+lid+'-rpt-out');if(!el)return;
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:Arial,sans-serif;}@media print{body{margin:0}}</style></head><body>'+el.innerHTML+'<script>window.onload=function(){window.print();}<\/script></body></html>';
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:Arial,sans-serif;}@media print{body{margin:0}}</style></head><body>'+el.innerHTML+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>';
   try{var w=window.open('','_blank');if(w){w.document.write(html);w.document.close();return;}}catch(e){}
   try{var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';a.download=(fv(lid,'date')||'report')+'_atlas_field_report.html';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},3000);}catch(e){showAlert('Print unavailable. Save the HTML file and open in Chrome to print.');}
 }
 function exportPDFFromEl(el){
-  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:Arial,sans-serif;}</style></head><body>'+el.innerHTML+'<script>window.onload=function(){window.print();}<\/script></body></html>';
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:0;padding:0;font-family:Arial,sans-serif;}</style></head><body>'+el.innerHTML+'<scr'+'ipt>window.onload=function(){window.print();}<\/scr'+'ipt></body></html>';
   try{var w=window.open('','_blank');if(w){w.document.write(html);w.document.close();return;}}catch(e){}
   try{var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},3000);}catch(e){showAlert('Print unavailable.');}
 }
@@ -1450,6 +1550,38 @@ document.addEventListener('focusout',function(){
     }
   },150);
 });
+/* ── full guide modal ── */
+function showFullGuide(){
+  var ov=div('modal-bg'),box=div('modal-box');
+  box.style.cssText='background:var(--color-background-primary,#fff);border-radius:12px;padding:1.5rem;width:92%;max-width:500px;max-height:88vh;overflow-y:auto;border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15))';
+  var title=div('modal-title');title.textContent='📖 Atlas Field Log — Full Guide';box.appendChild(title);
+
+  var sections=[
+    {head:'Overview',body:'This app helps you document daily field work and generate a formal Atlas Daily Field Report. Everything is saved locally on your device — no login required.'},
+    {head:'1 · Project Info',body:'Fill this out at the start of each day. Enter the date (auto-fills to today), project number, phase, office, PM, location, well ID, and client.\n\n<b>Saving values for reuse:</b> Type a value into any field and tap the Save button next to it. It saves as a chip below the field. On future logs, tap the chip to auto-fill the field instantly.\n\n<b>Saved projects:</b> Use Save current at the top to save all header fields together as a named project. Load it on future logs from the dropdown.\n\n<b>Scope checkboxes:</b> Check the scopes that apply today. For a task not listed, type it in the custom scope field and tap Add.\n\n<b>Weather:</b> Enter your zip and tap Get Weather, or tap the GPS button to auto-fill from your location.'},
+    {head:'2 · Notes',body:'This is your main working page. Stay here most of the day.\n\n<b>Adding entries:</b> Tap <b>+ Timestamp Entry</b> to add a new row with the current time filled in. Tap <b>+ Entry</b> for a blank row. Each entry has a time field (4-digit military, e.g. 0730) and a text field.\n\n<b>Quick phrases:</b> The green chips at the top are one-tap phrases that insert into your current entry. H&S tailgate conducted, Work suspended - weather, and Scope change: are included by default. Tap + Phrase to add your own.\n\n<b>Scope changes:</b> When scope changes mid-day, tap the Scope change: chip and finish the sentence with what changed. This timestamps the change and it goes into the report.\n\n<b>👤 + Field Details button:</b> Tap this anytime to quickly add crew, visitors, or scope items without leaving the notes page.\n\n<b>Reordering:</b> Drag the ⋮⋮ handle on any entry to reorder it.\n\n<b>Deleting:</b> Hold the ✕ button for half a second to delete a row — prevents accidental deletions.'},
+    {head:'3 · Field Details',body:'Track crew, scope, equipment, waste, and samples. Update this throughout the day as things change.\n\n<b>Personnel:</b> Add Atlas reps, subcontractors, and visitors as they arrive. Tap Save names to store them for future logs.\n\n<b>Scope of Work:</b> Write the formal Atlas scope and contractor scope here. These go directly into the report.\n\n<b>Equipment:</b> Tap equipment pills to check them. Add one-off items for today only, or tap Save to add to your permanent list.\n\n<b>Mileage:</b> Enter total mileage for the day.'},
+    {head:'4 · Review',body:'Tap Review entries to move your notes to this page. All entries are kept by default.\n\nTap <b>Discard</b> on any entry to remove it from the report (you can bring it back).\n\nTap any entry text to edit it directly. Drag entries to reorder.\n\n<b>📷 Photos:</b> Added here, not during note-taking. Device storage is limited to 5MB — photos would fill it fast and corrupt your text saves. Add photos here for anything that needs to be in the report.\n\n<b>⚠ Photos do not save to drafts.</b> If you archive or draft before building the report, photos are lost. Build the report first if photos matter that day.'},
+    {head:'5 · Report',body:'Tap <b>Build report</b> to generate the formatted Atlas Daily Field Report.\n\nTap <b>Print / Save PDF</b> to open the print dialog. On mobile, choose Save as PDF from your print options.\n\nTap <b>✉ Email</b> to pre-fill an email with report details — attach the PDF file manually.\n\nThe report is also saved to your Library automatically.'},
+    {head:'Library',body:'All completed reports and drafts are stored here, grouped by project number. Tap View to open a report. Tap Resume to reopen a draft. You can edit report text directly before printing.\n\n<b>⬇ Backup / ⬆ Restore:</b> Backup exports everything — logs, saved projects, crew names, equipment, library — to a JSON file. Restore loads it back. Use it when switching phones, or save one periodically in case your browser clears storage.\n\n<b>Where it saves:</b> Android — Downloads folder (find it in the Files app). iPhone — a share sheet appears, tap Save to Files and choose a location.\n\nThis is the only way to move your data between devices — there is no cloud sync.'},
+    {head:'Tips',body:'• The <b>📝 Notes</b> button fixed to the bottom-right takes you straight back to your notes from any page.\n• Multiple logs can be open at once — useful if covering two sites in one day.\n• Dark mode toggle is the 🌙 button in the top nav.\n• The 👁 button keeps your screen awake while actively logging.'},
+  ];
+
+
+  sections.forEach(function(s){
+    var secHead=div();secHead.style.cssText='font-size:17px;font-weight:700;color:#1a3a5c;margin:1.5rem 0 6px;padding-bottom:6px;border-bottom:2px solid #1a3a5c';secHead.textContent=s.head;
+    var secBody=div();secBody.style.cssText='font-size:13px;line-height:1.7;color:var(--color-text-primary,#1a1a1a);white-space:pre-wrap';secBody.innerHTML=s.body.replace(/\n/g,'<br>');
+    box.appendChild(secHead);box.appendChild(secBody);
+  });
+
+  var bar=div('action-bar');
+  var closeBtn=btn('Close','btn-primary');closeBtn.addEventListener('click',function(){ov.remove();});
+  bar.appendChild(closeBtn);box.appendChild(bar);
+  ov.appendChild(box);
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+  document.body.appendChild(ov);
+}
+
 /* ── init ── */
 async function init(){
   document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
