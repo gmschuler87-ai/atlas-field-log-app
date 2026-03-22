@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -91,8 +90,8 @@ textarea{resize:vertical;line-height:1.5}
 .acc-hdr-title{font-size:14px;font-weight:500;color:var(--color-text-primary,#1a1a1a)}
 .acc-hdr-arrow{font-size:18px;color:var(--color-text-secondary,#666);transition:transform 0.2s}
 .acc-hdr.open .acc-hdr-arrow{transform:rotate(90deg)}
-.acc-body{overflow:hidden;transition:max-height 0.25s ease}
-.acc-body.closed{max-height:0!important}
+.acc-body{overflow:visible;transition:max-height 0.25s ease}
+.acc-body.closed{max-height:0!important;overflow:hidden}
 .ok{font-size:12px;color:#3B6D11}
 .err{font-size:12px;color:#A32D2D}
 .action-bar{display:flex;gap:8px;justify-content:flex-end;margin-top:1rem}
@@ -136,6 +135,10 @@ textarea{resize:vertical;line-height:1.5}
 .notes-fab:active{transform:scale(0.97)}
 .notes-fab.visible{display:flex}
 @media print{.notes-fab{display:none!important}}
+.page-nav-bar{position:sticky;bottom:0;z-index:90;background:var(--color-background-primary,#fff);border-top:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));padding:10px 1rem;display:flex;gap:8px;justify-content:space-between;margin-top:1rem;box-shadow:0 -2px 8px rgba(0,0,0,0.06)}
+.page-nav-bar .btn{flex:1;padding:12px 8px;font-size:14px;min-height:48px}
+.page-nav-bar .btn-primary{flex:2}
+@media print{.page-nav-bar{display:none!important}}
 @media print{.top-nav,.stage-tabs,.card:not(.print-card),.action-bar,.app-header{display:none!important}.print-card{border:none;padding:0;border-radius:0}body{background:#fff}.app{padding:0;max-width:100%}@page{margin:0.5in}}
 </style>
 </head>
@@ -339,10 +342,11 @@ function makePill(labelTxt,onTap,onEdit,onDel){
   return p;
 }
 function mkFieldPills(lid,key,inputEl,fillId){
-  inputEl.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){e.preventDefault();var v=capWords(inputEl.value.trim());if(!v)return;if(!store.fieldOptions[key])store.fieldOptions[key]=[];if(!store.fieldOptions[key].includes(v)){store.fieldOptions[key].push(v);persist();}inputEl.value='';renderFieldPills(lid,key,fillId);}
-  });
+  function saveVal(){var v=capWords(inputEl.value.trim());if(!v)return;if(!store.fieldOptions[key])store.fieldOptions[key]=[];if(!store.fieldOptions[key].includes(v)){store.fieldOptions[key].push(v);persist();renderFieldPills(lid,key,fillId);showSavedFlash(inputEl);}}
+  inputEl.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();saveVal();}});
+  inputEl._savePill=saveVal;
 }
+function showSavedFlash(el){var orig=el.style.borderColor;el.style.borderColor='#3B6D11';el.style.background='#EAF3DE';setTimeout(function(){el.style.borderColor='';el.style.background='';},800);}
 function renderFieldPills(lid,key,fillId){
   var c=document.getElementById(fillId);if(!c)return;c.innerHTML='';
   (store.fieldOptions[key]||[]).forEach(function(val,idx){
@@ -361,9 +365,9 @@ function renderAllFieldPills(lid){
 }
 function mkClientField(lid){
   var clientInp=inp('','e.g. CalGEM','w');clientInp.id='l'+lid+'-client';
-  clientInp.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){e.preventDefault();var v=capWords(clientInp.value.trim());if(!v)return;if(!store.names.client.includes(v)){store.names.client.push(v);persist();}renderClientPills(lid);}
-  });
+  function saveClient(){var v=capWords(clientInp.value.trim());if(!v)return;if(!store.names.client.includes(v)){store.names.client.push(v);persist();renderClientPills(lid);showSavedFlash(clientInp);}}
+  clientInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();saveClient();}});
+  clientInp._savePill=saveClient;
   return clientInp;
 }
 function renderClientPills(lid){
@@ -457,14 +461,23 @@ function showWelcome(){
     var logoEl=document.querySelector('.app-header img');var logoSrc=logoEl?logoEl.src:'';
     var img=document.createElement('img');img.src=logoSrc;img.alt='Atlas';
     var h1=document.createElement('h1');h1.textContent='Atlas Daily Field Log';
-    var p=document.createElement('p');p.textContent='Document your field activities, generate reports, and store them in your library.';
+    var sub=document.createElement('p');sub.textContent='CalGEM / Environmental Field Reporting';sub.style.cssText='font-size:13px;color:var(--color-text-secondary,#666);margin:0';
+    var instructions=document.createElement('div');
+    instructions.style.cssText='text-align:left;background:var(--color-background-secondary,#f0f0ee);border-radius:10px;padding:1rem 1.2rem;max-width:320px;width:100%;font-size:13px;line-height:1.7;color:var(--color-text-primary,#1a1a1a)';
+    instructions.innerHTML='<div style="font-weight:600;margin-bottom:8px;font-size:14px">How to use</div>'
+      +'<div><b>1 · Header</b> — Date, project info, weather. Fill once per day.</div>'
+      +'<div><b>2 · Notes</b> — Your main working page. Log activities throughout the day. Use the timestamp button to add the current time.</div>'
+      +'<div><b>3 · Personnel</b> — Crew, subs, visitors, scope, equipment. Fill at end of day.</div>'
+      +'<div><b>4 · Review</b> — Review and edit entries. Add photos.</div>'
+      +'<div><b>5 · Report</b> — Build and print or email the final PDF.</div>'
+      +'<div style="margin-top:8px;font-size:12px;color:var(--color-text-secondary,#666)">📝 The Notes button (bottom right) takes you back to your entries from any page.</div>';
     var newBtn=document.createElement('button');newBtn.className='welcome-btn welcome-btn-primary';newBtn.textContent='+ Start New Log';
     newBtn.addEventListener('click',function(){showMainUI();createLog('Log 1',null);});
     var libBtn=document.createElement('button');libBtn.className='welcome-btn welcome-btn-secondary';libBtn.textContent='Go to Library';
     libBtn.addEventListener('click',function(){showMainUI();switchToLibrary();});
-    var btnWrap=document.createElement('div');btnWrap.style.cssText='display:flex;flex-direction:column;gap:10px;width:100%;max-width:260px';
+    var btnWrap=document.createElement('div');btnWrap.style.cssText='display:flex;flex-direction:column;gap:10px;width:100%;max-width:320px';
     btnWrap.appendChild(newBtn);btnWrap.appendChild(libBtn);
-    ws.appendChild(img);ws.appendChild(h1);ws.appendChild(p);ws.appendChild(btnWrap);
+    ws.appendChild(img);ws.appendChild(h1);ws.appendChild(sub);ws.appendChild(instructions);ws.appendChild(btnWrap);
   }
 }
 function showMainUI(){document.getElementById('log-container').style.display='';document.getElementById('top-nav').style.display='';document.getElementById('welcome-screen').classList.add('hidden');}
@@ -489,9 +502,17 @@ function updateBanner(lid){
   var parts=[],proj=fv(lid,'proj'),loc=fv(lid,'loc'),well=fv(lid,'well'),dateVal=fv(lid,'date');
   if(proj)parts.push(proj);if(loc)parts.push(loc);if(well)parts.push(well);
   if(subEl)subEl.textContent=parts.join(' · ')||'';
-  // Update date display in header card
-  var dateLabel=document.getElementById('l'+lid+'-date-display');
-  if(dateLabel&&dateVal){var dp=dateVal.split('-');dateLabel.textContent=dp.length===3?(dp[1]+'/'+dp[2]+'/'+dp[0]):'';} 
+  // Update sticky header date when log date changes
+  if(dateVal){
+    var hdrDate=document.getElementById('hdr-date');
+    if(hdrDate){
+      var dp=dateVal.split('-');
+      if(dp.length===3){
+        var d=new Date(parseInt(dp[0]),parseInt(dp[1])-1,parseInt(dp[2]));
+        hdrDate.textContent=d.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+      }
+    }
+  }
 }
 
 /* ── projects ── */
@@ -669,6 +690,8 @@ function buildReport(lid){
   var fmtDate=function(d){if(!d)return'';var p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0];};
   var atlas=getCrew('l'+lid+'-atlas-crew').join(', '),subs=getCrew('l'+lid+'-sub-crew').join(', ');
   var scopeParts=[['sc-sampling','Sampling'],['sc-monitoring','Monitoring'],['sc-cleanup-scope','Facility Cleanup'],['sc-pa','P&A'],['sc-oversight','Oversight']].map(function(p){var e=document.getElementById('l'+lid+'-'+p[0]);return(e&&e.checked)?'<b>[X]</b> '+p[1]:'[ ] '+p[1];}).join('&nbsp;&nbsp;&nbsp;');
+  var customScopes=logs[lid]&&logs[lid].customScopes?logs[lid].customScopes:[];
+  if(customScopes.length)scopeParts+='&nbsp;&nbsp;&nbsp;'+customScopes.map(function(s){return'<b>[X]</b> '+esc(s);}).join('&nbsp;&nbsp;&nbsp;');
   var keptItems=(logs[lid].reviewItems||[]).filter(function(r){return r.keep;});
   var allRows=[];var PX_TEXT=21;
   var i=0;
@@ -817,7 +840,7 @@ function showNewLogModal(){
 function createLog(label,projData){
   showMainUI();
   var lid=uid();logOrder.push(lid);
-  logs[lid]={lid:lid,label:label||'Log '+(logOrder.length),reviewItems:[],affiliationMap:Object.assign({},store.affiliations),oneOffEquip:[],consistencyFixes:[],photos:[]};
+  logs[lid]={lid:lid,label:label||'Log '+(logOrder.length),reviewItems:[],affiliationMap:Object.assign({},store.affiliations),oneOffEquip:[],customScopes:[],consistencyFixes:[],photos:[]};
   buildLogDOM(lid,projData);renderTabs();switchToLog(lid);saveLogs();return lid;
 }
 
@@ -886,28 +909,73 @@ function buildLogDOM(lid,projData){
     var l=document.createElement('label');var cb=document.createElement('input');cb.type='checkbox';cb.id='l'+lid+'-'+pair[0];
     l.appendChild(cb);l.appendChild(txt(' '+pair[1]));scopeDiv.appendChild(l);
   });
+  // Custom scope pills
+  if(!logs[lid].customScopes)logs[lid].customScopes=[];
+  function renderCustomScopes(){
+    var existing=scopeDiv.querySelectorAll('.custom-scope-pill');existing.forEach(function(e){e.remove();});
+    (logs[lid].customScopes||[]).forEach(function(item,idx){
+      var p=div('pill custom-scope-pill');p.style.cssText='background:#EDE9FF;border-color:#7C5CBF;color:#4B2EA0';
+      var span=el('span');span.textContent=item;
+      var x=el('span','pill-del');x.textContent='×';x.title='Remove';
+      x.addEventListener('click',function(e){e.stopPropagation();logs[lid].customScopes.splice(idx,1);saveLogs();renderCustomScopes();});
+      p.appendChild(span);p.appendChild(x);scopeDiv.appendChild(p);
+    });
+  }
+  renderCustomScopes();
+  var customScopeWrap=div();customScopeWrap.style.cssText='display:flex;gap:6px;margin-top:8px;width:100%';
+  var customScopeInp=el('input');customScopeInp.type='text';customScopeInp.placeholder='Add custom scope...';customScopeInp.style.cssText='flex:1;padding:7px 10px;border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:8px;font-size:14px;font-family:inherit;background:var(--color-background-primary,#fff)';
+  var customScopeBtn=btn('Add','btn-sm');
+  function addCustomScope(){var v=capWords(customScopeInp.value.trim());if(!v)return;if(!logs[lid].customScopes)logs[lid].customScopes=[];if(!logs[lid].customScopes.includes(v)){logs[lid].customScopes.push(v);saveLogs();renderCustomScopes();showSavedFlash(customScopeInp);}customScopeInp.value='';}
+  customScopeBtn.addEventListener('click',addCustomScope);
+  customScopeInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addCustomScope();}});
+  customScopeWrap.appendChild(customScopeInp);customScopeWrap.appendChild(customScopeBtn);
 
   var hCard=div('card');hCard.innerHTML='<div class="card-title">Report header</div>';
 
   var dateFg=div('fg');dateFg.appendChild(lbl('Date'));dateFg.appendChild(dateInp);hCard.appendChild(dateFg);
 
   var r2a=div('fr2');
-  var projFg=div('fg');projFg.appendChild(lbl('Project No.'));projFg.appendChild(projInp);var projPills=div('field-pills');projPills.id='l'+lid+'-proj-pills';projFg.appendChild(projPills);
+  var projFg=div('fg');projFg.appendChild(lbl('Project No.'));
+  var projRow=div();projRow.style.cssText='display:flex;gap:6px';
+  var projSaveBtn=btn('Save','btn-sm');projSaveBtn.addEventListener('click',function(){if(projInp._savePill)projInp._savePill();});
+  projRow.appendChild(projInp);projRow.appendChild(projSaveBtn);projFg.appendChild(projRow);
+  var projPills=div('field-pills');projPills.id='l'+lid+'-proj-pills';projFg.appendChild(projPills);
   var phaseFg=div('fg');phaseFg.appendChild(lbl('Phase No.'));phaseFg.appendChild(phaseInp);
   r2a.appendChild(projFg);r2a.appendChild(phaseFg);hCard.appendChild(r2a);
 
   var r2b=div('fr2');
-  var officeFg=div('fg');officeFg.appendChild(lbl('Atlas Office'));officeFg.appendChild(officeInp);var officePills=div('field-pills');officePills.id='l'+lid+'-office-pills';officeFg.appendChild(officePills);
-  var pmFg=div('fg');pmFg.appendChild(lbl('Program Manager'));pmFg.appendChild(pmInp);var pmPills=div('field-pills');pmPills.id='l'+lid+'-pm-pills';pmFg.appendChild(pmPills);
+  var officeFg=div('fg');officeFg.appendChild(lbl('Atlas Office'));
+  var officeRow=div();officeRow.style.cssText='display:flex;gap:6px';
+  var officeSaveBtn=btn('Save','btn-sm');officeSaveBtn.addEventListener('click',function(){if(officeInp._savePill)officeInp._savePill();});
+  officeRow.appendChild(officeInp);officeRow.appendChild(officeSaveBtn);officeFg.appendChild(officeRow);
+  var officePills=div('field-pills');officePills.id='l'+lid+'-office-pills';officeFg.appendChild(officePills);
+  var pmFg=div('fg');pmFg.appendChild(lbl('Program Manager'));
+  var pmRow=div();pmRow.style.cssText='display:flex;gap:6px';
+  var pmSaveBtn=btn('Save','btn-sm');pmSaveBtn.addEventListener('click',function(){if(pmInp._savePill)pmInp._savePill();});
+  pmRow.appendChild(pmInp);pmRow.appendChild(pmSaveBtn);pmFg.appendChild(pmRow);
+  var pmPills=div('field-pills');pmPills.id='l'+lid+'-pm-pills';pmFg.appendChild(pmPills);
   r2b.appendChild(officeFg);r2b.appendChild(pmFg);hCard.appendChild(r2b);
 
   var r2c=div('fr2');
-  var locFg=div('fg');locFg.appendChild(lbl('Location'));locFg.appendChild(locInp);var locPills=div('field-pills');locPills.id='l'+lid+'-loc-pills';locFg.appendChild(locPills);
-  var wellFg=div('fg');wellFg.appendChild(lbl('Well Field / Well ID(s)'));wellFg.appendChild(wellInp);var wellPills=div('field-pills');wellPills.id='l'+lid+'-well-pills';wellFg.appendChild(wellPills);
+  var locFg=div('fg');locFg.appendChild(lbl('Location'));
+  var locRow=div();locRow.style.cssText='display:flex;gap:6px';
+  var locSaveBtn=btn('Save','btn-sm');locSaveBtn.addEventListener('click',function(){if(locInp._savePill)locInp._savePill();});
+  locRow.appendChild(locInp);locRow.appendChild(locSaveBtn);locFg.appendChild(locRow);
+  var locPills=div('field-pills');locPills.id='l'+lid+'-loc-pills';locFg.appendChild(locPills);
+  var wellFg=div('fg');wellFg.appendChild(lbl('Well Field / Well ID(s)'));
+  var wellRow=div();wellRow.style.cssText='display:flex;gap:6px';
+  var wellSaveBtn=btn('Save','btn-sm');wellSaveBtn.addEventListener('click',function(){if(wellInp._savePill)wellInp._savePill();});
+  wellRow.appendChild(wellInp);wellRow.appendChild(wellSaveBtn);wellFg.appendChild(wellRow);
+  var wellPills=div('field-pills');wellPills.id='l'+lid+'-well-pills';wellFg.appendChild(wellPills);
   r2c.appendChild(locFg);r2c.appendChild(wellFg);hCard.appendChild(r2c);
 
-  var clientFg=div('fg');clientFg.appendChild(lbl('Client'));clientFg.appendChild(clientInp);var clientPills=div('field-pills');clientPills.id='l'+lid+'-client-pills';clientFg.appendChild(clientPills);hCard.appendChild(clientFg);
-  hCard.appendChild(fg('Scope of work',scopeDiv));
+  var clientFg=div('fg');clientFg.appendChild(lbl('Client'));
+  var clientRow=div();clientRow.style.cssText='display:flex;gap:6px';
+  var clientSaveBtn=btn('Save','btn-sm');clientSaveBtn.addEventListener('click',function(){if(clientInp._savePill)clientInp._savePill();});
+  clientRow.appendChild(clientInp);clientRow.appendChild(clientSaveBtn);clientFg.appendChild(clientRow);
+  var clientPills=div('field-pills');clientPills.id='l'+lid+'-client-pills';clientFg.appendChild(clientPills);hCard.appendChild(clientFg);
+  var scopeFg=div('fg');scopeFg.appendChild(lbl('Scope of work'));scopeFg.appendChild(scopeDiv);scopeFg.appendChild(customScopeWrap);
+  hCard.appendChild(scopeFg);
 
   // Weather card
   var zipInp=inp(F.zip||'','5-digit zip','w');zipInp.id='l'+lid+'-zip';zipInp.maxLength=5;
@@ -931,7 +999,7 @@ function buildLogDOM(lid,projData){
   wxCard.appendChild(wxFetchRow);wxCard.appendChild(wxGrid);wxCard.appendChild(wxStatus);
 
   // Page 1 nav
-  var p1NavWrap=div('action-bar');
+  var p1NavWrap=div('page-nav-bar');
   var toNotesBtn=btn('Next: Field Notes →','btn-primary');
   toNotesBtn.addEventListener('click',function(){goStage(lid,2);});
   p1NavWrap.appendChild(toNotesBtn);
@@ -955,11 +1023,12 @@ function buildLogDOM(lid,projData){
   function getTimeVal(row){return row.querySelector('.entry-time').value.trim();}
   function getNoteVal(row){return row.querySelector('.entry-text').value.trim();}
 
+  var _syncTimer=null;
   function syncScratchpad(){
     var rows=Array.from(entryList.querySelectorAll('.entry-row'));
     scratch.value=rows.map(function(r){var t=getTimeVal(r),n=getNoteVal(r);return t?(t+' - '+n):n;}).filter(function(s){return s.trim();}).join('\n');
     logs[lid].scratchpadEntries=rows.map(function(r){return{t:getTimeVal(r),n:getNoteVal(r)};}).filter(function(e){return e.t||e.n;});
-    saveLogs();
+    clearTimeout(_syncTimer);_syncTimer=setTimeout(function(){saveLogs();},2000);
   }
 
   function makeEntryRow(timeVal,noteVal){
@@ -1094,7 +1163,7 @@ function buildLogDOM(lid,projData){
   notesCard.appendChild(phraseBar);notesCard.appendChild(notesWrap);notesCard.appendChild(moveBtn);notesCard.appendChild(reviewBtnWrap);notesCard.appendChild(notesHint);
 
   // Page 2 nav
-  var p2NavWrap=div('action-bar');
+  var p2NavWrap=div('page-nav-bar');
   var p2BackBtn=btn('← Header');p2BackBtn.addEventListener('click',function(){goStage(lid,1);});
   var p2FwdBtn=btn('Next: Personnel →','btn-primary');p2FwdBtn.addEventListener('click',function(){goStage(lid,3);});
   p2NavWrap.appendChild(p2BackBtn);p2NavWrap.appendChild(p2FwdBtn);
@@ -1127,15 +1196,15 @@ function buildLogDOM(lid,projData){
     var harrow=el('span','acc-hdr-arrow');harrow.textContent='›';
     hdr.appendChild(htitle);hdr.appendChild(harrow);
     var body=div('acc-body');
-    if(!startOpen)body.classList.add('closed');
+    if(!startOpen){body.classList.add('closed');body.style.maxHeight='0';}
+    // Open sections: no max-height constraint so content (pills etc.) always shows fully
     bodyFn(body);
     hdr.addEventListener('click',function(){
       var open=hdr.classList.toggle('open');
       body.classList.toggle('closed',!open);
-      if(open){body.style.maxHeight='';body.style.maxHeight=body.scrollHeight+'px';}
+      if(open){body.style.maxHeight='none';}
       else{body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(function(){body.style.maxHeight='0';});}
     });
-    if(startOpen){setTimeout(function(){body.style.maxHeight=body.scrollHeight+'px';},50);}
     card.appendChild(hdr);card.appendChild(body);
   }
   var perCard=div('card');perCard.innerHTML='<div class="card-title">Personnel</div>';
@@ -1202,7 +1271,7 @@ function buildLogDOM(lid,projData){
   },false);
 
   // Page 3 nav
-  var p3NavWrap=div('action-bar');
+  var p3NavWrap=div('page-nav-bar');
   var p3BackBtn=btn('← Notes');p3BackBtn.addEventListener('click',function(){goStage(lid,2);});
   var p3FwdBtn=btn('Review entries →','btn-primary');p3FwdBtn.addEventListener('click',function(){goReview(lid);});
   p3NavWrap.appendChild(p3BackBtn);p3NavWrap.appendChild(p3FwdBtn);
@@ -1241,7 +1310,7 @@ function buildLogDOM(lid,projData){
   rvCard.appendChild(rvPhotoBtn);
   var rvList=div();rvList.id='l'+lid+'-review-list';rvCard.appendChild(rvList);
 
-  var p4NavWrap=div('action-bar');
+  var p4NavWrap=div('page-nav-bar');
   var p4BackBtn=btn('← Personnel');p4BackBtn.addEventListener('click',function(){goStage(lid,3);});
   var buildBtn=btn('Build report →','btn-primary');buildBtn.addEventListener('click',function(){buildReport(lid);});
   p4NavWrap.appendChild(p4BackBtn);p4NavWrap.appendChild(buildBtn);
@@ -1264,7 +1333,7 @@ function buildLogDOM(lid,projData){
     var body=encodeURIComponent('Atlas Daily Field Report'+'%0ADate: '+(d||'')+'%0AProject: '+(proj||'')+'%0ALocation: '+(loc||'')+'%0AWell: '+(well||'')+'%0AAtlas Rep: '+getCrew('l'+lid+'-atlas-crew').join(', ')+'%0A%0A[Attach the saved PDF file]');
     var a=document.createElement('a');a.href='mailto:?subject='+subj+'&body='+body;document.body.appendChild(a);a.click();document.body.removeChild(a);
   });
-  var ab5=div('action-bar');ab5.appendChild(back2);ab5.appendChild(emailBtn);ab5.appendChild(printBtn);s5.appendChild(ab5);
+  var ab5=div('page-nav-bar');ab5.appendChild(back2);ab5.appendChild(emailBtn);ab5.appendChild(printBtn);s5.appendChild(ab5);
   pane.appendChild(s5);
 
   document.getElementById('log-container').appendChild(pane);
