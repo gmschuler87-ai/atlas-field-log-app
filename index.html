@@ -153,7 +153,7 @@ textarea{resize:vertical;line-height:1.5}
 </div>
   <div style="margin-top:2rem;padding:0.75rem 1rem;display:flex;gap:8px;justify-content:flex-end;border-top:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15))">
     <span id="storage-warn" style="display:none;font-size:11px;color:#A32D2D;font-weight:600;cursor:default" title="">⚠ Storage nearly full</span><button class="util-btn" id="export-btn" style="font-size:12px;padding:5px 10px;opacity:0.6">⬇ Backup</button>
-    <label class="util-btn" style="cursor:pointer;margin:0;font-size:12px;padding:5px 10px;opacity:0.6">⬆ Restore<input type="file" id="import-input" accept=".json" style="display:none"></label>
+    <button class="util-btn" id="restore-btn" style="font-size:12px;padding:5px 10px;opacity:0.6">⬆ Restore</button><input type="file" id="import-input" accept=".json" style="display:none;position:absolute;left:-9999px">
   </div>
 </div>
 <script>
@@ -291,7 +291,23 @@ async function loadStore(){
 async function persist(){try{await storageSet('atlas-store',JSON.stringify(store));}catch(e){}}
 async function loadLogs(){try{var raw=await storageGet('atlas-logs');if(raw){var d=JSON.parse(raw);logs=d.logs||{};logOrder=d.logOrder||[];}}catch(e){}}
 async function saveLogs(){
-  try{var today=new Date().toISOString().split('T')[0];await storageSet('atlas-logs',JSON.stringify({date:today,logs:logs,logOrder:logOrder}));}catch(e){}
+  try{
+    var today=new Date().toISOString().split('T')[0];
+    // Strip photo dataUrls before saving to avoid localStorage quota issues
+    // Photos are added at review time and live in session memory only
+    var logsToSave={};
+    Object.keys(logs).forEach(function(lid){
+      var l=Object.assign({},logs[lid]);
+      l.photos=[];  // don't persist photos
+      if(l.reviewItems){
+        l.reviewItems=l.reviewItems.map(function(r){
+          return r.type==='photo'?Object.assign({},r,{dataUrl:''}):r;
+        });
+      }
+      logsToSave[lid]=l;
+    });
+    await storageSet('atlas-logs',JSON.stringify({date:today,logs:logsToSave,logOrder:logOrder}));
+  }catch(e){}
   checkStorageUsage();
 }
 function checkStorageUsage(){
@@ -1489,7 +1505,7 @@ function buildLogDOM(lid,projData){
         del.addEventListener('click',function(){
           showConfirm('Remove this photo?',function(){
             logs[lid].photos.splice(pi,1);
-            saveLogs();updatePhotoCount();
+            saveLogs();
           });
         });
         wrap.appendChild(thumb);wrap.appendChild(del);photoStrip.appendChild(wrap);
@@ -1527,15 +1543,16 @@ function buildLogDOM(lid,projData){
   addBtn.addEventListener('click',function(){addEntry('','',false);});
 
   var toolbar=div('ta-footer');toolbar.style.cssText='display:flex;gap:8px;align-items:center;padding:6px 8px';
+  tsBtn.style.cssText='flex:1;font-size:12px;padding:10px 8px;min-height:48px';
+  addBtn.style.cssText='flex:1;font-size:13px;padding:10px 8px;min-height:48px';
   var moveBtn=btn('Move notes','btn-sm');
   moveBtn.style.cssText='font-size:12px;padding:5px 10px;margin-left:auto';
   moveBtn.addEventListener('click',function(){showMoveModal(lid);});
   document.body.appendChild(photoInput);
-  toolbar.appendChild(tsBtn);toolbar.appendChild(addBtn);toolbar.appendChild(photoBtn);toolbar.appendChild(photoCount);toolbar.appendChild(photoMsg);
-  updatePhotoCount();
+  toolbar.appendChild(tsBtn);toolbar.appendChild(addBtn);
 
   var notesWrap=div();notesWrap.style.cssText='border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:8px;overflow:hidden';
-  notesWrap.appendChild(entryList);notesWrap.appendChild(toolbar);notesWrap.appendChild(photoStrip);notesWrap.appendChild(scratch);
+  notesWrap.appendChild(entryList);notesWrap.appendChild(toolbar);notesWrap.appendChild(scratch);
   moveBtn.style.cssText='font-size:11px;padding:3px 8px;background:none;border:none;color:var(--color-text-secondary,#999);cursor:pointer;text-decoration:underline;display:block;margin-top:4px;text-align:right;width:100%';
   moveBtn.textContent='Move notes to another log...';
 
@@ -1631,6 +1648,35 @@ function buildLogDOM(lid,projData){
 
 
   var rvCard=div('card');rvCard.innerHTML='<div class="card-title">Review entries</div><p style="font-size:13px;color:var(--color-text-secondary,#666);margin-bottom:1rem">Review each entry below. All notes have been kept by default — discard any that are not relevant to the final report. Edit text directly if adjustments are needed.</p>';
+
+  // Photo button for review stage
+  var rvPhotoInput=document.createElement('input');rvPhotoInput.type='file';rvPhotoInput.accept='image/*';rvPhotoInput.style.cssText='display:none;position:absolute;left:-9999px';
+  document.body.appendChild(rvPhotoInput);
+  var rvPhotoBtn=btn('📷 Add Photo','btn-sm');
+  rvPhotoBtn.style.cssText='margin-bottom:10px';
+  rvPhotoBtn.addEventListener('click',function(){rvPhotoInput.click();});
+  rvPhotoInput.addEventListener('change',function(e){
+    var file=e.target.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(ev){
+      var img=new Image();
+      img.onload=function(){
+        var maxW=800,maxH=1200,scale=Math.min(1,maxW/img.width,maxH/img.height);
+        var canvas=document.createElement('canvas');
+        canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+        canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        var dataUrl=canvas.toDataURL('image/jpeg',0.75);
+        var isPortrait=(canvas.height>canvas.width);
+        // Show caption/link modal then inject into reviewItems
+        showReviewPhotoModal(lid,dataUrl,isPortrait);
+      };
+      img.src=ev.target.result;
+    };
+    reader.readAsDataURL(file);
+    rvPhotoInput.value='';
+  });
+  rvCard.appendChild(rvPhotoBtn);
+
   var rvList=div();rvList.id='l'+lid+'-review-list';rvCard.appendChild(rvList);s2.appendChild(rvCard);
 
 
@@ -1671,6 +1717,42 @@ function buildLogDOM(lid,projData){
 }
 
 /* ── photo link modal ── */
+function showReviewPhotoModal(lid,dataUrl,isPortrait){
+  var ov=div('modal-bg'),box=div('modal-box');box.style.maxWidth='480px';
+  var title=div('modal-title');title.textContent='📷 Add photo to report';box.appendChild(title);
+  var thumb=document.createElement('img');thumb.src=dataUrl;
+  thumb.style.cssText='width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:1rem;border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3))';
+  box.appendChild(thumb);
+  var capFg=div('fg');capFg.appendChild(lbl('Caption (optional)'));
+  var capInp=inp('','Describe this photo');capFg.appendChild(capInp);box.appendChild(capFg);
+  var linkFg=div('fg');linkFg.style.marginTop='10px';
+  linkFg.appendChild(lbl('Link to a specific note entry'));
+  var sel=document.createElement('select');sel.style.cssText='width:100%;margin-top:4px';
+  var noneOpt=document.createElement('option');noneOpt.value='';noneOpt.textContent='— no specific entry —';sel.appendChild(noneOpt);
+  (logs[lid].reviewItems||[]).forEach(function(item){
+    if(item.type==='photo'||!item.keep)return;
+    var o=document.createElement('option');o.value=item.text;
+    o.textContent=item.text.length>70?item.text.slice(0,70)+'…':item.text;
+    sel.appendChild(o);
+  });
+  linkFg.appendChild(sel);box.appendChild(linkFg);
+  var bar=div('action-bar');bar.style.marginTop='1.25rem';
+  var cancel=btn('Cancel');cancel.addEventListener('click',function(){ov.remove();});
+  var save=btn('Add photo','btn-primary');
+  save.addEventListener('click',function(){
+    var caption=capInp.value.trim();
+    var linkedEntry=sel.value||null;
+    var photoItem={type:'photo',id:uid(),dataUrl:dataUrl,caption:caption,linkedEntry:linkedEntry,portrait:!!isPortrait,keep:true,section:'photo',text:'[Photo '+(caption||'no caption')+']',original:''};
+    if(!logs[lid].reviewItems)logs[lid].reviewItems=[];
+    logs[lid].reviewItems.push(photoItem);
+    ov.remove();
+    renderReview(lid);
+  });
+  bar.appendChild(cancel);bar.appendChild(save);box.appendChild(bar);ov.appendChild(box);
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+  document.body.appendChild(ov);setTimeout(function(){capInp.focus();},100);
+}
+
 function showPhotoLinkModal(lid,dataUrl,isPortrait){
   var ov=div('modal-bg'),box=div('modal-box');box.style.maxWidth='480px';
   var title=div('modal-title');title.textContent='📷 Link photo to an entry';box.appendChild(title);
@@ -1845,6 +1927,7 @@ async function init(){
   wakeBtn.addEventListener('click',async function(){if(wakeLock){wakeLock.release();}else{await requestWake();}});
   requestWake();
   document.getElementById('import-input').addEventListener('change',function(e){importBackup(e.target.files[0]);e.target.value='';});
+  document.getElementById('restore-btn').addEventListener('click',function(){document.getElementById('import-input').click();});
   // Green tint on filled fields
   function markFilled(e){
     var el=e.target;
