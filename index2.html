@@ -133,6 +133,7 @@ textarea{resize:vertical;line-height:1.5}
 .modal-title{font-size:16px;font-weight:700;color:var(--atlas-primary-darker);margin-bottom:1rem;padding-bottom:8px;border-bottom:2px solid var(--atlas-bg-subtle)}
 .dark{--atlas-primary:#5a9aaa;--atlas-primary-dark:#4a8494;--atlas-primary-darker:#2a5a6a;--atlas-bg:#141e22;--atlas-bg-card:#1e2c32;--atlas-bg-subtle:#243238;--atlas-text:#dce8ec;--atlas-text-secondary:#8ab0bc;--atlas-border:rgba(90,154,170,0.2);--atlas-border-strong:rgba(90,154,170,0.35)}
 .dark input,.dark select,.dark textarea{color:#dce8ec;background:#1e2c32;border-color:rgba(90,154,170,0.35)}
+.dark .util-btn{background:var(--atlas-bg-card);color:var(--atlas-text-secondary);border-color:var(--atlas-border)}
 .dark input.has-value,.dark select.has-value,.dark textarea.has-value{background:#1a2e22;border-color:#4a9060}
 .dark .entry-row{background:#1e2c32}
 .dark .ri.kept{background:#1a2e22;border-color:#4a9060}
@@ -182,7 +183,7 @@ textarea{resize:vertical;line-height:1.5}
 <div style="margin-top:2rem;padding:0.75rem 1rem;display:flex;gap:8px;justify-content:flex-end;align-items:center;border-top:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));flex-wrap:wrap">
   <span id="storage-warn" style="display:none;font-size:11px;color:#A32D2D;font-weight:600;cursor:default" title="">⚠ Storage nearly full</span>
   <div style="flex:1"></div>
-  <button class="util-btn" id="dark-btn" title="Toggle dark mode">🌙 Dark mode</button>
+  <button class="util-btn" id="dark-btn" title="Toggle dark mode" style="min-width:120px;justify-content:center"><span id="dark-btn-icon">🌙</span> <span id="dark-btn-label">Dark mode</span></button>
   <button class="util-btn" id="wake-btn" title="Keep screen awake" style="opacity:0.5">👁 Stay awake</button>
   <button class="util-btn" id="export-btn" style="font-size:12px;padding:5px 10px;opacity:0.6">⬇ Backup</button>
   <button class="util-btn" id="restore-btn" style="font-size:12px;padding:5px 10px;opacity:0.6">⬆ Restore</button>
@@ -1040,13 +1041,16 @@ function buildLogDOM(lid,projData){
     _swipeStartTime=Date.now();_swipeLocked=false;
   },{passive:true});
   pane.addEventListener('touchmove',function(e){
-    if(_swipeLocked)return;
     var t=e.touches[0];
     var dx=t.clientX-_swipeStartX;
     var dy=t.clientY-_swipeStartY;
     // Lock to vertical scroll if moving more vertically
-    if(Math.abs(dy)>Math.abs(dx)){_swipeLocked=true;}
-  },{passive:true});
+    if(Math.abs(dy)>Math.abs(dx)){_swipeLocked=true;return;}
+    if(_swipeLocked)return;
+    // Prevent browser overscroll when at first or last stage
+    var cur=getCurrentStage(lid);
+    if((dx>0&&cur===1)||(dx<0&&cur===5)){e.preventDefault();}
+  },{passive:false});
   pane.addEventListener('touchend',function(e){
     if(_swipeLocked)return;
     var t=e.changedTouches[0];
@@ -1699,8 +1703,16 @@ async function init(){
   document.getElementById('safety-tab').addEventListener('click',function(){switchToSafety();});
   document.getElementById('export-btn').addEventListener('click',exportBackup);
   var darkBtn=document.getElementById('dark-btn');
-  if(localStorage.getItem('atlas-dark')==='1'){document.body.classList.add('dark');darkBtn.textContent='☀️';}
-  darkBtn.addEventListener('click',function(){var on=document.body.classList.toggle('dark');localStorage.setItem('atlas-dark',on?'1':'0');darkBtn.textContent=on?'☀️':'🌙';});
+  var darkIcon=document.getElementById('dark-btn-icon');
+  var darkLabel=document.getElementById('dark-btn-label');
+  function setDarkMode(on){
+    document.body.classList.toggle('dark',on);
+    if(darkIcon)darkIcon.textContent=on?'☀️':'🌙';
+    if(darkLabel)darkLabel.textContent=on?'Light mode':'Dark mode';
+    if(darkLabel)darkLabel.style.color='';
+  }
+  if(localStorage.getItem('atlas-dark')==='1'){setDarkMode(true);}
+  darkBtn.addEventListener('click',function(){var on=document.body.classList.toggle('dark');localStorage.setItem('atlas-dark',on?'1':'0');setDarkMode(on);});
   var wakeLock=null,wakeBtn=document.getElementById('wake-btn');
   function setWakeBtnOff(){wakeBtn.style.cssText='padding:7px 12px;border:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));border-radius:8px;background:var(--color-background-primary,#fff);cursor:pointer;font-size:13px;color:var(--color-text-secondary,#666);font-family:inherit;line-height:1.4;white-space:nowrap;display:inline-flex;align-items:center;opacity:0.5';wakeBtn.title='Keep screen awake (tap to enable)';}
   function setWakeBtnOn(){wakeBtn.style.cssText='padding:7px 12px;border:1.5px solid #3B6D11;border-radius:8px;background:#EAF3DE;cursor:pointer;font-size:13px;color:#3B6D11;font-family:inherit;line-height:1.4;white-space:nowrap;display:inline-flex;align-items:center;font-weight:600';wakeBtn.title='Screen staying awake (tap to release)';}
