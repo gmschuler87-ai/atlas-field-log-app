@@ -720,9 +720,9 @@ function deg2compass(d){return['N','NE','E','SE','S','SW','W','NW'][Math.round(d
 /* ── review ── */
 function parseEntryTime(text){
   // Extract leading time like "0730 - " or "0730: " or just "0730"
-  var m=text.match(/^(\d{3,4})(?:\s*[-:]\s*)/);
+  var m=text.match(/^(\d{3,4})(?:\s*[-:\s])/);
   if(m){var t=m[1];if(t.length===3)t='0'+t;return parseInt(t,10);}
-  return -1; // no time — sort to end
+  return -1; // no time
 }
 function goReview(lid){
   var notes=fv(lid,'scratchpad').trim();
@@ -730,15 +730,40 @@ function goReview(lid){
   document.getElementById('l'+lid+'-review-list').innerHTML='';
   var lines=notes.split('\n').map(function(l){return l.trim();}).filter(Boolean);
   var items=lines.map(function(line){return{text:line,original:line,section:'activities',keep:true};});
-  // Auto-sort by time, preserve relative order for untimed entries
-  items.sort(function(a,b){
-    var ta=parseEntryTime(a.text),tb=parseEntryTime(b.text);
-    if(ta===-1&&tb===-1)return 0;
-    if(ta===-1)return 1;
-    if(tb===-1)return -1;
-    return ta-tb;
+
+  // Group untimed lines with the timed entry above them
+  // Each group: {time, entries:[]} where entries preserves original order
+  var groups=[];
+  var currentGroup=null;
+  items.forEach(function(item){
+    var t=parseEntryTime(item.text);
+    if(t!==-1){
+      // New timed entry starts a new group
+      currentGroup={time:t,entries:[item]};
+      groups.push(currentGroup);
+    } else {
+      // Untimed — attach to current group or create a pre-group at top
+      if(!currentGroup){
+        currentGroup={time:-1,entries:[item]};
+        groups.push(currentGroup);
+      } else {
+        currentGroup.entries.push(item);
+      }
+    }
   });
-  logs[lid].reviewItems=items;
+
+  // Sort groups by time only (untimed pre-groups stay at top)
+  groups.sort(function(a,b){
+    if(a.time===-1&&b.time===-1)return 0;
+    if(a.time===-1)return -1; // untimed preamble stays at top
+    if(b.time===-1)return 1;
+    return a.time-b.time;
+  });
+
+  // Flatten back to items array preserving intra-group order
+  var sorted=[];
+  groups.forEach(function(g){g.entries.forEach(function(e){sorted.push(e);});});
+  logs[lid].reviewItems=sorted;
   renderReview(lid);
 }
 function renderReview(lid){
@@ -1283,37 +1308,40 @@ function buildLogDOM(lid,projData){
     textInp.addEventListener('input',function(){this.style.height='auto';this.style.height=this.scrollHeight+'px';syncScratchpad();});
     var delBtn=el('button','entry-del');delBtn.textContent='✕';delBtn.title='Delete entry';delBtn.type='button';
     var _delPending=false,_delCancel=null;
-    delBtn.addEventListener('click',function(e){
-      e.stopPropagation();
-      if(!_delPending){
-        // First tap — arm it
-        _delPending=true;
-        delBtn.textContent='Sure?';
-        delBtn.style.cssText='flex-shrink:0;padding:6px 10px;font-size:12px;font-weight:700;color:#fff;background:#c0392b;border:none;border-radius:6px;cursor:pointer;margin-left:auto';
-        _delCancel=setTimeout(function(){
+    function doDelete(){
+      clearTimeout(_delCancel);_delPending=false;
+      if(entryList.querySelectorAll('.entry-row').length===1){
+        textInp.value='';timeInp.value='';syncScratchpad();
+        delBtn.textContent='✕';delBtn.style.cssText='';
+      }else{
+        row.remove();syncScratchpad();
+      }
+    }
+    function armDelete(){
+      _delPending=true;
+      delBtn.textContent='Sure?';
+      delBtn.style.cssText='flex-shrink:0;padding:6px 10px;font-size:12px;font-weight:700;color:#fff;background:#c0392b;border:none;border-radius:6px;cursor:pointer;margin-left:auto';
+      _delCancel=setTimeout(function(){
+        _delPending=false;
+        delBtn.textContent='✕';delBtn.style.cssText='';
+      },2500);
+      // Cancel if user taps something other than this button
+      setTimeout(function(){
+        var cancelOnBlur=function(e){
+          if(e.target===delBtn)return; // ignore taps on the button itself
           _delPending=false;
           delBtn.textContent='✕';delBtn.style.cssText='';
-        },2500);
-        // Cancel if they tap anywhere else
-        var cancelOnBlur=function(){
-          if(_delPending){_delPending=false;delBtn.textContent='✕';delBtn.style.cssText='';clearTimeout(_delCancel);}
+          clearTimeout(_delCancel);
           document.removeEventListener('touchstart',cancelOnBlur,true);
           document.removeEventListener('mousedown',cancelOnBlur,true);
         };
-        setTimeout(function(){
-          document.addEventListener('touchstart',cancelOnBlur,true);
-          document.addEventListener('mousedown',cancelOnBlur,true);
-        },50);
-      } else {
-        // Second tap — confirm delete
-        clearTimeout(_delCancel);_delPending=false;
-        if(entryList.querySelectorAll('.entry-row').length===1){
-          textInp.value='';timeInp.value='';syncScratchpad();
-          delBtn.textContent='✕';delBtn.style.cssText='';
-        }else{
-          row.remove();syncScratchpad();
-        }
-      }
+        document.addEventListener('touchstart',cancelOnBlur,true);
+        document.addEventListener('mousedown',cancelOnBlur,true);
+      },50);
+    }
+    delBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(_delPending){doDelete();}else{armDelete();}
     });
     row.addEventListener('dragstart',function(e){e.dataTransfer.effectAllowed='move';row.style.opacity='0.4';entryList._dragging=row;});
     row.addEventListener('dragend',function(){row.style.opacity='';entryList._dragging=null;entryList.querySelectorAll('.entry-row').forEach(function(r){r.classList.remove('drag-over');});syncScratchpad();});
