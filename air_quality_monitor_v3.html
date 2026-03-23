@@ -234,7 +234,7 @@ body.dark .lib-item{border-color:#1c3347;}
       </div></div>
       <div class="form-row">
         <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="pidDateTime" onchange="saveData()"></div>
-        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="pidReading" onchange="saveData()" placeholder="e.g. 98.5 ppm"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="pidReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="e.g. 98.5 ppm"></div>
       </div>
     </div>
     <div class="instrument-block">
@@ -249,7 +249,7 @@ body.dark .lib-item{border-color:#1c3347;}
       </div></div>
       <div class="form-row">
         <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="dustDateTime" onchange="saveData()"></div>
-        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="dustReading" onchange="saveData()" placeholder="e.g. 0.001 mg/m³"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="dustReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="e.g. 0.001 mg/m³"></div>
       </div>
     </div>
     <div class="instrument-block">
@@ -264,7 +264,7 @@ body.dark .lib-item{border-color:#1c3347;}
       </div></div>
       <div class="form-row">
         <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="soundDateTime" onchange="saveData()"></div>
-        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="soundReading" onchange="saveData()" placeholder="e.g. 72 dB"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="soundReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="e.g. 72 dB"></div>
       </div>
     </div>
     <div class="instrument-block" id="extraInstBlock">
@@ -282,7 +282,7 @@ body.dark .lib-item{border-color:#1c3347;}
         </div></div>
         <div class="form-row">
           <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="extraDateTime" onchange="saveData()"></div>
-          <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="extraReading" onchange="saveData()" placeholder="Reading + units"></div>
+          <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="extraReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="Reading + units"></div>
         </div>
       </div>
     </div>
@@ -399,6 +399,7 @@ const TAB_NAMES = ['info','instruments','readings','checklists','library'];
 function switchTab(name, btn) {
   // Hide welcome if showing
   const ws=document.getElementById('welcome-screen');if(ws)ws.style.display='none';
+  document.querySelector('.app-header').style.display='flex';
   document.querySelector('.tab-bar').style.display='flex';
   document.querySelector('.bottom-bar').style.display='flex';
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -431,7 +432,7 @@ function showSafety(){
 function showHome(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  const st=document.getElementById('safety-tab');if(st){st.style.color='#dc2626';st.style.background='';st.style.borderBottomColor='transparent';}
+  document.querySelector('.app-header').style.display='none';
   document.querySelector('.tab-bar').style.display='none';
   document.querySelector('.bottom-bar').style.display='none';
   const ws=document.getElementById('welcome-screen');
@@ -773,16 +774,16 @@ function renderRounds() {
           </select></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.1" value="${rd.voc}" onchange="updateReading(${round.id},${rd.id},'voc',this.value)" placeholder="0.0" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
-          <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" value="${rd.dust}" onchange="updateReading(${round.id},${rd.id},'dust',this.value)" placeholder="0.000" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
+          <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-dust" value="${rd.voc}" onchange="updateReading(${round.id},${rd.id},'voc',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
+          <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" inputmode="decimal" enterkeyhint="next" data-next="input-noise" value="${rd.dust}" onchange="updateReading(${round.id},${rd.id},'dust',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Visible Dust?</label><select class="input-visdust" onchange="updateReading(${round.id},${rd.id},'visibleDust',this.value)" style="${missingVis?missingStyle:''}"><option value="">--</option><option value="No" ${rd.visibleDust==='No'?'selected':''}>No</option><option value="Yes" ${rd.visibleDust==='Yes'?'selected':''}>Yes</option></select></div>
-          <div class="form-group"><label>Noise (dB)</label><input class="input-noise" type="number" step="0.1" value="${rd.noise}" onchange="updateReading(${round.id},${rd.id},'noise',this.value)" placeholder="0.0" style="${missingNoise?missingStyle:''}"></div>
+          <div class="form-group"><label>Visible Dust?</label><select class="input-visdust" onchange="updateReading(${round.id},${rd.id},'visibleDust',this.value);if(this.value)advanceToNext(this);" data-next="input-noise" style="${missingVis?missingStyle:''}"><option value="">--</option><option value="No" ${rd.visibleDust==='No'?'selected':''}>No</option><option value="Yes" ${rd.visibleDust==='Yes'?'selected':''}>Yes</option></select></div>
+          <div class="form-group"><label>Noise (dB)</label><input class="input-noise" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-comments" value="${rd.noise}" onchange="updateReading(${round.id},${rd.id},'noise',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${missingNoise?missingStyle:''}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Odors</label><select class="input-odors" onchange="updateReading(${round.id},${rd.id},'odors',this.value)" style="${missingOdors?missingStyle:''}"><option value="">--</option><option value="N" ${rd.odors==='N'?'selected':''}>N</option><option value="Y" ${rd.odors==='Y'?'selected':''}>Y</option></select></div>
-          <div class="form-group"><label>Comments</label><input type="text" value="${rd.comments||''}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" placeholder="Notes..."></div>
+          <div class="form-group"><label>Odors</label><select class="input-odors" onchange="updateReading(${round.id},${rd.id},'odors',this.value);if(this.value)advanceToNext(this);" data-next="input-comments" style="${missingOdors?missingStyle:''}"><option value="">--</option><option value="N" ${rd.odors==='N'?'selected':''}>N</option><option value="Y" ${rd.odors==='Y'?'selected':''}>Y</option></select></div>
+          <div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" value="${rd.comments||''}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="Notes..."></div>
         </div>
       </div>`;
     }).join('');
@@ -807,7 +808,7 @@ function renderRounds() {
       <div class="round-body">
         <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--card-border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
-            <input type="text" class="round-wxzip" placeholder="ZIP" style="width:80px;padding:6px 8px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;background:var(--input-bg);font-family:inherit" value="${round.wxZip||''}">
+            <input type="text" class="round-wxzip" placeholder="ZIP" inputmode="numeric" enterkeyhint="search" style="width:72px;padding:6px 8px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;background:var(--input-bg);font-family:inherit" value="${round.wxZip||''}" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchWeatherForRound(${round.id});}">
             <button class="btn btn-sm btn-outline" onclick="fetchWeatherForRound(${round.id})" style="white-space:nowrap">🌤 Get Weather</button>
             <button class="btn btn-sm btn-outline" onclick="fetchWeatherGPSForRound(${round.id})" style="white-space:nowrap">📍 GPS</button>
             <span class="round-wx-status" style="font-size:11px;color:var(--text-dim);flex:1">${round.wxStatus||''}</span>
@@ -851,62 +852,48 @@ function resumeLibraryItem(idx) {
   const item = library[idx];
   if(!item || !item.data) { showToast('No data in this report'); return; }
 
-  // Check for active session first
+  // Save current session as draft first (never lose data)
   const hasSession = rounds.some(r=>r.readings.length>0) ||
     (document.getElementById('wellId').value||'').trim() !== '' ||
     (document.getElementById('employees').value||'').trim() !== '';
 
-  function doResume() {
-    const d = item.data;
-    const si = d.si || {};
-
-    // Restore form fields
-    ['wellId','projectNum','phase','siteDate','employees','siteMPs',
-     'pidModel','pidDateTime','pidReading','dustModel','dustDateTime','dustReading',
-     'soundModel','soundDateTime','soundReading','extraModel','extraDateTime','extraReading'
-    ].forEach(function(id){
-      const el = document.getElementById(id);
-      if(el && si[id] !== undefined) el.value = si[id];
-    });
-
-    // Restore rounds
-    rounds = d.rounds ? JSON.parse(JSON.stringify(d.rounds)) : [];
-    roundCounter = rounds.length ? Math.max.apply(null, rounds.map(r=>r.id)) : 0;
-
-    // Restore checklists
-    if(d.chk) window._pendingChecklists = d.chk;
-
-    // Re-render everything
-    renderRounds();
-    renderAllPresetDropdowns();
-    if(window._pendingChecklists) restoreChecklists();
-
-    // Save as active session
-    saveData();
-    showToast('Session resumed');
-    switchTab('readings');
+  if(hasSession){
+    const data=collectFormData();const si=data.si;
+    const totalReadings=rounds.reduce(function(n,r){return n+r.readings.length;},0);
+    let dateStr=si.siteDate;
+    if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=(d.getMonth()+1)+'/'+(d.getDate())+'/'+(d.getFullYear());}
+    const draftEntry={
+      title:'[Draft] '+(si.wellId||'Untitled')+' — '+(dateStr||new Date().toLocaleDateString()),
+      date:dateStr||new Date().toLocaleDateString(),
+      readingCount:totalReadings,
+      data:data,
+      savedAt:new Date().toISOString()
+    };
+    library.unshift(draftEntry);
+    saveLibrary();
+    renderLibrary();
+    showToast('Current session saved as draft');
   }
 
-  if(hasSession) {
-    // Use two-tap confirm pattern via a modal instead of confirm()
-    const modal = document.createElement('div');
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
-    modal.innerHTML = `<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:340px">
-      <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">Resume this report?</div>
-      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">This will replace your current active session. Your current session will be lost unless you generate a PDF first.</p>
-      <div style="display:flex;gap:8px">
-        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
-        <button onclick="this.closest('[style*=fixed]').remove();doResume()" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Resume</button>
-      </div>
-    </div>`;
-    // doResume needs to be accessible from onclick
-    modal._doResume = doResume;
-    modal.querySelector('button:last-child').onclick = function(){modal.remove(); doResume();};
-    modal.addEventListener('click', function(e){if(e.target===modal)modal.remove();});
-    document.body.appendChild(modal);
-  } else {
-    doResume();
-  }
+  // Load the selected report
+  const d = item.data;
+  const si = d.si || {};
+  ['wellId','projectNum','phase','siteDate','employees','siteMPs',
+   'pidModel','pidDateTime','pidReading','dustModel','dustDateTime','dustReading',
+   'soundModel','soundDateTime','soundReading','extraModel','extraDateTime','extraReading'
+  ].forEach(function(id){
+    const el = document.getElementById(id);
+    if(el && si[id] !== undefined) el.value = si[id];
+  });
+  rounds = d.rounds ? JSON.parse(JSON.stringify(d.rounds)) : [];
+  roundCounter = rounds.length ? Math.max.apply(null, rounds.map(r=>r.id)) : 0;
+  if(d.chk) window._pendingChecklists = d.chk;
+  renderRounds();
+  renderAllPresetDropdowns();
+  if(window._pendingChecklists) restoreChecklists();
+  saveData();
+  showToast('Session resumed');
+  switchTab('readings');
 }
 
 function deleteLibraryItem(idx) {
@@ -1448,48 +1435,65 @@ function buildSafetyPanel(){
 // ===== WELCOME SCREEN =====
 function buildWelcomeScreen(){
   const ws=document.getElementById('welcome-screen');
-  // Always rebuild so session status stays current
   ws.innerHTML='';
+  ws.style.cssText='display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;background:var(--atlas-dark);padding:0;gap:0;text-align:center;overflow-y:auto';
 
-  // Title
-  const t=document.createElement('div');
-  t.style.cssText='font-size:24px;font-weight:800;color:var(--atlas-dark);margin-bottom:4px;letter-spacing:-0.3px';
-  t.textContent='Air Quality Monitor';ws.appendChild(t);
-  const s=document.createElement('div');
-  s.style.cssText='font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:24px;letter-spacing:.3px;text-transform:uppercase';
-  s.textContent='Atlas Technical Consultants';ws.appendChild(s);
+  // ── Hero section ──
+  const hero=document.createElement('div');
+  hero.style.cssText='width:100%;background:var(--atlas-dark);padding:56px 24px 40px;display:flex;flex-direction:column;align-items:center;flex-shrink:0';
 
-  // Session status card — show if active session exists
-  const hasSession = rounds.some(r=>r.readings.length>0) ||
-    document.getElementById('wellId').value.trim() ||
-    document.getElementById('employees').value.trim();
+  const logoImg=document.createElement('img');
+  logoImg.src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTQxLjE2IDEyMS44OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogIzQxNzQ4ZDsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDE1LjAxLDQyLjQxYzkuMDMtLjUzLDE4LjEtMS4wMSwyNy4yMS0xLjQ0di0xNS4yNGgzNy42NFYxLjY5aC0xMDIuNDl2MjQuMDRoMzcuNjR2MTYuNjhaIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNTQ5LjUzLDEuNjloLTI3LjIxdjM2Ljc1YzkuMDUtLjE1LDE4LjEyLS4yNSwyNy4yMS0uMzFWMS42OVoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yOTcuMjUsNjAuNjFjLTIuMDQuMjMtNC4wNy40Ni02LjA5LjY5LTEuNjQuMTktMy4yNi4zOC00Ljg4LjU3LTEuNjMuMTktMy4yNy4zOC00Ljg4LjU3LTkuNjUsMS4xNi0xOS4wMywyLjM2LTI4LjIsMy41OS0xLjY2LjIyLTMuMzIuNDQtNC45Ni42Ny0xLjY3LjIzLTMuMzIuNDYtNC45Ny42OUM4Mi45MSw4OS43NCwwLDEyMS44OCwwLDEyMS44OGMwLDAsODcuMzMtMjEuMjEsMjM1LjU5LTM3LjE4LDEuNjMtLjE4LDMuMjYtLjM1LDQuODktLjUyLDEuNjMtLjE4LDMuMjYtLjM1LDQuODktLjUyaC4wNnMtMTYuMjksMzYuNTMtMTYuMjksMzYuNTNoMjcuNzVsMTctMzkuMzVjMTAuMTQtLjk2LDIwLjUyLTEuODgsMzEuMTMtMi43N2wtNy40My0xNy41Yy0uMTIuMDItLjIzLjAzLS4zNS4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkxOC41OSw3MS40OGMtMS42LS4yNC0zLjIxLS40OC00LjgyLS43Mi0xLjctLjI1LTMuMzktLjUxLTUuMS0uNzYtMjQuNTgtMy41OS01MS4wMy02Ljk4LTc5LjI5LTEwLjAyLTIuMjYtLjI0LTQuNTItLjQ5LTYuODItLjczLTEuOTEtLjItMy44NS0uMzktNS43Ny0uNTktMTguMzQtMS44Ny0zNy40Mi0zLjU4LTU3LjIyLTUuMS0xLjYxLS4xMy0zLjItLjI1LTQuODItLjM3LTEuNTktLjEyLTMuMjEtLjIzLTQuODItLjM1LTkuMTYtLjY2LTE4LjQ4LTEuMjgtMjcuOTUtMS44Ni0xLjU4LS4xLTMuMTYtLjE5LTQuNzUtLjI5LS43Mi0uMDQtMS40NS0uMDktMi4xNy0uMTNsLTguMjksMjAuMDFoMy4zM2M2LjgyLjMxLDEzLjU2LjY0LDIwLjI2Ljk4bDIxLjA0LDQ4LjYyaDI4LjQ1bC0yMS00Ny4wM3MuMDgsMCwuMTIsMGMxLjYuMSwzLjE5LjIsNC43OS4zLDEuNi4xLDMuMi4yLDQuNzkuMywxOS40MSwxLjIzLDM4LjIzLDIuNiw1Ni40MSw0LjA5LDMuOTcuMzIsNy45LjY1LDExLjgxLjk4LDguMjguNzEsMTYuNDIsMS40MywyNC40MiwyLjE4LDUuNy41MywxMS4zMywxLjA3LDE2Ljg4LDEuNjIsMi4xMS4yMSw0LjIuNDIsNi4yOC42My41MywxLjIuOCwyLjU2LjgsNC4wOHYuMzRjMCwxLjQyLS4yNywyLjcxLS43OCwzLjg4LS43NiwxLjcxLTIuMDUsMy4xNi0zLjksNC4zMy0zLjEyLDEuOTgtNy41MSwyLjk2LTEzLjE3LDIuOTYtNy4wNywwLTEzLjU4LTEuMjktMTkuNTMtMy44OS00LjgyLTIuMS05LjU0LTQuODEtMTQuMTctOC4xLTEuMDgtLjc3LTIuMTYtMS41Ni0zLjI0LTIuNGwtMS43MywxLjk4LTE0LjM1LDE2LjQ3YzcuNDIsNi40NCwxNS42NiwxMS4yLDI0Ljc0LDE0LjMsOS4wNywzLjEsMTguMzIsNC42NSwyNy43NCw0LjY1LDYuNzIsMCwxMi44My0uODIsMTguMzUtMi40NSw1LjUyLTEuNjQsMTAuMjctNC4wMSwxNC4yNC03LjExLDMuOTgtMy4xLDcuMDgtNi45NCw5LjMtMTEuNTEuOTgtMi4wMiwxLjc0LTQuMTcsMi4yOS02LjQ1LjMyLTEuMzEuNTYtMi42Ni43My00LjA2LjE3LTEuMzMuMjYtMi43MS4yOS00LjEyLDEuNDMuMTYsMi44Ni4zMiw0LjI4LjQ3LDEuNDMuMTYsMi44Ni4zMiw0LjI4LjQ4LDEzOC4wNSwxNS42MSwyMjAuNjIsMzQuNzQsMjIwLjYyLDM0Ljc0LDAsMC03Ny4zNi0yOC40MS0yMjIuNTYtNTAuNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTgyMi4xMSw1MS4wMWMxNC4zOCwxLjQ5LDI4LjIzLDMuMDcsNDEuNTUsNC43LDEyLjY4LDEuNTUsMjQuODgsMy4xNywzNi41OCw0LjgxLTMuMDYtMi4yNi02LjY1LTQuMjUtMTAuODMtNS45My00LjkxLTEuOTgtMTAuNDgtMy43NS0xNi43NC01LjM0LTUuMzItMS4zNS05LjcyLTIuNTQtMTMuMi0zLjU2LTMuNDktMS4wMS02LjIzLTIuMDktOC4yNC0zLjIxLTIuMDEtMS4xMi0zLjQtMi4zOS00LjE2LTMuODEtLjUzLS45OC0uODctMi4wOS0xLjAzLTMuMzEtLjA0LS4yNi0uMDYtLjUyLS4wOC0uNzktLjAxLS4xMy0uMDItLjI2LS4wMi0uMzktLjAyLS4yOS0uMDMtLjU3LS4wMy0uODQsMC0yLjkzLDEuMzItNS4zOSwzLjk3LTcuMzYsMi42NS0xLjk4LDYuNjMtMi45NiwxMS45My0yLjk2czEwLjYsMS4wNCwxNS45LDMuMTNjNS4zLDIuMDksMTAuNzIsNC45NCwxNi4yNiw4LjU1bDE0LjEzLTE5LjY0Yy02LjM2LTQuODUtMTMuMzQtOC41OC0yMC45NC0xMS4xNy03LjYtMi41OS0xNS45My0zLjg5LTI1LTMuODktNi4zNiwwLTEyLjE4Ljg1LTE3LjQ2LDIuNTQtNS4yOCwxLjctOS44Myw0LjEyLTEzLjYzLDcuMjgtMy44MSwzLjE2LTYuNzYsNi45Mi04Ljg3LDExLjI2cy0zLjE1LDkuMjItMy4xNSwxNC42NHYuMzRjMCw1Ljg3Ljk3LDEwLjc4LDIuOTIsMTQuNzMuMDQuMDguMDkuMTUuMTMuMjMiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik03MTMuOTQsMzIuMTZsMy43LDguNjUuNzUsMS43NnYuMDJjOS40My41NiwxOC42OSwxLjE2LDI3LjgsMS44MUw3MjYuODQuODRoLTI1LjA5bC0yMC44Myw0Ny45OGMtLjE2LDAtLjMxLS4wMi0uNDctLjAyLTEuNTEtLjA3LTMuMDYtLjEzLTQuNTgtLjE5LTEuNTItLjA3LTMuMDUtLjEzLTQuNTgtLjE5LTMzLjctMS4zNi02OS4wNi0yLjEzLTEwNi4xLTIuMTMtMi4zOCwwLTQuNzEuMDItNy4wOC4wMi0xLjQzLDAtMi44Ni4wMS00LjI5LjAyLTEuNDMsMC0yLjg3LDAtNC4yOS4wMi05LjE5LjA2LTE4LjI1LjE2LTI3LjIxLjMxLTEuNDMuMDItMi44Ni4wNC00LjI5LjA3LTEuNDIuMDMtMi44Ny4wNS00LjI5LjA4LTIxLjY0LjQyLTQyLjYzLDEuMDktNjIuOTUsMS45OS0xLjQzLjA3LTIuODUuMTMtNC4yOS4yLTEuNDMuMDctMi44Ni4xNC00LjI5LjIxLTkuMjEuNDQtMTguMjguOTItMjcuMjEsMS40NC0xLjQzLjA5LTIuODYuMTctNC4yOS4yNi0xLjQyLjA5LTIuODYuMTctNC4yOS4yNi0yMi42OSwxLjQxLTQ0LjQ0LDMuMTEtNjUuMjgsNS4wMS0xLjQ5LjE0LTIuOTkuMjctNC40OC40MS0xLjQ5LjE0LTIuOTkuMjgtNC40Ny40Mi0uMDMsMC0uMDcsMC0uMS4wMUwzMDcuMjUuODRoLTI1LjA5bC0yNS4wMyw1Ni4zN2M5LjI2LTEuMjIsMTguNi0yLjM5LDI4LjAxLTMuNDlsOS4yMi0yMS41NiwxMy4xOSwzMC45Nyw2LjA0LDE0LjIzcy4wMiwwLC4wMywwbDE4LjIsNDIuODNoMjguNDVsLTE5LjcyLTQ0Ljg4YzEuNDMtLjEsMi44Ny0uMjEsNC4zMS0uMzEsMS41LS4xMSwzLjAxLS4yMSw0LjUyLS4zMSwxOC40Mi0xLjI3LDM3LjQ1LTIuNDEsNTcuMDUtMy40LDEuNDMtLjA3LDIuODYtLjE0LDQuMjktLjIxLDEuNDMtLjA3LDIuODYtLjE0LDQuMjktLjIxdjQ5LjMyaDI3LjIxdi01MC41YzEuNDItLjA2LDIuODYtLjExLDQuMjktLjE2LDEuNDMtLjA2LDIuODUtLjExLDQuMjktLjE2LDIwLjQ0LS43NCw0MS40My0xLjI5LDYyLjk1LTEuNjQsMS40My0uMDIsMi44NS0uMDUsNC4yOS0uMDcsMS40Mi0uMDIsMi44Ni0uMDQsNC4yOS0uMDZ2NTIuNTloODguODh2LTIzLjUzaC02MS42N3YtMjkuMzFjMS40MiwwLDIuODYtLjAxLDQuMjktLjAyLDEuNDMsMCwyLjg1LS4wMSw0LjI5LS4wMiwyLjM1LDAsNC43MSwwLDcuMDgsMCwzMy40LDAsNjUuOC41Myw5Ny4wNiwxLjQ4LDEuNTMuMDUsMy4wNy4wOSw0LjYuMTQsMS41My4wNSwzLjA2LjEsNC41OS4xNS4wOCwwLC4xNi4wMS4yMy4wMWwtMjIuOTQsNTEuMWgyNy43NGwxOS4yNi00NC4yOCw2Ljc1LTE2LjI3LDExLjQ2LTI3LjQ4WiIvPgo8L3N2Zz4=';
+  logoImg.style.cssText='width:220px;max-width:70%;height:auto;object-fit:contain;margin-bottom:20px;filter:brightness(0) invert(1)';
+  logoImg.alt='Atlas';
+  hero.appendChild(logoImg);
+
+  const appTitle=document.createElement('div');
+  appTitle.style.cssText='font-size:22px;font-weight:800;color:#fff;letter-spacing:-0.3px;line-height:1.2;margin-bottom:6px';
+  appTitle.textContent='Air Quality Monitoring Log';
+  hero.appendChild(appTitle);
+
+  const appSub=document.createElement('div');
+  appSub.style.cssText='font-size:13px;color:rgba(255,255,255,0.55);font-weight:500;letter-spacing:.5px;text-transform:uppercase';
+  appSub.textContent='Atlas Technical Consultants';
+  hero.appendChild(appSub);
+  ws.appendChild(hero);
+
+  // ── Content area ──
+  const body=document.createElement('div');
+  body.style.cssText='width:100%;background:var(--bg);border-radius:24px 24px 0 0;flex:1;padding:28px 20px 40px;display:flex;flex-direction:column;align-items:center;gap:0;margin-top:-2px';
+
+  // Session card if active
+  const hasSession=rounds.some(r=>r.readings.length>0)||
+    (document.getElementById('wellId').value||'').trim()!==''||
+    (document.getElementById('employees').value||'').trim()!=='';
 
   if(hasSession){
     const totalReadings=rounds.reduce(function(n,r){return n+r.readings.length;},0);
-    const loc=document.getElementById('wellId').value.trim();
+    const loc=(document.getElementById('wellId').value||'').trim();
     const sessionCard=document.createElement('div');
-    sessionCard.style.cssText='background:var(--card);border:2px solid var(--atlas-primary);border-radius:12px;padding:16px 18px;width:100%;max-width:320px;margin-bottom:14px;text-align:left;box-shadow:0 2px 12px rgba(58,107,130,.15)';
-    sessionCard.innerHTML='<div style="font-weight:700;font-size:13px;color:var(--atlas-primary);margin-bottom:6px">📋 Session in progress</div>'
-      +(loc?'<div style="font-size:13px;color:var(--text);margin-bottom:2px"><b>Location:</b> '+loc+'</div>':'')
+    sessionCard.style.cssText='background:var(--card);border:2px solid var(--atlas-primary);border-radius:14px;padding:16px 18px;width:100%;max-width:360px;margin-bottom:16px;text-align:left;box-shadow:0 4px 16px rgba(58,107,130,.15)';
+    sessionCard.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--atlas-primary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Session in progress</div>'
+      +(loc?'<div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:3px">'+loc+'</div>':'')
       +'<div style="font-size:13px;color:var(--text-dim)">'+rounds.length+' round'+(rounds.length!==1?'s':'')+' · '+totalReadings+' reading'+(totalReadings!==1?'s':'')+'</div>';
-    ws.appendChild(sessionCard);
+    body.appendChild(sessionCard);
 
     const continueBtn=document.createElement('button');
-    continueBtn.textContent='▶ Continue Session';
-    continueBtn.style.cssText='padding:0 32px;height:52px;background:var(--atlas-primary);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;width:100%;max-width:320px;box-shadow:0 4px 14px rgba(58,107,130,.35)';
+    continueBtn.textContent='▶  Continue Session';
+    continueBtn.style.cssText='height:54px;width:100%;max-width:360px;background:var(--atlas-primary);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px;box-shadow:0 4px 16px rgba(58,107,130,.3);letter-spacing:.1px';
     continueBtn.onclick=function(){switchTab('readings');};
-    ws.appendChild(continueBtn);
+    body.appendChild(continueBtn);
   }
 
-  // New log button
+  // Primary button
   const startBtn=document.createElement('button');
-  startBtn.textContent=hasSession?'+ Start New Log (clears current)':'▶ Start New Log';
-  startBtn.style.cssText='padding:0 32px;height:'+(hasSession?'44px':'52px')+';background:'+(hasSession?'transparent':'var(--atlas-primary)')+';color:'+(hasSession?'var(--atlas-primary)':'#fff')+';border:2px solid var(--atlas-primary);border-radius:10px;font-size:'+(hasSession?'14px':'16px')+';font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;width:100%;max-width:320px'+(hasSession?'':';box-shadow:0 4px 14px rgba(58,107,130,.35)')+'';
+  startBtn.textContent=hasSession?'+ New Log':'▶  Start New Log';
+  startBtn.style.cssText='height:'+(hasSession?'46px':'54px')+';width:100%;max-width:360px;background:'+(hasSession?'transparent':'var(--atlas-primary)')+';color:'+(hasSession?'var(--atlas-primary)':'#fff')+';border:2px solid var(--atlas-primary);border-radius:12px;font-size:'+(hasSession?'15px':'16px')+';font-weight:800;cursor:pointer;font-family:inherit;margin-bottom:10px'+(hasSession?'':';box-shadow:0 4px 16px rgba(58,107,130,.3)')+';letter-spacing:.1px';
   startBtn.onclick=function(){
     if(hasSession){
       const modal=document.createElement('div');
       modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
-      modal.innerHTML='<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:320px"><div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">Start fresh?</div><p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">This will clear the current session. Any unsaved data will be lost.</p><div style="display:flex;gap:8px"><button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button><button id="confirmNewBtn" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--danger);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Clear & Start</button></div></div>';
+      modal.innerHTML='<div style="background:var(--card);border-radius:14px;padding:22px;width:100%;max-width:320px"><div style="font-size:16px;font-weight:800;margin-bottom:8px;color:var(--text)">Start fresh?</div><p style="font-size:14px;color:var(--text-dim);margin-bottom:18px;line-height:1.5">Your current session will be cleared. Saved reports in the Library are kept.</p><div style="display:flex;gap:10px"><button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex:1;height:44px;border:1.5px solid var(--input-border);border-radius:8px;background:none;cursor:pointer;font-size:14px;font-weight:700;color:var(--text-dim);font-family:inherit">Cancel</button><button id="confirmNewBtn" style="flex:1;height:44px;border:none;border-radius:8px;background:var(--danger);color:#fff;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit">Clear & Start</button></div></div>';
       modal.querySelector('#confirmNewBtn').onclick=function(){modal.remove();clearAll();switchTab('info');};
       modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
       document.body.appendChild(modal);
@@ -1497,20 +1501,35 @@ function buildWelcomeScreen(){
     }
     switchTab('info');
   };
-  ws.appendChild(startBtn);
+  body.appendChild(startBtn);
 
-  // Library button
+  // Library
   const libBtn=document.createElement('button');
-  libBtn.textContent='📁 Library';
-  libBtn.style.cssText='padding:0 20px;height:44px;background:none;border:1.5px solid var(--card-border);color:var(--text-dim);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:10px;width:100%;max-width:320px';
+  libBtn.textContent='📁  Library';
+  libBtn.style.cssText='height:46px;width:100%;max-width:360px;background:none;border:1.5px solid var(--card-border);color:var(--text-dim);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px';
   libBtn.onclick=function(){switchTab('library');};
-  ws.appendChild(libBtn);
+  body.appendChild(libBtn);
 
+  // Guide
   const guideBtn=document.createElement('button');
-  guideBtn.textContent='📖 Full Guide';
-  guideBtn.style.cssText='padding:0 20px;height:44px;background:none;border:1.5px solid var(--card-border);color:var(--text-dim);border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;max-width:320px';
+  guideBtn.textContent='📖  Full Guide';
+  guideBtn.style.cssText='height:46px;width:100%;max-width:360px;background:none;border:1.5px solid var(--card-border);color:var(--text-dim);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px';
   guideBtn.onclick=function(){showFullGuide();};
-  ws.appendChild(guideBtn);
+  body.appendChild(guideBtn);
+
+  // Divider
+  const div=document.createElement('div');
+  div.style.cssText='width:100%;max-width:360px;border-top:1px solid var(--card-border);margin-bottom:16px';
+  body.appendChild(div);
+
+  // Safety
+  const safetyBtn=document.createElement('button');
+  safetyBtn.textContent='🦺  Safety';
+  safetyBtn.style.cssText='height:46px;width:100%;max-width:360px;background:none;border:1.5px solid #fca5a5;color:#dc2626;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
+  safetyBtn.onclick=function(){showSafety();};
+  body.appendChild(safetyBtn);
+
+  ws.appendChild(body);
 }
 function showFullGuide(){
   const sections=[
@@ -1703,6 +1722,20 @@ async function toggleWakeLock(){
     if(btn){btn.textContent='👁 Screen On';btn.style.opacity='1';btn.style.background='var(--atlas-primary)';btn.style.color='#fff';}
     showToast('Screen will stay on');
   }catch(e){showToast('Could not enable: '+e.message);}
+}
+
+// ===== FIELD AUTO-ADVANCE =====
+function advanceToNext(el){
+  // Find the next input/select in the same reading-item by class
+  const card = el.closest('.reading-item');
+  if(!card) return;
+  const nextClass = el.dataset.next;
+  if(!nextClass) return;
+  const next = card.querySelector('.'+nextClass);
+  if(next){
+    next.focus();
+    if(next.select && next.type !== 'number') next.select();
+  }
 }
 
 // ===== DARK MODE =====
