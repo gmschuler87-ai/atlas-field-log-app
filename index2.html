@@ -1044,11 +1044,10 @@ function buildLogDOM(lid,projData){
     var t=e.touches[0];
     var dx=t.clientX-_swipeStartX;
     var dy=t.clientY-_swipeStartY;
-    // Lock to vertical scroll if moving more vertically
-    if(Math.abs(dy)>Math.abs(dx)*0.8){_swipeLocked=true;return;}
+    if(Math.abs(dy)>Math.abs(dx)){_swipeLocked=true;return;}
     if(_swipeLocked)return;
-    // Always prevent horizontal browser overscroll/bounce
-    e.preventDefault();
+    // Only preventDefault when swipe is clearly horizontal and meaningful
+    if(Math.abs(dx)>20){e.preventDefault();}
   },{passive:false});
   pane.addEventListener('touchend',function(e){
     if(_swipeLocked)return;
@@ -1066,7 +1065,7 @@ function buildLogDOM(lid,projData){
       target=target.parentElement;
     }
     var cur=getCurrentStage(lid);
-    if(dx<0&&cur<5){if(cur+1===4){goReview(lid);}else{goStage(lid,cur+1);}}
+    if(dx<0&&cur<5){if(cur+1===4){goReview(lid);}else if(cur+1===5){buildReport(lid);}else{goStage(lid,cur+1);}}
     else if(dx>0&&cur>1){if(cur-1===4){goStage(lid,3);}else{goStage(lid,cur-1);}}
   },{passive:true});
 
