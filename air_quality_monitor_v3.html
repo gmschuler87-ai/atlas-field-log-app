@@ -351,11 +351,19 @@ function init() {
   renderChecklist('dustProcedures', dustProcItems, 'proc');
   renderChecklist('dustMitigation', dustMitItems, 'mit');
   renderAllPresetDropdowns();
-  if(rounds.length===0) addRound();
   renderRounds();
   renderLibrary();
-  // Show home screen on first load
-  showHome();
+  // Only show home if no meaningful data in current session
+  const hasSession = rounds.some(r=>r.readings.length>0) ||
+    document.getElementById('wellId').value.trim() ||
+    document.getElementById('employees').value.trim();
+  if(hasSession){
+    switchTab('readings');
+  } else {
+    if(rounds.length===0) addRound();
+    renderRounds();
+    showHome();
+  }
 }
 
 // ===== TABS =====
@@ -974,12 +982,28 @@ function generatePDF() {
   saveLibrary();
   renderLibrary();
 
-  // Show preview modal
+  // Show preview modal then clear session
   document.getElementById('print-output').innerHTML = fullHtml;
   showToast('Saved to library');
-  showPdfPreview(fullHtml);
+  showPdfPreview(fullHtml, function(){
+    // After preview closed — end session
+    endSession();
+  });
 }
-function showPdfPreview(html){
+function endSession(){
+  localStorage.removeItem(SK);
+  rounds=[];roundCounter=0;
+  // Clear all form fields
+  document.querySelectorAll('#panel-info input:not([type="date"]),#panel-info textarea').forEach(el=>el.value='');
+  document.getElementById('siteDate').valueAsDate=new Date();
+  document.querySelectorAll('#panel-instruments input[type="text"],#panel-instruments input[type="datetime-local"]').forEach(el=>el.value='');
+  document.querySelectorAll('.checklist-btn').forEach(b=>b.className='checklist-btn');
+  document.querySelectorAll('.checklist-comment').forEach(c=>c.classList.remove('show'));
+  addRound();renderRounds();
+  showToast('Session ended — report saved to Library');
+  showHome();
+}
+function showPdfPreview(html, onClose){
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;flex-direction:column';
   const toolbar=document.createElement('div');
@@ -993,7 +1017,7 @@ function showPdfPreview(html){
   const closeBtn=document.createElement('button');
   closeBtn.textContent='✕ Close';
   closeBtn.style.cssText='padding:8px 12px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  closeBtn.onclick=function(){modal.remove();};
+  closeBtn.onclick=function(){modal.remove();if(onClose)onClose();};
   btns.appendChild(printBtn);btns.appendChild(closeBtn);
   toolbar.appendChild(btns);modal.appendChild(toolbar);
   const frame=document.createElement('iframe');
@@ -1263,7 +1287,7 @@ function buildSafetyPanel(){
 // ===== WELCOME SCREEN =====
 function buildWelcomeScreen(){
   const ws=document.getElementById('welcome-screen');
-  if(ws._built)return;ws._built=true;
+  // Always rebuild so session status stays current
   ws.innerHTML='';
 
   // Logo
@@ -1280,28 +1304,51 @@ function buildWelcomeScreen(){
   s.style.cssText='font-size:13px;color:var(--text-dim);margin-bottom:20px';
   s.textContent='Atlas Technical Consultants';ws.appendChild(s);
 
-  // Brief instructions
-  const inst=document.createElement('div');
-  inst.style.cssText='background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:16px;text-align:left;width:100%;max-width:400px;margin-bottom:16px;font-size:13px;line-height:1.8';
-  inst.innerHTML='<div style="font-weight:700;margin-bottom:8px;font-size:14px;color:var(--atlas-primary)">How to use</div>'
-    +'<div><b>1 · Site Info</b> — Location, project, employees, weather.</div>'
-    +'<div><b>2 · Instruments</b> — Record bump/cal for each instrument.</div>'
-    +'<div><b>3 · Readings</b> — Add monitoring rounds throughout the day.</div>'
-    +'<div><b>4 · Checklists</b> — Complete dust procedures &amp; mitigation.</div>'
-    +'<div><b>5 · Library</b> — Saved reports, backup &amp; settings.</div>'
-    +'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--card-border);font-size:12px;color:var(--text-dim)">🏠 Tap the Atlas logo at any time to return here.</div>';
-  ws.appendChild(inst);
+  // Session status card — show if active session exists
+  const hasSession = rounds.some(r=>r.readings.length>0) ||
+    document.getElementById('wellId').value.trim() ||
+    document.getElementById('employees').value.trim();
 
-  // Buttons
+  if(hasSession){
+    const totalReadings=rounds.reduce(function(n,r){return n+r.readings.length;},0);
+    const loc=document.getElementById('wellId').value.trim();
+    const sessionCard=document.createElement('div');
+    sessionCard.style.cssText='background:var(--card);border:2px solid var(--atlas-primary);border-radius:10px;padding:14px 16px;width:100%;max-width:400px;margin-bottom:12px;text-align:left';
+    sessionCard.innerHTML='<div style="font-weight:700;font-size:13px;color:var(--atlas-primary);margin-bottom:6px">📋 Session in progress</div>'
+      +(loc?'<div style="font-size:13px;color:var(--text);margin-bottom:2px"><b>Location:</b> '+loc+'</div>':'')
+      +'<div style="font-size:13px;color:var(--text-dim)">'+rounds.length+' round'+(rounds.length!==1?'s':'')+' · '+totalReadings+' reading'+(totalReadings!==1?'s':'')+'</div>';
+    ws.appendChild(sessionCard);
+
+    const continueBtn=document.createElement('button');
+    continueBtn.textContent='▶ Continue Session';
+    continueBtn.style.cssText='padding:14px 32px;background:var(--atlas-primary);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;width:100%;max-width:280px';
+    continueBtn.onclick=function(){switchTab('readings');};
+    ws.appendChild(continueBtn);
+  }
+
+  // New log button
   const startBtn=document.createElement('button');
-  startBtn.textContent='Start New Log';
-  startBtn.style.cssText='padding:14px 32px;background:var(--atlas-primary);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;width:100%;max-width:280px';
-  startBtn.onclick=function(){switchTab('info');};
+  startBtn.textContent=hasSession?'+ Start New Log (clears current)':'▶ Start New Log';
+  startBtn.style.cssText='padding:'+(hasSession?'10px 20px':'14px 32px')+';background:'+(hasSession?'none':'var(--atlas-primary)')+';color:'+(hasSession?'var(--atlas-primary)':'#fff')+';border:'+(hasSession?'1px solid var(--atlas-primary)':'none')+';border-radius:8px;font-size:'+(hasSession?'13px':'15px')+';font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;width:100%;max-width:280px';
+  startBtn.onclick=function(){
+    if(hasSession){
+      if(!confirm('Clear current session and start fresh?'))return;
+      clearAll();
+    }
+    switchTab('info');
+  };
   ws.appendChild(startBtn);
+
+  // Library button
+  const libBtn=document.createElement('button');
+  libBtn.textContent='📁 Library';
+  libBtn.style.cssText='padding:10px 20px;background:none;border:1px solid var(--card-border);color:var(--text-dim);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-bottom:8px;width:100%;max-width:280px';
+  libBtn.onclick=function(){switchTab('library');};
+  ws.appendChild(libBtn);
 
   const guideBtn=document.createElement('button');
   guideBtn.textContent='📖 Full Guide';
-  guideBtn.style.cssText='padding:10px 20px;background:none;border:1px solid var(--atlas-primary);color:var(--atlas-primary);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;max-width:280px';
+  guideBtn.style.cssText='padding:10px 20px;background:none;border:1px solid var(--card-border);color:var(--text-dim);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;max-width:280px';
   guideBtn.onclick=function(){showFullGuide();};
   ws.appendChild(guideBtn);
 }
