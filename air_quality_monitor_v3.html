@@ -116,7 +116,7 @@ body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
 }
 
 /* Print */
-@media print{body{background:#fff!important;font-size:8pt;}.app-header,.tab-bar,.bottom-bar,.toast,.no-print{display:none!important;}.panel{display:none!important;}#print-output{display:block!important;}@page{size:letter portrait;margin:.4in;}}
+@media print{body{background:#fff!important;font-size:8pt;}.app-header,.tab-bar,.bottom-bar,.toast,.no-print,#welcome-screen{display:none!important;}.panel{display:none!important;}#print-output{display:block!important;}@page{size:letter portrait;margin:.4in;}}
 #print-output{display:none;}
 </style>
 </head>
@@ -988,29 +988,16 @@ function endSession(){
   showHome();
 }
 function showPdfPreview(html){
-  const modal=document.createElement('div');
-  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;flex-direction:column';
-  const toolbar=document.createElement('div');
-  toolbar.style.cssText='background:var(--atlas-dark);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0';
-  toolbar.innerHTML='<span style="color:#fff;font-weight:700;font-size:14px">Report Preview</span>';
-  const btns=document.createElement('div');btns.style.cssText='display:flex;gap:8px';
-  const printBtn=document.createElement('button');
-  printBtn.textContent='🖨 Print / Save PDF';
-  printBtn.style.cssText='padding:8px 14px;background:var(--atlas-primary);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  printBtn.onclick=function(){modal.remove();setTimeout(function(){window.print();},300);};
-  const closeBtn=document.createElement('button');
-  closeBtn.textContent='✕ Close';
-  closeBtn.style.cssText='padding:8px 12px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  closeBtn.onclick=function(){modal.remove();};
-  btns.appendChild(printBtn);btns.appendChild(closeBtn);
-  toolbar.appendChild(btns);modal.appendChild(toolbar);
-  const frame=document.createElement('iframe');
-  frame.style.cssText='flex:1;border:none;background:#fff';
-  modal.appendChild(frame);
-  document.body.appendChild(modal);
-  frame.contentDocument.open();
-  frame.contentDocument.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:20px;font-family:Arial,sans-serif;}@media print{body{margin:0}}</style></head><body>'+html+'</body></html>');
-  frame.contentDocument.close();
+  // Open in new window so only the report prints, never the app
+  const w=window.open('','_blank','width=800,height=900');
+  if(!w){showToast('Allow popups to preview the report');return;}
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+  // Give it a moment to render then prompt print
+  setTimeout(function(){
+    try{w.focus();w.print();}catch(e){}
+  },600);
 }
 
 // ===== INSTRUMENTS =====
