@@ -24,7 +24,7 @@
   --atlas-border-strong:rgba(61,110,126,0.35);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Segoe UI',Arial,sans-serif;font-size:15px;color:var(--atlas-text);background:var(--atlas-bg);min-height:100vh}
+body{font-family:'Segoe UI',Arial,sans-serif;font-size:15px;color:var(--atlas-text);background:var(--atlas-bg);min-height:100vh;overscroll-behavior-x:none}
 .app{max-width:900px;margin:0 auto;padding:1rem}
 .app-header{position:sticky;top:0;z-index:100;background:var(--atlas-primary-darker);border-bottom:3px solid var(--atlas-primary);padding:0.6rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:12px;min-height:56px;box-shadow:0 2px 8px rgba(0,0,0,0.2)}
 .app-header-title{color:#fff;font-size:16px;font-weight:700;letter-spacing:0.01em;white-space:nowrap}
@@ -1045,11 +1045,10 @@ function buildLogDOM(lid,projData){
     var dx=t.clientX-_swipeStartX;
     var dy=t.clientY-_swipeStartY;
     // Lock to vertical scroll if moving more vertically
-    if(Math.abs(dy)>Math.abs(dx)){_swipeLocked=true;return;}
+    if(Math.abs(dy)>Math.abs(dx)*0.8){_swipeLocked=true;return;}
     if(_swipeLocked)return;
-    // Prevent browser overscroll when at first or last stage
-    var cur=getCurrentStage(lid);
-    if((dx>0&&cur===1)||(dx<0&&cur===5)){e.preventDefault();}
+    // Always prevent horizontal browser overscroll/bounce
+    e.preventDefault();
   },{passive:false});
   pane.addEventListener('touchend',function(e){
     if(_swipeLocked)return;
