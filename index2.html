@@ -718,12 +718,27 @@ function wxCode(c){if(c===0)return'Clear';if(c<=2)return'Partly Cloudy';if(c===3
 function deg2compass(d){return['N','NE','E','SE','S','SW','W','NW'][Math.round(d/45)%8];}
 
 /* ── review ── */
+function parseEntryTime(text){
+  // Extract leading time like "0730 - " or "0730: " or just "0730"
+  var m=text.match(/^(\d{3,4})(?:\s*[-:]\s*)/);
+  if(m){var t=m[1];if(t.length===3)t='0'+t;return parseInt(t,10);}
+  return -1; // no time — sort to end
+}
 function goReview(lid){
   var notes=fv(lid,'scratchpad').trim();
   goStage(lid,4);
   document.getElementById('l'+lid+'-review-list').innerHTML='';
   var lines=notes.split('\n').map(function(l){return l.trim();}).filter(Boolean);
-  logs[lid].reviewItems=lines.map(function(line){return{text:line,original:line,section:'activities',keep:true};});
+  var items=lines.map(function(line){return{text:line,original:line,section:'activities',keep:true};});
+  // Auto-sort by time, preserve relative order for untimed entries
+  items.sort(function(a,b){
+    var ta=parseEntryTime(a.text),tb=parseEntryTime(b.text);
+    if(ta===-1&&tb===-1)return 0;
+    if(ta===-1)return 1;
+    if(tb===-1)return -1;
+    return ta-tb;
+  });
+  logs[lid].reviewItems=items;
   renderReview(lid);
 }
 function renderReview(lid){
@@ -1699,6 +1714,20 @@ function showFullGuide(){
 /* ── init ── */
 async function init(){
   document.getElementById('hdr-date').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  // Hide sticky nav when keyboard opens on notes page (viewport shrinks)
+  if(window.visualViewport){
+    var _lastVH=window.visualViewport.height;
+    window.visualViewport.addEventListener('resize',function(){
+      var cur=window.visualViewport.height;
+      var keyboardOpen=cur<_lastVH*0.75;
+      // Only hide nav on notes page (stage 2)
+      logOrder.forEach(function(lid){
+        var cur2=getCurrentStage(lid);
+        var nav=document.querySelector('#l'+lid+'-stage-2 .page-nav-bar');
+        if(nav)nav.style.display=keyboardOpen?'none':'';
+      });
+    });
+  }
   await loadStore();await loadLogs();await loadLibrary();
   if(!logOrder.length){showWelcome();}
   else{logOrder.forEach(function(lid){buildLogDOM(lid,null);});renderTabs();switchToLog(logOrder[0]);}
