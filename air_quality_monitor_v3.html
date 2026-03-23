@@ -302,11 +302,11 @@ body.dark .lib-item{border-color:#1c3347;}
   <!-- Summary bar -->
   <div id="readingsSummary" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;overflow:hidden"></div>
   <!-- Controls row -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <span style="font-size:13px;font-weight:700;color:var(--atlas-dark);">MONITORING ROUNDS</span>
-    <div style="display:flex;gap:6px">
-      <button class="btn btn-sm btn-outline" id="readingsFullscreenBtn" onclick="toggleReadingsFullscreen()" title="Fullscreen">⛶</button>
-      <button class="btn btn-sm btn-primary" onclick="addRound()">+ New Round</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px">
+    <span style="font-size:14px;font-weight:800;color:var(--atlas-dark);letter-spacing:.2px">Monitoring Rounds</span>
+    <div style="display:flex;gap:8px;flex-shrink:0">
+      <button class="btn btn-sm btn-outline" id="readingsFullscreenBtn" onclick="toggleReadingsFullscreen()" title="Fullscreen" style="padding:0 10px;height:36px">⛶</button>
+      <button class="btn btn-sm btn-primary" onclick="addRound()" style="height:36px;font-weight:800">+ New Round</button>
     </div>
   </div>
   <div id="roundsContainer"></div>
@@ -736,15 +736,15 @@ function updateReadingStatus(rid, readId) {
 }
 function updateRoundStatus(rid) {
   const r=rounds.find(r=>r.id===rid); if(!r) return;
-  const roundEl = document.querySelector(`[data-round="${rid}"]`);
+  const roundEl=document.querySelector('[data-round="'+rid+'"]');
   if(!roundEl) return;
-  const tempInput = roundEl.querySelector('.round-temp');
-  const windDirInput = roundEl.querySelector('.round-winddir');
-  const windSpeedInput = roundEl.querySelector('.round-windspeed');
-  const ms = 'border-color:#f59e0b;background:#fffbeb';
-  if(tempInput) tempInput.style.cssText = !r.temp ? ms : '';
-  if(windDirInput) windDirInput.style.cssText = !r.windDir ? ms : '';
-  if(windSpeedInput) windSpeedInput.style.cssText = !r.windSpeed ? ms : '';
+  const ms='border-color:#f59e0b;background:#fffbeb';
+  const tempEl=roundEl.querySelector('.round-temp');
+  const dirEl=roundEl.querySelector('.round-winddir');
+  const spdEl=roundEl.querySelector('.round-windspeed');
+  if(tempEl) tempEl.style.cssText=!r.temp?ms:'';
+  if(dirEl) dirEl.style.cssText=!r.windDir?ms:'';
+  if(spdEl) spdEl.style.cssText=!r.windSpeed?ms:'';
 }
 function deleteReading(rid, readId) {
   const r=rounds.find(r=>r.id===rid); if(!r) return;
@@ -798,14 +798,17 @@ function renderRounds() {
           </div>
           <div class="form-group">
             <label>Odors?</label>
-            <div class="tap-btn-group input-odors-n" data-next="input-comments" tabindex="-1">
-              <button class="tap-btn ${rd.odors==='N'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'odors','N',${round.id},${rd.id},'input-comments')">No</button>
-              <button class="tap-btn ${rd.odors==='Y'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'odors','Y',${round.id},${rd.id},'input-comments')">Yes</button>
+            <div class="tap-btn-group input-odors-n" tabindex="-1">
+              <button class="tap-btn ${rd.odors==='N'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'odors','N',${round.id},${rd.id},null)">No</button>
+              <button class="tap-btn ${rd.odors==='Y'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'odors','Y',${round.id},${rd.id},null)">Yes</button>
             </div>
           </div>
         </div>
-        <div class="form-row full">
-          <div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" value="${rd.comments||''}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="Notes..."></div>
+        <div style="margin-top:6px">
+          ${rd.comments
+            ? `<div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" value="${rd.comments}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="font-size:14px"></div>`
+            : `<button onclick="expandComments(this,${round.id},${rd.id})" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit">+ Add comment</button>`
+          }
         </div>
       </div>`;
     }).join('');
@@ -817,14 +820,17 @@ function renderRounds() {
     const roundHasAlert = round.readings.some(rd=>{const v=parseFloat(rd.voc),d=parseFloat(rd.dust);return v>=2||d>=0.050;});
 
     return `<div class="round-card" data-round="${round.id}">
-      <div class="round-header">
-        <div class="round-header-left">
-          <span class="round-num" style="color:#fff">Round ${rounds.length - ri} <span style="font-weight:400;color:var(--text-dim);font-size:11px;">(${totalInRound} reading${totalInRound!==1?'s':''})</span>${roundHasAlert?'<span class=\"action-badge\" style=\"margin-left:8px\">⚠ ACTION</span>':''}</span>
-          <input type="time" value="${round.time}" onchange="updateRound(${round.id},'time',this.value)" style="padding:6px 8px;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:13px;font-weight:600;background:rgba(255,255,255,.15);color:#fff;font-family:inherit;min-height:36px;-webkit-appearance:none">
+      <div class="round-header" style="flex-direction:column;gap:10px;padding:12px 14px">
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
+          <span class="round-num" style="color:#fff;font-size:15px">Round ${rounds.length - ri}
+            <span style="font-weight:500;color:rgba(255,255,255,.6);font-size:12px;margin-left:6px">${totalInRound} reading${totalInRound!==1?'s':''}</span>
+            ${roundHasAlert?'<span class=\"action-badge\" style=\"margin-left:6px\">⚠ ACTION</span>':''}
+          </span>
+          <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:0 12px;height:34px;font-size:13px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff">Delete</button>
         </div>
-        <div style="display:flex;gap:6px;">
-          <button class="btn btn-sm btn-outline" onclick="addReadingToRound(${round.id})">+ Reading</button>
-          <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:4px 10px;font-size:14px;">×</button>
+        <div style="display:flex;align-items:center;gap:8px;width:100%">
+          <input type="time" value="${round.time}" onchange="updateRound(${round.id},'time',this.value)" style="padding:6px 8px;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:13px;font-weight:600;background:rgba(255,255,255,.15);color:#fff;font-family:inherit;min-height:36px;-webkit-appearance:none;flex-shrink:0">
+          <button class="btn btn-primary" onclick="addReadingToRound(${round.id})" style="flex:1;height:38px;font-size:14px;font-weight:800;background:rgba(255,255,255,.95);color:var(--atlas-dark);border:none">+ Add Reading</button>
         </div>
       </div>
       <div class="round-body">
@@ -1382,6 +1388,8 @@ function applyWeatherToRound(rid,wd,location,roundEl,statusEl){
   const spdEl=roundEl.querySelector('.round-windspeed');if(spdEl)spdEl.value=windSpd;
   const condEl=roundEl.querySelector('.round-conditions');if(condEl)condEl.value=conditions;
   if(statusEl){statusEl.textContent=r.wxStatus;statusEl.style.color=hi>=95?'#dc2626':'var(--text-dim)';}
+  // Clear amber on weather fields now that they're filled
+  updateRoundStatus(rid);
 }
 
 // fetchWeatherGPS and fetchWeatherZip removed - weather is now per-round
@@ -1744,6 +1752,16 @@ async function toggleWakeLock(){
     if(btn){btn.textContent='👁 Screen On';btn.style.opacity='1';btn.style.background='var(--atlas-primary)';btn.style.color='#fff';}
     showToast('Screen will stay on');
   }catch(e){showToast('Could not enable: '+e.message);}
+}
+
+// ===== EXPAND COMMENTS =====
+function expandComments(btn, rid, readId){
+  const container = btn.parentElement;
+  container.innerHTML = '<div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" placeholder="Notes..." style="font-size:14px"></div>';
+  const inp = container.querySelector('input');
+  inp.onchange = function(){updateReading(rid, readId, 'comments', this.value);};
+  inp.onkeydown = function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}};
+  inp.focus();
 }
 
 // ===== TAP FIELD (visible dust / odors) =====
