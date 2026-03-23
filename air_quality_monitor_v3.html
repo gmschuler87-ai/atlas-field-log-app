@@ -111,6 +111,12 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--atlas-dark);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:700;opacity:0;transition:.25s;z-index:200;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.2);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
+/* ── MP TAP GRID ── */
+.mp-tap-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.mp-tap-btn{padding:0 12px;height:38px;border:1.5px solid var(--input-border);border-radius:8px;background:var(--input-bg);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.1s;}
+.mp-tap-active{background:var(--atlas-primary);border-color:var(--atlas-primary);color:#fff;}
+body.dark .mp-tap-btn{background:var(--input-bg);border-color:var(--input-border);color:var(--text);}
+
 /* ── TAP BUTTONS (visible dust / odors) ── */
 .tap-btn-group{display:flex;gap:8px;height:var(--touch);}
 .tap-btn{flex:1;height:var(--touch);border-radius:10px;border:2px solid var(--input-border);font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;transition:.1s;background:var(--input-bg);color:var(--text-dim);}
@@ -196,7 +202,16 @@ body.dark .lib-item{border-color:#1c3347;}
           <textarea id="siteMPs" onchange="saveSiteMPs()" placeholder="e.g. MP-1, MP-2, Upwind, Downwind, Property Line N" style="flex:1;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;font-family:inherit;min-height:52px;resize:vertical;background:var(--input-bg)"></textarea>
           <button class="btn btn-sm btn-outline" onclick="saveMPPresetFromSite()" style="white-space:nowrap;align-self:flex-start">Save preset</button>
         </div>
-        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Comma-separated. Leave blank to use MP-1 through MP-10.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px">
+          <div style="font-size:11px;color:var(--text-dim)">Comma-separated. Blank = MP-1 through MP-10.</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            <span style="font-size:11px;font-weight:700;color:var(--text-dim)">MP style:</span>
+            <div style="display:flex;border:1.5px solid var(--atlas-primary);border-radius:8px;overflow:hidden">
+              <button id="mpStyleTap" onclick="setMPStyle('tap')" style="padding:5px 10px;font-size:11px;font-weight:700;font-family:inherit;border:none;cursor:pointer;background:var(--atlas-primary);color:#fff;transition:.15s">Buttons</button>
+              <button id="mpStyleDrop" onclick="setMPStyle('drop')" style="padding:5px 10px;font-size:11px;font-weight:700;font-family:inherit;border:none;cursor:pointer;background:transparent;color:var(--atlas-primary);transition:.15s">Dropdown</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="form-row">
@@ -394,6 +409,7 @@ function init() {
   renderChecklist('dustProcedures', dustProcItems, 'proc');
   renderChecklist('dustMitigation', dustMitItems, 'mit');
   renderAllPresetDropdowns();
+  initMPStyleToggle();
   renderRounds();
   renderLibrary();
   // Go to readings if active session, otherwise home screen
@@ -557,6 +573,7 @@ function saveData() {
     siteDate:document.getElementById('siteDate').value,
     employees:document.getElementById('employees').value,
     siteMPs:(document.getElementById('siteMPs')||{}).value||'',
+    mpStyle:window.mpStyle||'tap',
 
     pidModel:document.getElementById('pidModel').value,
     pidDateTime:document.getElementById('pidDateTime').value,pidReading:document.getElementById('pidReading').value,
@@ -582,6 +599,7 @@ function loadData() {
     });
     if(d.rounds) rounds=d.rounds;
     if(d.roundCounter) roundCounter=d.roundCounter;
+    if(d.mpStyle){window.mpStyle=d.mpStyle;localStorage.setItem('atlas_aq_mp_style',d.mpStyle);}
     if(d.checklists) window._pendingChecklists=d.checklists;
   } catch(e){}
 }
@@ -682,8 +700,14 @@ function addReadingToRound(rid) {
     if(!firstReading) return;
     firstReading.scrollIntoView({behavior:'smooth', block:'center'});
     setTimeout(function(){
-      const mpSelect = firstReading.querySelector('.input-mp');
-      if(mpSelect) mpSelect.focus();
+      const mpGrid = firstReading.querySelector('.mp-tap-grid');
+      const mpSelect = firstReading.querySelector('select.input-mp');
+      if(mpGrid){
+        const firstBtn = mpGrid.querySelector('.mp-tap-btn');
+        if(firstBtn) firstBtn.focus();
+      } else if(mpSelect){
+        mpSelect.focus();
+      }
     }, 400);
   }, 80);
 }
@@ -795,9 +819,12 @@ function renderRounds() {
           <button class="reading-delete" onclick="confirmDelete(this,function(){deleteReading(${round.id},${rd.id});})" title="Delete reading">×</button>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Monitor Point</label><select class="input-mp" onchange="updateReading(${round.id},${rd.id},'monitorPoint',this.value);advanceToNext(this);" data-next="input-voc">
-            ${getSiteMPs().map(mp=>`<option value="${mp}" ${rd.monitorPoint===mp?'selected':''}>${mp}</option>`).join('')}
-          </select></div>
+          <div class="form-group"><label>Monitor Point</label>
+            ${useMPButtons()
+              ? `<div class="mp-tap-grid input-mp" data-next="input-voc">${getSiteMPs().map(mp=>`<button class="mp-tap-btn${rd.monitorPoint===mp?' mp-tap-active':''}" onclick="selectMPTap(this,'${mp}',${round.id},${rd.id})">${mp}</button>`).join('')}</div>`
+              : `<select class="input-mp" onchange="updateReading(${round.id},${rd.id},'monitorPoint',this.value);advanceToNext(this);" data-next="input-voc">${getSiteMPs().map(mp=>`<option value="${mp}" ${rd.monitorPoint===mp?'selected':''}>${mp}</option>`).join('')}</select>`
+            }
+          </div>
           <div class="form-group"><label>Time</label><input type="time" value="${rd.time}" onchange="updateReading(${round.id},${rd.id},'time',this.value)"></div>
         </div>
         <div class="form-row">
@@ -1644,12 +1671,16 @@ function confirmDelete(btn, onConfirm){
 }
 
 // ===== MONITORING POINTS =====
+function useMPButtons(){
+  if(window.mpStyle === 'drop') return false;
+  return getSiteMPs().length <= 8;
+}
 function getSiteMPs(){
   const el=document.getElementById('siteMPs');
   const val=el?el.value.trim():'';
-  if(!val)return['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8','MP-9','MP-10'];
+  if(!val)return['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8'];
   const mps=val.split(',').map(s=>s.trim()).filter(Boolean);
-  return mps.length?mps:['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8','MP-9','MP-10'];
+  return mps.length?mps:['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8'];
 }
 function saveSiteMPs(){
   saveData();
@@ -1678,11 +1709,11 @@ function updateReadingsSummary(){
     });
   });
   const items=[];
-  items.push({val:totalRounds,label:'round'+(totalRounds!==1?'s':''),color:'var(--atlas-primary)'});
-  items.push({val:totalReadings,label:'reading'+(totalReadings!==1?'s':''),color:'var(--atlas-primary)'});
-  if(actionHits>0)items.push({val:'⚠',label:actionHits+' action'+(actionHits!==1?' hits':''),color:'#dc2626'});
-  else if(totalReadings>0)items.push({val:'✓',label:'clear',color:'var(--success)'});
-  if(incomplete>0)items.push({val:incomplete,label:'incomplete',color:'#d97706'});
+  items.push({val:totalRounds,label:'total round'+(totalRounds!==1?'s':''),color:'var(--atlas-primary)'});
+  items.push({val:totalReadings,label:'total reading'+(totalReadings!==1?'s':''),color:'var(--atlas-primary)'});
+  if(actionHits>0)items.push({val:'⚠',label:actionHits+' action level'+(actionHits!==1?' hits':'hit'),color:'#dc2626'});
+  else if(totalReadings>0)items.push({val:'✓',label:'no action levels',color:'var(--success)'});
+  if(incomplete>0)items.push({val:incomplete,label:'reading'+(incomplete!==1?'s':'')+' incomplete',color:'#d97706'});
   el.innerHTML=items.map(function(it,i){
     return '<div style="flex:1;text-align:center;padding:6px 4px'+(i>0?';border-left:1px solid var(--card-border)':'')+'">'
       +'<div style="font-size:18px;font-weight:800;color:'+it.color+';line-height:1">'+it.val+'</div>'
@@ -1823,6 +1854,40 @@ function advanceToNext(el){
       next.focus();
       if(next.select && next.type !== 'number') next.select();
     }
+  }
+}
+
+// ===== MP STYLE =====
+window.mpStyle = localStorage.getItem('atlas_aq_mp_style') || 'tap';
+function setMPStyle(style){
+  window.mpStyle = style;
+  localStorage.setItem('atlas_aq_mp_style', style);
+  // Update toggle button appearance
+  const tapBtn = document.getElementById('mpStyleTap');
+  const dropBtn = document.getElementById('mpStyleDrop');
+  if(tapBtn && dropBtn){
+    tapBtn.style.background = style==='tap' ? 'var(--atlas-primary)' : 'transparent';
+    tapBtn.style.color = style==='tap' ? '#fff' : 'var(--atlas-primary)';
+    dropBtn.style.background = style==='drop' ? 'var(--atlas-primary)' : 'transparent';
+    dropBtn.style.color = style==='drop' ? '#fff' : 'var(--atlas-primary)';
+  }
+  renderRounds();
+}
+function initMPStyleToggle(){
+  setMPStyle(window.mpStyle);
+}
+function selectMPTap(btn, mp, rid, readId){
+  // Update data
+  updateReading(rid, readId, 'monitorPoint', mp);
+  // Update visual state in this grid
+  const grid = btn.parentElement;
+  grid.querySelectorAll('.mp-tap-btn').forEach(function(b){b.classList.remove('mp-tap-active');});
+  btn.classList.add('mp-tap-active');
+  // Auto-advance to VOC
+  const card = btn.closest('.reading-item');
+  if(card){
+    const vocInput = card.querySelector('.input-voc');
+    if(vocInput) setTimeout(function(){vocInput.focus();}, 50);
   }
 }
 
