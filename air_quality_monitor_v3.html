@@ -1,0 +1,1545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Atlas Air Quality Monitoring Log</title>
+<style>
+:root {
+  --atlas-primary:#3a6b82; --atlas-dark:#1a3650; --atlas-light:#eef3f5;
+  --bg:#eef3f5; --card:#fff; --card-border:#c8d8e0; --text:#1a202c; --text-dim:#6b7280;
+  --input-bg:#f9fafb; --input-border:#d1d5db; --success:#059669; --warning:#d97706; --danger:#dc2626;
+  --radius:8px;
+  /* aliases so old --atlas-blue refs still work */
+  --atlas-blue:#3a6b82;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent;font-size:14px;}
+.app-header{background:var(--atlas-dark);padding:10px 14px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2);border-bottom:3px solid var(--atlas-primary);}
+.app-header h1{color:#fff;font-size:16px;font-weight:700;}
+.app-header .subtitle{color:rgba(255,255,255,.7);font-size:11px;margin-top:1px;}
+.header-logo{height:28px;filter:brightness(0) invert(1);}
+.tab-bar{display:flex;background:#fff;border-bottom:2px solid var(--card-border);position:sticky;top:54px;z-index:99;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+.tab{flex:1;padding:10px 4px;text-align:center;font-size:11px;font-weight:600;color:var(--text-dim);border:none;background:none;cursor:pointer;border-bottom:3px solid transparent;transition:.15s;}
+.tab.active{color:var(--atlas-blue);border-bottom-color:var(--atlas-blue);background:var(--atlas-light);}
+.panel{display:none;padding:12px;padding-bottom:90px;}
+.panel.active{display:block;}
+.section-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:14px;margin-bottom:12px;}
+.section-title{font-size:13px;font-weight:700;color:var(--atlas-dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--atlas-light);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;}
+.form-row.full{grid-template-columns:1fr;}
+.form-row.triple{grid-template-columns:1fr 1fr 1fr;}
+.form-group label{display:block;font-size:11px;font-weight:600;color:var(--text-dim);margin-bottom:3px;text-transform:uppercase;letter-spacing:.3px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:14px;background:var(--input-bg);color:var(--text);font-family:inherit;transition:border-color .15s;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--atlas-blue);box-shadow:0 0 0 2px rgba(26,107,138,.15);}
+.form-group textarea{resize:vertical;min-height:36px;}
+.preset-row{display:flex;gap:6px;align-items:flex-end;}
+.preset-row .form-group{flex:1;}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 16px;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit;}
+.btn-primary{background:var(--atlas-blue);color:#fff;}
+.btn-primary:hover{background:var(--atlas-dark);}
+.btn-success{background:var(--success);color:#fff;}
+.btn-danger{background:var(--danger);color:#fff;}
+.btn-outline{background:transparent;color:var(--atlas-blue);border:1.5px solid var(--atlas-blue);}
+.btn-sm{padding:6px 10px;font-size:11px;}
+.btn-block{width:100%;}
+
+/* Rounds */
+.round-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:12px;overflow:hidden;}
+.round-header{background:var(--atlas-light);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--card-border);}
+.round-header-left{display:flex;align-items:center;gap:10px;}
+.round-num{font-size:13px;font-weight:700;color:var(--atlas-dark);}
+.round-body{padding:12px 14px;}
+.round-shared{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--card-border);}
+
+.reading-item{background:var(--input-bg);border:1px solid var(--input-border);border-radius:6px;padding:10px;margin-bottom:8px;position:relative;}
+.reading-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.reading-mp{font-size:12px;font-weight:700;color:var(--atlas-blue);background:var(--atlas-light);padding:2px 8px;border-radius:10px;}
+.reading-delete{width:24px;height:24px;border:none;background:none;color:var(--danger);font-size:16px;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;}
+.reading-delete:hover{background:#fee2e2;}
+.action-badge{display:inline-block;background:var(--danger);color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px;margin-left:6px;}
+
+/* Checklists */
+.checklist-item{border-bottom:1px solid #f0f0f0;padding:10px 0;}
+.checklist-item:last-child{border-bottom:none;}
+.checklist-text{font-size:13px;color:var(--text);margin-bottom:8px;line-height:1.4;}
+.checklist-buttons{display:flex;gap:6px;margin-bottom:6px;}
+.checklist-btn{padding:6px 14px;border:1.5px solid var(--input-border);border-radius:6px;background:#fff;font-size:12px;font-weight:600;cursor:pointer;transition:.15s;color:var(--text-dim);}
+.checklist-btn.sel-na{background:#f3f4f6;border-color:#9ca3af;color:#4b5563;}
+.checklist-btn.sel-yes{background:#d1fae5;border-color:#059669;color:#059669;}
+.checklist-btn.sel-no{background:#fee2e2;border-color:#dc2626;color:#dc2626;}
+.checklist-comment{display:none;margin-top:6px;}
+.checklist-comment.show{display:block;}
+
+/* Instruments */
+.instrument-block{padding:10px 0;border-bottom:1px solid #f0f0f0;}
+.instrument-block:last-child{border-bottom:none;}
+.inst-name{font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.inst-detail{font-size:11px;color:var(--text-dim);margin-bottom:8px;line-height:1.4;}
+
+/* PDF Library */
+.lib-item{display:flex;justify-content:space-between;align-items:center;padding:10px;border-bottom:1px solid #f0f0f0;}
+.lib-item:last-child{border-bottom:none;}
+.lib-info{flex:1;}
+.lib-title{font-size:13px;font-weight:600;color:var(--text);}
+.lib-date{font-size:11px;color:var(--text-dim);}
+.lib-actions{display:flex;gap:6px;}
+
+/* Bottom bar */
+.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--card-border);padding:10px 16px;display:flex;gap:8px;z-index:100;box-shadow:0 -2px 8px rgba(0,0,0,.08);}
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%) translateY(-20px);background:var(--atlas-dark);color:#fff;padding:8px 20px;border-radius:20px;font-size:13px;font-weight:600;opacity:0;transition:.3s;z-index:200;pointer-events:none;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.action-info{font-size:12px;color:var(--text-dim);line-height:1.6;padding:6px 0;}
+.action-info strong{color:var(--warning);}
+
+/* Dark mode */
+body.dark{--bg:#0f1e27;--card:#162430;--card-border:#1e3545;--text:#d8eaf0;--text-dim:#8aacbb;--input-bg:#1a2e3a;--input-border:#2a4558;--atlas-light:#1a2e3a;}
+body.dark .tab-bar{background:#162430;border-color:#1e3545;}
+body.dark .tab.active{background:#1a2e3a;}
+body.dark .bottom-bar{background:#162430;border-color:#1e3545;}
+body.dark .section-card{background:var(--card);border-color:var(--card-border);}
+body.dark .round-card{background:var(--card);border-color:var(--card-border);}
+body.dark .round-header{background:#1a2e3a;}
+body.dark .checklist-btn{background:#1a2e3a;border-color:#2a4558;color:var(--text-dim);}
+body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
+
+@media(max-width:600px){
+  .form-row{grid-template-columns:1fr!important;}
+  .form-row.triple{grid-template-columns:1fr 1fr!important;}
+  .round-shared{grid-template-columns:1fr 1fr!important;}
+  .preset-row{flex-wrap:wrap;}
+  .preset-row input{min-width:0;flex:1 1 100%;}
+  .tab{font-size:10px;padding:8px 2px;}
+  .section-card{padding:12px 10px;}
+  .btn{font-size:12px;}
+  .bottom-bar{padding:8px 12px;}
+}
+
+/* Print */
+@media print{body{background:#fff!important;font-size:8pt;}.app-header,.tab-bar,.bottom-bar,.toast,.no-print{display:none!important;}.panel{display:none!important;}#print-output{display:block!important;}@page{size:letter portrait;margin:.4in;}}
+#print-output{display:none;}
+</style>
+</head>
+<body>
+
+<div class="app-header" onclick="showHome()" title="Home" style="cursor:pointer">
+  <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA2MTIgMzMyIj4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuOC41LCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjEgQnVpbGQgMikgIC0tPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuc3QwIHsKICAgICAgICBmaWxsOiAjZmZmZmZmOwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzEwLDE3Ny4zOWMtNy4xOCwwLTE0LjIzLjE4LTIxLjE3LjQ5LTEuMzYuMDYtMi43Mi4xMi00LjA3LjItMS4zNy4wNy0yLjczLjE1LTQuMDkuMjMtMTcuMDUsMS4wNi0zMy4zNywzLjAxLTQ4Ljk0LDUuNjQtMS40NS4yNC0yLjkuNDktNC4zNC43NC0xLjQ2LjI2LTIuOTEuNTQtNC4zNi44MS0xMTkuMjQsMjIuNDMtMTkxLjAzLDgzLjczLTE5MS4wMyw4My43MywwLDAsNzQuMjgtMzUuMTQsMTc3LjY4LTUxLjQ1LDEuNDMtLjIyLDIuODYtLjQ0LDQuMy0uNjYsMS40My0uMjIsMi44Ni0uNDMsNC4yOS0uNjNsLTEuNjcsNC4wNS0xLjY3LDQuMDMtMTguNDksNDQuNjZoNDkuMDNsMTkuNTItNTAuMzksMS40OC0zLjg1LDEuNS0zLjg2YzEuMzYtLjA5LDIuNzMtLjE3LDQuMDktLjI2LDEuMzctLjA4LDIuNzMtLjE3LDQuMDktLjI1LDExLjEyLS42MiwyMi40MS0uOTYsMzMuODYtLjk2czIzLjUxLjM2LDM0Ljk4LDEuMDJsLTEzLjQ0LTMyLjc5Yy03LjA3LS4zMi0xNC4yNS0uNS0yMS41NC0uNSIvPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00MDIuOTUsMjIwLjQ4bC0xLjgzLTQuMDhjMS40Ni4yMSwyLjkyLjQyLDQuMzcuNjQsMS40Ny4yMiwyLjkzLjQ1LDQuMzguNjcsMTAzLjYzLDE2LjI4LDE3OC4xNCw1MS41MiwxNzguMTQsNTEuNTIsMCwwLTcyLjQ2LTYxLjg2LTE5Mi43MS04NC4wNC0xLjQ4LS4yNy0yLjk1LS41NC00LjQ0LS44LTEuNDctLjI2LTIuOTQtLjUxLTQuNDItLjc1bC0xLjc5LTQtMS44Mi00LjA2LTU0LjgzLTEyMi4zaC00Mi4xOWwtNTAuNzUsMTIyLjY0YzE1LjQyLTIuNDYsMzEuNjMtNC4yOCw0OC41Ny01LjIzbDI1Ljc1LTY2LjUyLDI3LjI3LDY2LjU0LDEuNTYsMy44MiwxLjU2LDMuODEsMTMuNDgsMzIuODgsMS41OSwzLjg3LDEuNTgsMy44NSwyMC42LDUwLjI5aDQ3Ljc4bC0yMC4wNC00NC43MS0xLjgxLTQuMDRaIi8+Cjwvc3ZnPg==" style="height:44px;width:auto;flex-shrink:0;object-fit:contain" alt="Atlas">
+  <div>
+    <div style="color:#fff;font-size:16px;font-weight:700;line-height:1.2">Air Quality Monitoring Log</div>
+    <div style="color:rgba(255,255,255,0.7);font-size:11px;margin-top:1px">Atlas Technical Consultants</div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <button class="tab active" onclick="switchTab('info',this)">Site Info</button>
+  <button class="tab" onclick="switchTab('instruments',this)">Instruments</button>
+  <button class="tab" onclick="switchTab('readings',this)">Readings</button>
+  <button class="tab" onclick="switchTab('checklists',this)">Checklists</button>
+  <button class="tab" onclick="switchTab('library',this)">Library</button>
+  <button class="tab" id="safety-tab" onclick="switchTab('safety',this)" style="color:#dc2626;border-bottom-color:transparent">🦺 Safety</button>
+</div>
+
+<div class="toast" id="toast">Saved</div>
+
+<!-- ===== SITE INFO ===== -->
+<div id="panel-info" class="panel active">
+  <div class="section-card">
+    <div class="section-title">Site Information</div>
+    <div class="form-row full" style="margin-bottom:10px;">
+      <div class="form-group"><label>Location ID</label>
+        <div class="preset-row">
+          <select id="wellIdSelect" onchange="selectWellId(this.value)" style="flex:1;"><option value="">-- Select saved --</option></select>
+          <input type="text" id="wellId" onchange="saveData()" placeholder="e.g. Site A, Parcel 12, Block 3" style="flex:1;">
+          <button class="btn btn-sm btn-outline" onclick="saveWellPreset()">Save</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-row full" style="margin-bottom:10px;">
+      <div class="form-group">
+        <label>Monitoring Points</label>
+        <div style="display:flex;gap:6px;align-items:flex-start">
+          <textarea id="siteMPs" onchange="saveSiteMPs()" placeholder="e.g. MP-1, MP-2, Upwind, Downwind, Property Line N" style="flex:1;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;font-family:inherit;min-height:52px;resize:vertical;background:var(--input-bg)"></textarea>
+          <button class="btn btn-sm btn-outline" onclick="saveMPPresetFromSite()" style="white-space:nowrap;align-self:flex-start">Save preset</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-dim);margin-top:4px">Comma-separated. Leave blank to use MP-1 through MP-10.</div>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Project Number</label>
+        <div class="preset-row">
+          <select id="projectNumSelect" onchange="applyPreset('projectNum',this.value)" style="flex:1;"><option value="">-- Select --</option></select>
+          <input type="text" id="projectNum" onchange="saveData()" placeholder="Project #" style="flex:1;">
+          <button class="btn btn-sm btn-outline" onclick="savePreset('projectNum')">Save</button>
+        </div>
+      </div>
+      <div class="form-group"><label>Phase</label><input type="text" id="phase" onchange="saveData()" placeholder="e.g. Assessment, Remediation"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Date</label><input type="date" id="siteDate" onchange="saveData()"></div>
+      <div class="form-group"><label>Employee(s)</label>
+        <div class="preset-row">
+          <select id="employeeSelect" onchange="addEmployee(this.value);this.value='';" style="flex:1;"><option value="">-- Add --</option></select>
+          <button class="btn btn-sm btn-outline" onclick="promptAddEmployee()">+ New</button>
+        </div>
+        <input type="text" id="employees" onchange="saveData()" placeholder="Employee names" style="margin-top:6px;">
+      </div>
+    </div>
+  </div>
+  <div class="section-card">
+    <div class="section-title">Action Levels</div>
+    <div class="action-info">VOC = <strong>2 ppmv</strong> &nbsp;|&nbsp; Dust = <strong>0.050 mg/m³</strong> &nbsp;|&nbsp; Opacity <strong>20%</strong></div>
+  </div>
+</div>
+
+<!-- ===== INSTRUMENTS ===== -->
+<div id="panel-instruments" class="panel">
+  <div class="section-card">
+    <div class="section-title">Instruments — Bump/Cal</div>
+    <div class="instrument-block">
+      <div class="inst-name">PID — VOC Monitor</div>
+      <div class="inst-detail">e.g. MultiRAE PID. Bump test daily. Cal if not within 3% of span gas.</div>
+      <div class="form-row full"><div class="form-group"><label>Instrument Name / Model</label>
+        <div class="preset-row">
+          <select id="pidModelSelect" onchange="applyInstPreset('pid',this.value)" style="flex:1"><option value="">-- Saved --</option></select>
+          <input type="text" id="pidModel" onchange="saveData()" placeholder="e.g. MultiRAE PID" style="flex:1">
+          <button class="btn btn-sm btn-outline" onclick="saveInstPreset('pid')">Save</button>
+        </div>
+      </div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="pidDateTime" onchange="saveData()"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="pidReading" onchange="saveData()" placeholder="e.g. 98.5 ppm"></div>
+      </div>
+    </div>
+    <div class="instrument-block">
+      <div class="inst-name">Dust Monitor — PM10</div>
+      <div class="inst-detail">e.g. Aeroqual Series 500. Auto cal on start-up with white cap on. Record final reading after cal.</div>
+      <div class="form-row full"><div class="form-group"><label>Instrument Name / Model</label>
+        <div class="preset-row">
+          <select id="dustModelSelect" onchange="applyInstPreset('dust',this.value)" style="flex:1"><option value="">-- Saved --</option></select>
+          <input type="text" id="dustModel" onchange="saveData()" placeholder="e.g. Aeroqual 500" style="flex:1">
+          <button class="btn btn-sm btn-outline" onclick="saveInstPreset('dust')">Save</button>
+        </div>
+      </div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="dustDateTime" onchange="saveData()"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="dustReading" onchange="saveData()" placeholder="e.g. 0.001 mg/m³"></div>
+      </div>
+    </div>
+    <div class="instrument-block">
+      <div class="inst-name">Sound Level Monitor</div>
+      <div class="inst-detail">e.g. Triplett SLM600 or equivalent datalogger.</div>
+      <div class="form-row full"><div class="form-group"><label>Instrument Name / Model</label>
+        <div class="preset-row">
+          <select id="soundModelSelect" onchange="applyInstPreset('sound',this.value)" style="flex:1"><option value="">-- Saved --</option></select>
+          <input type="text" id="soundModel" onchange="saveData()" placeholder="e.g. Triplett SLM600" style="flex:1">
+          <button class="btn btn-sm btn-outline" onclick="saveInstPreset('sound')">Save</button>
+        </div>
+      </div></div>
+      <div class="form-row">
+        <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="soundDateTime" onchange="saveData()"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="soundReading" onchange="saveData()" placeholder="e.g. 72 dB"></div>
+      </div>
+    </div>
+    <div class="instrument-block" id="extraInstBlock">
+      <div class="inst-name" style="display:flex;justify-content:space-between;align-items:center">
+        Additional Instrument (optional)
+        <button class="btn btn-sm btn-outline" onclick="toggleExtraInst()" id="extraInstToggle">+ Add</button>
+      </div>
+      <div id="extraInstFields" style="display:none;margin-top:10px">
+        <div class="form-row full"><div class="form-group"><label>Instrument Name / Model</label>
+          <div class="preset-row">
+            <select id="extraModelSelect" onchange="applyInstPreset('extra',this.value)" style="flex:1"><option value="">-- Saved --</option></select>
+            <input type="text" id="extraModel" onchange="saveData()" placeholder="Instrument name" style="flex:1">
+            <button class="btn btn-sm btn-outline" onclick="saveInstPreset('extra')">Save</button>
+          </div>
+        </div></div>
+        <div class="form-row">
+          <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="extraDateTime" onchange="saveData()"></div>
+          <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="extraReading" onchange="saveData()" placeholder="Reading + units"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== READINGS ===== -->
+<div id="panel-readings" class="panel">
+  <!-- Summary bar -->
+  <div id="readingsSummary" style="background:var(--card);border:1px solid var(--card-border);border-radius:8px;padding:10px 14px;margin-bottom:10px;display:flex;gap:12px;align-items:center;flex-wrap:wrap"></div>
+  <!-- Controls row -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+    <span style="font-size:13px;font-weight:700;color:var(--atlas-dark);">MONITORING ROUNDS</span>
+    <div style="display:flex;gap:6px">
+      <button class="btn btn-sm btn-outline" id="readingsFullscreenBtn" onclick="toggleReadingsFullscreen()" title="Fullscreen">⛶</button>
+      <button class="btn btn-sm btn-primary" onclick="addRound()">+ New Round</button>
+    </div>
+  </div>
+  <div id="roundsContainer"></div>
+  <!-- Scroll to bottom -->
+  <button onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" style="position:sticky;bottom:70px;left:100%;display:block;margin-right:8px;width:44px;height:44px;border-radius:50%;background:var(--atlas-primary);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0.85;transform:translateX(-8px)">⬇</button>
+</div>
+
+<!-- ===== CHECKLISTS ===== -->
+<div id="panel-checklists" class="panel">
+  <div class="section-card"><div class="section-title">Dust Monitoring Procedures</div><div id="dustProcedures"></div></div>
+  <div class="section-card"><div class="section-title">Dust Mitigation Measures</div><div id="dustMitigation"></div></div>
+</div>
+
+<!-- ===== PDF LIBRARY ===== -->
+<div id="panel-library" class="panel">
+  <div class="section-card">
+    <div class="section-title">Saved Reports</div>
+    <div id="libraryList"><p style="color:var(--text-dim);font-size:13px;padding:10px 0;">No saved reports yet. Generate a PDF to save one.</p></div>
+  </div>
+  <div style="display:flex;gap:8px;padding:0 0 8px;flex-wrap:wrap">
+    <button class="btn btn-outline" style="flex:1;min-width:80px" onclick="exportData()">⬇ Backup</button>
+    <button class="btn btn-outline" style="flex:1;min-width:80px" onclick="importData()">⬆ Restore</button>
+    <button class="btn btn-outline" id="darkModeBtn" onclick="toggleDark()" style="flex:1;min-width:80px">🌙 Dark</button>
+    <button class="btn btn-outline" id="wakeBtn" onclick="toggleWakeLock()" style="flex:1;min-width:80px;opacity:0.5">👁 Stay Awake</button>
+    <button class="btn btn-danger" onclick="clearAll()" style="flex:1;min-width:80px;font-size:12px">🗑 Clear</button>
+  </div>
+  <p style="font-size:11px;color:var(--text-dim);line-height:1.5;padding-bottom:12px">Backup saves all data to a JSON file. Restore loads it back. Use this when switching devices.</p>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+</div>
+
+<div id="panel-safety" class="panel"></div>
+<div id="welcome-screen" style="display:none;padding:20px;text-align:center;min-height:80vh;display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px"></div>
+<div id="print-output"></div>
+
+<!-- ===== BOTTOM BAR ===== -->
+<div class="bottom-bar">
+  <button class="btn btn-primary btn-block" onclick="generatePDF()">📄 Generate & Save PDF</button>
+</div>
+
+<script>
+// ===== LOGO =====
+const LOGO_B64 = "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTQxLjE2IDEyMS44OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogIzQxNzQ4ZDsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDE1LjAxLDQyLjQxYzkuMDMtLjUzLDE4LjEtMS4wMSwyNy4yMS0xLjQ0di0xNS4yNGgzNy42NFYxLjY5aC0xMDIuNDl2MjQuMDRoMzcuNjR2MTYuNjhaIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNTQ5LjUzLDEuNjloLTI3LjIxdjM2Ljc1YzkuMDUtLjE1LDE4LjEyLS4yNSwyNy4yMS0uMzFWMS42OVoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yOTcuMjUsNjAuNjFjLTIuMDQuMjMtNC4wNy40Ni02LjA5LjY5LTEuNjQuMTktMy4yNi4zOC00Ljg4LjU3LTEuNjMuMTktMy4yNy4zOC00Ljg4LjU3LTkuNjUsMS4xNi0xOS4wMywyLjM2LTI4LjIsMy41OS0xLjY2LjIyLTMuMzIuNDQtNC45Ni42Ny0xLjY3LjIzLTMuMzIuNDYtNC45Ny42OUM4Mi45MSw4OS43NCwwLDEyMS44OCwwLDEyMS44OGMwLDAsODcuMzMtMjEuMjEsMjM1LjU5LTM3LjE4LDEuNjMtLjE4LDMuMjYtLjM1LDQuODktLjUyLDEuNjMtLjE4LDMuMjYtLjM1LDQuODktLjUyaC4wNnMtMTYuMjksMzYuNTMtMTYuMjksMzYuNTNoMjcuNzVsMTctMzkuMzVjMTAuMTQtLjk2LDIwLjUyLTEuODgsMzEuMTMtMi43N2wtNy40My0xNy41Yy0uMTIuMDItLjIzLjAzLS4zNS4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkxOC41OSw3MS40OGMtMS42LS4yNC0zLjIxLS40OC00LjgyLS43Mi0xLjctLjI1LTMuMzktLjUxLTUuMS0uNzYtMjQuNTgtMy41OS01MS4wMy02Ljk4LTc5LjI5LTEwLjAyLTIuMjYtLjI0LTQuNTItLjQ5LTYuODItLjczLTEuOTEtLjItMy44NS0uMzktNS43Ny0uNTktMTguMzQtMS44Ny0zNy40Mi0zLjU4LTU3LjIyLTUuMS0xLjYxLS4xMy0zLjItLjI1LTQuODItLjM3LTEuNTktLjEyLTMuMjEtLjIzLTQuODItLjM1LTkuMTYtLjY2LTE4LjQ4LTEuMjgtMjcuOTUtMS44Ni0xLjU4LS4xLTMuMTYtLjE5LTQuNzUtLjI5LS43Mi0uMDQtMS40NS0uMDktMi4xNy0uMTNsLTguMjksMjAuMDFoMy4zM2M2LjgyLjMxLDEzLjU2LjY0LDIwLjI2Ljk4bDIxLjA0LDQ4LjYyaDI4LjQ1bC0yMS00Ny4wM3MuMDgsMCwuMTIsMGMxLjYuMSwzLjE5LjIsNC43OS4zLDEuNi4xLDMuMi4yLDQuNzkuMywxOS40MSwxLjIzLDM4LjIzLDIuNiw1Ni40MSw0LjA5LDMuOTcuMzIsNy45LjY1LDExLjgxLjk4LDguMjguNzEsMTYuNDIsMS40MywyNC40MiwyLjE4LDUuNy41MywxMS4zMywxLjA3LDE2Ljg4LDEuNjIsMi4xMS4yMSw0LjIuNDIsNi4yOC42My41MywxLjIuOCwyLjU2LjgsNC4wOHYuMzRjMCwxLjQyLS4yNywyLjcxLS43OCwzLjg4LS43NiwxLjcxLTIuMDUsMy4xNi0zLjksNC4zMy0zLjEyLDEuOTgtNy41MSwyLjk2LTEzLjE3LDIuOTYtNy4wNywwLTEzLjU4LTEuMjktMTkuNTMtMy44OS00LjgyLTIuMS05LjU0LTQuODEtMTQuMTctOC4xLTEuMDgtLjc3LTIuMTYtMS41Ni0zLjI0LTIuNGwtMS43MywxLjk4LTE0LjM1LDE2LjQ3YzcuNDIsNi40NCwxNS42NiwxMS4yLDI0Ljc0LDE0LjMsOS4wNywzLjEsMTguMzIsNC42NSwyNy43NCw0LjY1LDYuNzIsMCwxMi44My0uODIsMTguMzUtMi40NSw1LjUyLTEuNjQsMTAuMjctNC4wMSwxNC4yNC03LjExLDMuOTgtMy4xLDcuMDgtNi45NCw5LjMtMTEuNTEuOTgtMi4wMiwxLjc0LTQuMTcsMi4yOS02LjQ1LjMyLTEuMzEuNTYtMi42Ni43My00LjA2LjE3LTEuMzMuMjYtMi43MS4yOS00LjEyLDEuNDMuMTYsMi44Ni4zMiw0LjI4LjQ3LDEuNDMuMTYsMi44Ni4zMiw0LjI4LjQ4LDEzOC4wNSwxNS42MSwyMjAuNjIsMzQuNzQsMjIwLjYyLDM0Ljc0LDAsMC03Ny4zNi0yOC40MS0yMjIuNTYtNTAuNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTgyMi4xMSw1MS4wMWMxNC4zOCwxLjQ5LDI4LjIzLDMuMDcsNDEuNTUsNC43LDEyLjY4LDEuNTUsMjQuODgsMy4xNywzNi41OCw0LjgxLTMuMDYtMi4yNi02LjY1LTQuMjUtMTAuODMtNS45My00LjkxLTEuOTgtMTAuNDgtMy43NS0xNi43NC01LjM0LTUuMzItMS4zNS05LjcyLTIuNTQtMTMuMi0zLjU2LTMuNDktMS4wMS02LjIzLTIuMDktOC4yNC0zLjIxLTIuMDEtMS4xMi0zLjQtMi4zOS00LjE2LTMuODEtLjUzLS45OC0uODctMi4wOS0xLjAzLTMuMzEtLjA0LS4yNi0uMDYtLjUyLS4wOC0uNzktLjAxLS4xMy0uMDItLjI2LS4wMi0uMzktLjAyLS4yOS0uMDMtLjU3LS4wMy0uODQsMC0yLjkzLDEuMzItNS4zOSwzLjk3LTcuMzYsMi42NS0xLjk4LDYuNjMtMi45NiwxMS45My0yLjk2czEwLjYsMS4wNCwxNS45LDMuMTNjNS4zLDIuMDksMTAuNzIsNC45NCwxNi4yNiw4LjU1bDE0LjEzLTE5LjY0Yy02LjM2LTQuODUtMTMuMzQtOC41OC0yMC45NC0xMS4xNy03LjYtMi41OS0xNS45My0zLjg5LTI1LTMuODktNi4zNiwwLTEyLjE4Ljg1LTE3LjQ2LDIuNTQtNS4yOCwxLjctOS44Myw0LjEyLTEzLjYzLDcuMjgtMy44MSwzLjE2LTYuNzYsNi45Mi04Ljg3LDExLjI2cy0zLjE1LDkuMjItMy4xNSwxNC42NHYuMzRjMCw1Ljg3Ljk3LDEwLjc4LDIuOTIsMTQuNzMuMDQuMDguMDkuMTUuMTMuMjMiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik03MTMuOTQsMzIuMTZsMy43LDguNjUuNzUsMS43NnYuMDJjOS40My41NiwxOC42OSwxLjE2LDI3LjgsMS44MUw3MjYuODQuODRoLTI1LjA5bC0yMC44Myw0Ny45OGMtLjE2LDAtLjMxLS4wMi0uNDctLjAyLTEuNTEtLjA3LTMuMDYtLjEzLTQuNTgtLjE5LTEuNTItLjA3LTMuMDUtLjEzLTQuNTgtLjE5LTMzLjctMS4zNi02OS4wNi0yLjEzLTEwNi4xLTIuMTMtMi4zOCwwLTQuNzEuMDItNy4wOC4wMi0xLjQzLDAtMi44Ni4wMS00LjI5LjAyLTEuNDMsMC0yLjg3LDAtNC4yOS4wMi05LjE5LjA2LTE4LjI1LjE2LTI3LjIxLjMxLTEuNDMuMDItMi44Ni4wNC00LjI5LjA3LTEuNDIuMDMtMi44Ny4wNS00LjI5LjA4LTIxLjY0LjQyLTQyLjYzLDEuMDktNjIuOTUsMS45OS0xLjQzLjA3LTIuODUuMTMtNC4yOS4yLTEuNDMuMDctMi44Ni4xNC00LjI5LjIxLTkuMjEuNDQtMTguMjguOTItMjcuMjEsMS40NC0xLjQzLjA5LTIuODYuMTctNC4yOS4yNi0xLjQyLjA5LTIuODYuMTctNC4yOS4yNi0yMi42OSwxLjQxLTQ0LjQ0LDMuMTEtNjUuMjgsNS4wMS0xLjQ5LjE0LTIuOTkuMjctNC40OC40MS0xLjQ5LjE0LTIuOTkuMjgtNC40Ny40Mi0uMDMsMC0uMDcsMC0uMS4wMUwzMDcuMjUuODRoLTI1LjA5bC0yNS4wMyw1Ni4zN2M5LjI2LTEuMjIsMTguNi0yLjM5LDI4LjAxLTMuNDlsOS4yMi0yMS41NiwxMy4xOSwzMC45Nyw2LjA0LDE0LjIzcy4wMiwwLC4wMywwbDE4LjIsNDIuODNoMjguNDVsLTE5LjcyLTQ0Ljg4YzEuNDMtLjEsMi44Ny0uMjEsNC4zMS0uMzEsMS41LS4xMSwzLjAxLS4yMSw0LjUyLS4zMSwxOC40Mi0xLjI3LDM3LjQ1LTIuNDEsNTcuMDUtMy40LDEuNDMtLjA3LDIuODYtLjE0LDQuMjktLjIxLDEuNDMtLjA3LDIuODYtLjE0LDQuMjktLjIxdjQ5LjMyaDI3LjIxdi01MC41YzEuNDItLjA2LDIuODYtLjExLDQuMjktLjE2LDEuNDMtLjA2LDIuODUtLjExLDQuMjktLjE2LDIwLjQ0LS43NCw0MS40My0xLjI5LDYyLjk1LTEuNjQsMS40My0uMDIsMi44NS0uMDUsNC4yOS0uMDcsMS40Mi0uMDIsMi44Ni0uMDQsNC4yOS0uMDZ2NTIuNTloODguODh2LTIzLjUzaC02MS42N3YtMjkuMzFjMS40MiwwLDIuODYtLjAxLDQuMjktLjAyLDEuNDMsMCwyLjg1LS4wMSw0LjI5LS4wMiwyLjM1LDAsNC43MSwwLDcuMDgsMCwzMy40LDAsNjUuOC41Myw5Ny4wNiwxLjQ4LDEuNTMuMDUsMy4wNy4wOSw0LjYuMTQsMS41My4wNSwzLjA2LjEsNC41OS4xNS4wOCwwLC4xNi4wMS4yMy4wMWwtMjIuOTQsNTEuMWgyNy43NGwxOS4yNi00NC4yOCw2Ljc1LTE2LjI3LDExLjQ2LTI3LjQ4WiIvPgo8L3N2Zz4=";
+
+// ===== STORAGE =====
+const SK = 'atlas_aq_v3';
+const SK_PRESETS = 'atlas_aq_presets_v3';
+const SK_WELLS = 'atlas_aq_wells_v3';
+const SK_LIBRARY = 'atlas_aq_library_v3';
+
+// ===== DATA =====
+const dustProcItems = [
+  'Photographing construction activities causing visible dust',
+  'Documenting air monitor placement and measurement locations',
+  'Include/Attach an Air Monitoring Field Map and upload to SharePoint. On the map mark the monitoring points where readings are collected',
+  'Checking air monitors for power (battery life). Plug in and charge battery each Night'
+];
+const dustMitItems = [
+  'Keep dirt swept up during work to prevent moist dirt from drying',
+  'Running street sweeper during day (if possible)',
+  'Cleaning trucks, excavators and other equipment prior to leaving work area',
+  'Work surfaces cleaned and buttoned-up prior to end of the day'
+];
+
+let rounds = [];
+let roundCounter = 0;
+let presets = { projectNum:[], employees:[] };
+let wellMap = {}; // wellId -> wellApi mapping
+let library = []; // saved PDF forms
+
+// ===== INIT =====
+function init() {
+  document.getElementById('siteDate').valueAsDate = new Date();
+  loadPresets();
+  loadWellMap();
+  loadLibrary();
+  loadData();
+  renderChecklist('dustProcedures', dustProcItems, 'proc');
+  renderChecklist('dustMitigation', dustMitItems, 'mit');
+  renderAllPresetDropdowns();
+  if(rounds.length===0) addRound();
+  renderRounds();
+  renderLibrary();
+  // Show home screen on first load
+  showHome();
+}
+
+// ===== TABS =====
+const TAB_NAMES = ['info','instruments','readings','checklists','library','safety'];
+function switchTab(name, btn) {
+  // Hide welcome if showing
+  const ws=document.getElementById('welcome-screen');if(ws)ws.style.display='none';
+  document.querySelector('.tab-bar').style.display='flex';
+  document.querySelector('.bottom-bar').style.display='flex';
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  // Safety panel built lazily
+  if(name==='safety')buildSafetyPanel();
+  const panel=document.getElementById('panel-'+name);
+  if(panel)panel.classList.add('active');
+  if(btn){btn.classList.add('active');}
+  else{document.querySelectorAll('.tab').forEach((t,i)=>{if(TAB_NAMES[i]===name)t.classList.add('active');});}
+  // Safety tab stays red
+  const st=document.getElementById('safety-tab');
+  if(st){st.style.color=name==='safety'?'#fff':'#dc2626';st.style.background=name==='safety'?'#dc2626':'';st.style.borderBottomColor=name==='safety'?'#dc2626':'transparent';}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function showHome(){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  const st=document.getElementById('safety-tab');if(st){st.style.color='#dc2626';st.style.background='';st.style.borderBottomColor='transparent';}
+  document.querySelector('.tab-bar').style.display='none';
+  document.querySelector('.bottom-bar').style.display='none';
+  const ws=document.getElementById('welcome-screen');
+  if(ws){ws.style.display='flex';buildWelcomeScreen();}
+}
+function getCurrentTab(){
+  const p=document.querySelector('.panel.active');
+  return p?p.id.replace('panel-',''):TAB_NAMES[0];
+}
+// Swipe between tabs
+let _swX=0,_swY=0,_swLocked=false;
+document.addEventListener('touchstart',function(e){
+  const t=e.touches[0];_swX=t.clientX;_swY=t.clientY;_swLocked=false;
+},{passive:true});
+document.addEventListener('touchmove',function(e){
+  const t=e.touches[0];
+  const dx=t.clientX-_swX,dy=t.clientY-_swY;
+  if(Math.abs(dy)>Math.abs(dx)){_swLocked=true;return;}
+  if(_swLocked)return;
+  if(Math.abs(dx)>20)e.preventDefault();
+},{passive:false});
+document.addEventListener('touchend',function(e){
+  if(_swLocked)return;
+  const t=e.changedTouches[0];
+  const dx=t.clientX-_swX,dy=t.clientY-_swY;
+  if(Math.abs(dx)<45||e.timeStamp-_swStart>500||Math.abs(dy)>Math.abs(dx)*0.8)return;
+  const cur=getCurrentTab();const idx=TAB_NAMES.indexOf(cur);
+  if(dx<0&&idx<TAB_NAMES.length-1)switchTab(TAB_NAMES[idx+1]);
+  else if(dx>0&&idx>0)switchTab(TAB_NAMES[idx-1]);
+},{passive:true});
+let _swStart=0;
+document.addEventListener('touchstart',function(e){_swStart=e.timeStamp;},{passive:true});
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t=document.getElementById('toast');t.textContent=msg||'Saved';t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),1500);
+}
+
+// ===== WELL ID / API MAPPING =====
+function loadWellMap() { try { wellMap=JSON.parse(localStorage.getItem(SK_WELLS))||{}; } catch(e){ wellMap={}; } }
+function saveWellMap() { localStorage.setItem(SK_WELLS, JSON.stringify(wellMap)); }
+function selectWellId(val) {
+  if(!val) return;
+  document.getElementById('wellId').value = val;
+  // Apply saved MP preset for this location if exists
+  if(presets.mpPresets&&presets.mpPresets[val]){
+    rounds.forEach(function(r){if(!r.customMPs||!r.customMPs.length)r.customMPs=presets.mpPresets[val];});
+    renderRounds();
+  }
+  saveData();
+}
+function saveWellPreset() {
+  const wid = document.getElementById('wellId').value.trim();
+  if(!wid) { showToast('Enter Location ID first'); return; }
+  wellMap[wid] = true; saveWellMap();
+  const sel = document.getElementById('wellIdSelect');
+  const exists = Array.from(sel.options).some(o=>o.value===wid);
+  if(!exists) { sel.add(new Option(wid, wid)); }
+  saveData();
+  showToast('Location saved');
+}
+
+// ===== PRESETS =====
+function loadPresets() { try { const s=JSON.parse(localStorage.getItem(SK_PRESETS)); if(s){presets={...presets,...s};} if(!presets.instruments)presets.instruments=[]; } catch(e){} }
+function savePresets() { localStorage.setItem(SK_PRESETS, JSON.stringify(presets)); }
+function renderAllPresetDropdowns() {
+  // Location ID dropdown
+  const ws = document.getElementById('wellIdSelect');
+  ws.innerHTML = '<option value="">-- Select saved --</option>';
+  Object.keys(wellMap).forEach(wid=>{ ws.add(new Option(wid, wid)); });
+  renderPresetSelect('projectNumSelect','projectNum');
+  renderEmployeeSelect();
+  renderInstPresetDropdowns();
+}
+function renderPresetSelect(selId, key) {
+  const sel=document.getElementById(selId); sel.innerHTML='<option value="">-- Select --</option>';
+  (presets[key]||[]).forEach(v=>{ sel.innerHTML+=`<option value="${v}">${v}</option>`; });
+}
+function renderEmployeeSelect() {
+  const sel=document.getElementById('employeeSelect'); sel.innerHTML='<option value="">-- Add --</option>';
+  (presets.employees||[]).forEach(v=>{ sel.innerHTML+=`<option value="${v}">${v}</option>`; });
+}
+function applyPreset(field,val) { if(!val) return; document.getElementById(field).value=val; saveData(); }
+function savePreset(key) {
+  const val=document.getElementById(key).value.trim(); if(!val){showToast('Enter a value first');return;}
+  if(!presets[key]) presets[key]=[]; if(presets[key].includes(val)){showToast('Already saved');return;}
+  presets[key].push(val); savePresets(); renderAllPresetDropdowns(); showToast('Preset saved');
+}
+function addEmployee(name) {
+  if(!name) return; const el=document.getElementById('employees');
+  const cur=el.value.trim();
+  if(cur&&!cur.includes(name)) el.value=cur+', '+name; else if(!cur) el.value=name;
+  saveData();
+}
+function promptAddEmployee() {
+  const name=prompt('Enter new employee name:'); if(!name||!name.trim()) return;
+  const n=name.trim(); if(!presets.employees.includes(n)){presets.employees.push(n);savePresets();renderEmployeeSelect();}
+  addEmployee(n); showToast('Employee added');
+}
+
+// ===== DATA PERSISTENCE =====
+function saveData() {
+  const data = {
+    wellId:document.getElementById('wellId').value,
+    projectNum:document.getElementById('projectNum').value,phase:document.getElementById('phase').value,
+    siteDate:document.getElementById('siteDate').value,
+    employees:document.getElementById('employees').value,
+    siteMPs:(document.getElementById('siteMPs')||{}).value||'',
+
+    pidModel:document.getElementById('pidModel').value,
+    pidDateTime:document.getElementById('pidDateTime').value,pidReading:document.getElementById('pidReading').value,
+    dustModel:document.getElementById('dustModel').value,
+    dustDateTime:document.getElementById('dustDateTime').value,dustReading:document.getElementById('dustReading').value,
+    soundModel:document.getElementById('soundModel').value,
+    soundDateTime:document.getElementById('soundDateTime').value,soundReading:document.getElementById('soundReading').value,
+    extraModel:document.getElementById('extraModel').value,
+    extraDateTime:document.getElementById('extraDateTime').value,extraReading:document.getElementById('extraReading').value,
+    rounds, roundCounter, checklists:getChecklistData()
+  };
+  localStorage.setItem(SK, JSON.stringify(data));
+  showToast();
+}
+function loadData() {
+  try {
+    const d=JSON.parse(localStorage.getItem(SK)); if(!d) return;
+    ['wellId','projectNum','phase','siteDate','employees','siteMPs',
+     'pidModel','pidDateTime','pidReading','dustModel','dustDateTime','dustReading',
+     'soundModel','soundDateTime','soundReading','extraModel','extraDateTime','extraReading'
+    ].forEach(id=>{
+      const el=document.getElementById(id); if(el&&d[id]) el.value=d[id];
+    });
+    if(d.rounds) rounds=d.rounds;
+    if(d.roundCounter) roundCounter=d.roundCounter;
+    if(d.checklists) window._pendingChecklists=d.checklists;
+  } catch(e){}
+}
+
+// ===== CHECKLISTS =====
+function getChecklistData() {
+  const items={};
+  document.querySelectorAll('.checklist-btn.sel-na,.checklist-btn.sel-yes,.checklist-btn.sel-no').forEach(btn=>{
+    const key=btn.dataset.key;
+    items[key]=btn.classList.contains('sel-na')?'N/A':btn.classList.contains('sel-yes')?'YES':'NO';
+  });
+  document.querySelectorAll('.checklist-comment-input').forEach(inp=>{ items[inp.dataset.key+'_comment']=inp.value; });
+  return items;
+}
+function renderChecklist(cid, items, prefix) {
+  document.getElementById(cid).innerHTML = items.map((text,i)=>{
+    const key=prefix+'_'+i;
+    return `<div class="checklist-item"><div class="checklist-text">${text}</div>
+      <div class="checklist-buttons">
+        <button class="checklist-btn" data-key="${key}" onclick="setChk(this,'na')">N/A</button>
+        <button class="checklist-btn" data-key="${key}" onclick="setChk(this,'yes')">YES</button>
+        <button class="checklist-btn" data-key="${key}" onclick="setChk(this,'no')">NO</button>
+      </div>
+      <div class="checklist-comment" id="comment_${key}">
+        <input type="text" class="checklist-comment-input" data-key="${key}" placeholder="Comment (required for N/A or NO)" onchange="saveData()" style="width:100%;padding:6px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;">
+      </div></div>`;
+  }).join('');
+  setTimeout(restoreChecklists, 100);
+}
+function setChk(btn,val) {
+  const key=btn.dataset.key;
+  btn.parentElement.querySelectorAll('.checklist-btn').forEach(s=>s.className='checklist-btn');
+  btn.classList.add(val==='na'?'sel-na':val==='yes'?'sel-yes':'sel-no');
+  const c=document.getElementById('comment_'+key);
+  if(val==='na'||val==='no') c.classList.add('show'); else c.classList.remove('show');
+  saveData();
+}
+function restoreChecklists() {
+  if(!window._pendingChecklists) return;
+  const d=window._pendingChecklists;
+  Object.keys(d).forEach(key=>{
+    if(key.endsWith('_comment')){
+      const inp=document.querySelector(`.checklist-comment-input[data-key="${key.replace('_comment','')}"]`);
+      if(inp) inp.value=d[key];
+    } else {
+      document.querySelectorAll(`.checklist-btn[data-key="${key}"]`).forEach(btn=>{
+        if((d[key]==='N/A'&&btn.textContent==='N/A')||(d[key]==='YES'&&btn.textContent==='YES')||(d[key]==='NO'&&btn.textContent==='NO')) btn.click();
+      });
+    }
+  });
+}
+
+// ===== ROUNDS & READINGS =====
+function addRound() {
+  roundCounter++;
+  const now = new Date();
+  const rh=String(now.getHours()).padStart(2,'0'),rm=String(now.getMinutes()).padStart(2,'0');
+  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', customMPs:[], readings:[] });
+  addReadingToRound(rounds[0].id);
+  renderRounds(); saveData();
+}
+function deleteRound(rid) {
+  rounds = rounds.filter(r=>r.id!==rid);
+  renderRounds(); saveData();
+}
+function addReadingToRound(rid) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const now = new Date();
+  const h=String(now.getHours()).padStart(2,'0'),m=String(now.getMinutes()).padStart(2,'0');
+  const activeMPs = getSiteMPs();
+  const defaultMP = activeMPs[0]||'MP-1';
+  r.readings.unshift({
+    id: Date.now(), time:h+':'+m, monitorPoint:defaultMP,
+    voc:'', dust:'', visibleDust:'', noise:'', odors:'', comments:''
+  });
+  renderRounds(); saveData();
+}
+function updateReading(rid, readId, field, val) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const rd=r.readings.find(x=>x.id===readId); if(rd){rd[field]=val; saveData();}
+  updateReadingStatus(rid, readId);
+  updateReadingsSummary();
+}
+function updateRound(rid, field, val) {
+  const r=rounds.find(r=>r.id===rid); if(r){r[field]=val; saveData();}
+  // Only update round-level indicators
+  updateRoundStatus(rid);
+}
+function updateReadingStatus(rid, readId) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
+  const card = document.querySelector(`[data-reading="${readId}"]`);
+  if(!card) return;
+  const missingVoc = !rd.voc && rd.voc!=='0';
+  const missingDust = !rd.dust && rd.dust!=='0';
+  const missingVis = !rd.visibleDust;
+  const missingNoise = !rd.noise && rd.noise!=='0';
+  const missingOdors = !rd.odors;
+  const hasMissing = missingVoc||missingDust||missingVis||missingNoise||missingOdors;
+  const vocNum=parseFloat(rd.voc); const dustNum=parseFloat(rd.dust);
+  const vocAlert=vocNum>=2; const dustAlert=dustNum>=0.050;
+  const ms = 'border-color:#f59e0b;background:#fffbeb';
+  const dangerMs = 'border-color:var(--danger);background:#fee2e2';
+  const clearMs = '';
+
+  // Update card border
+  if(vocAlert||dustAlert) {
+    card.style.borderColor = 'var(--danger)';
+    card.style.borderLeft = '';
+  } else if(hasMissing) {
+    card.style.borderColor = '';
+    card.style.borderLeft = '3px solid #f59e0b';
+  } else {
+    card.style.borderColor = '';
+    card.style.borderLeft = '';
+  }
+
+  // Update individual input styles
+  const inputs = card.querySelectorAll('input,select');
+  // Map field indices to missing states: VOC=idx2, Dust=idx3, VisDust=idx4, Noise=idx5, Odors=idx6
+  const fieldMap = [
+    {cls:'input-voc', missing:missingVoc, danger:vocAlert},
+    {cls:'input-dust', missing:missingDust, danger:dustAlert},
+    {cls:'input-visdust', missing:missingVis, danger:false},
+    {cls:'input-noise', missing:missingNoise, danger:false},
+    {cls:'input-odors', missing:missingOdors, danger:false}
+  ];
+  fieldMap.forEach(f=>{
+    const el = card.querySelector('.'+f.cls);
+    if(!el) return;
+    if(f.danger) el.style.cssText = dangerMs;
+    else if(f.missing) el.style.cssText = ms;
+    else el.style.cssText = '';
+  });
+
+  // Update status label
+  const statusEl = card.querySelector('.reading-status');
+  if(statusEl) {
+    if(vocAlert||dustAlert) statusEl.innerHTML='<span class="action-badge">⚠ ACTION</span>';
+    else if(hasMissing) statusEl.innerHTML='<span style="color:#f59e0b;font-size:10px;margin-left:4px;">● incomplete</span>';
+    else statusEl.innerHTML='<span style="color:var(--success);font-size:10px;margin-left:4px;">✓</span>';
+  }
+}
+function updateRoundStatus(rid) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const roundEl = document.querySelector(`[data-round="${rid}"]`);
+  if(!roundEl) return;
+  const tempInput = roundEl.querySelector('.round-temp');
+  const windDirInput = roundEl.querySelector('.round-winddir');
+  const windSpeedInput = roundEl.querySelector('.round-windspeed');
+  const ms = 'border-color:#f59e0b;background:#fffbeb';
+  if(tempInput) tempInput.style.cssText = !r.temp ? ms : '';
+  if(windDirInput) windDirInput.style.cssText = !r.windDir ? ms : '';
+  if(windSpeedInput) windSpeedInput.style.cssText = !r.windSpeed ? ms : '';
+}
+function deleteReading(rid, readId) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  r.readings = r.readings.filter(x=>x.id!==readId);
+  renderRounds(); saveData();
+}
+
+function renderRounds() {
+  const c=document.getElementById('roundsContainer');
+  c.innerHTML = rounds.map((round,ri)=>{
+    const totalInRound = round.readings.length;
+    const readingsHtml = round.readings.map((rd,rdi)=>{
+      const readingNum = totalInRound - rdi; // newest first, so count down
+      const vocNum=parseFloat(rd.voc); const dustNum=parseFloat(rd.dust);
+      const vocAlert=vocNum>=2; const dustAlert=dustNum>=0.050;
+      const alert=(vocAlert||dustAlert)?'<span class="action-badge">⚠ ACTION</span>':'';
+      // Check for missing required fields
+      const missingVoc = !rd.voc && rd.voc!=='0';
+      const missingDust = !rd.dust && rd.dust!=='0';
+      const missingVis = !rd.visibleDust;
+      const missingNoise = !rd.noise && rd.noise!=='0';
+      const missingOdors = !rd.odors;
+      const hasMissing = missingVoc||missingDust||missingVis||missingNoise||missingOdors;
+      const missingStyle = 'border-color:#f59e0b;background:#fffbeb;';
+      const cardBorder = (vocAlert||dustAlert)?'border-color:var(--danger);':hasMissing?'border-left:3px solid #f59e0b;':'';
+      return `<div class="reading-item" data-reading="${rd.id}" style="${cardBorder}">
+        <div class="reading-item-header">
+          <span class="reading-mp">#${readingNum} ${rd.monitorPoint} <span class="reading-status">${alert}${hasMissing?'<span style="color:#f59e0b;font-size:10px;margin-left:4px;">● incomplete</span>':(!alert?'<span style="color:var(--success);font-size:10px;margin-left:4px;">✓</span>':'')}</span></span>
+          <button class="reading-delete" onclick="confirmDelete(this,function(){deleteReading(${round.id},${rd.id});})" title="Delete reading">×</button>
+        </div>
+        <div class="form-row triple">
+          <div class="form-group"><label>Time</label><input type="time" value="${rd.time}" onchange="updateReading(${round.id},${rd.id},'time',this.value)"></div>
+          <div class="form-group"><label>Monitor Point</label><select onchange="updateReading(${round.id},${rd.id},'monitorPoint',this.value)">
+            ${getSiteMPs().map(mp=>`<option value="${mp}" ${rd.monitorPoint===mp?'selected':''}>${mp}</option>`).join('')}
+          </select></div>
+          <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.01" value="${rd.voc}" onchange="updateReading(${round.id},${rd.id},'voc',this.value)" placeholder="0.00" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
+        </div>
+        <div class="form-row triple">
+          <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" value="${rd.dust}" onchange="updateReading(${round.id},${rd.id},'dust',this.value)" placeholder="0.000" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
+          <div class="form-group"><label>Visible Dust?</label><select class="input-visdust" onchange="updateReading(${round.id},${rd.id},'visibleDust',this.value)" style="${missingVis?missingStyle:''}"><option value="">--</option><option value="No" ${rd.visibleDust==='No'?'selected':''}>No</option><option value="Yes" ${rd.visibleDust==='Yes'?'selected':''}>Yes</option></select></div>
+          <div class="form-group"><label>Noise (dB)</label><input class="input-noise" type="number" step="0.1" value="${rd.noise}" onchange="updateReading(${round.id},${rd.id},'noise',this.value)" placeholder="0.0" style="${missingNoise?missingStyle:''}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Odors</label><select class="input-odors" onchange="updateReading(${round.id},${rd.id},'odors',this.value)" style="${missingOdors?missingStyle:''}"><option value="">--</option><option value="N" ${rd.odors==='N'?'selected':''}>N</option><option value="Y" ${rd.odors==='Y'?'selected':''}>Y</option></select></div>
+          <div class="form-group"><label>Comments</label><input type="text" value="${rd.comments||''}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" placeholder="Notes..."></div>
+        </div>
+      </div>`;
+    }).join('');
+
+    // Round-level missing check
+    const missingTemp = !round.temp;
+    const missingWind = !round.windDir || !round.windSpeed;
+    const roundMissingStyle = 'border-color:#f59e0b;background:#fffbeb;';
+    const roundHasAlert = round.readings.some(rd=>{const v=parseFloat(rd.voc),d=parseFloat(rd.dust);return v>=2||d>=0.050;});
+
+    return `<div class="round-card" data-round="${round.id}">
+      <div class="round-header">
+        <div class="round-header-left">
+          <span class="round-num">Round ${rounds.length - ri} <span style="font-weight:400;color:var(--text-dim);font-size:11px;">(${totalInRound} reading${totalInRound!==1?'s':''})</span>${roundHasAlert?'<span class=\"action-badge\" style=\"margin-left:8px\">⚠ ACTION</span>':''}</span>
+          <input type="time" value="${round.time}" onchange="updateRound(${round.id},'time',this.value)" style="padding:4px 6px;border:1px solid var(--input-border);border-radius:4px;font-size:12px;">
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-sm btn-outline" onclick="addReadingToRound(${round.id})">+ Reading</button>
+          <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:4px 10px;font-size:14px;">×</button>
+        </div>
+      </div>
+      <div class="round-body">
+        <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--card-border)">
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
+            <input type="text" class="round-wxzip" placeholder="ZIP" style="width:80px;padding:6px 8px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;background:var(--input-bg);font-family:inherit" value="${round.wxZip||''}">
+            <button class="btn btn-sm btn-outline" onclick="fetchWeatherForRound(${round.id})" style="white-space:nowrap">🌤 Get Weather</button>
+            <button class="btn btn-sm btn-outline" onclick="fetchWeatherGPSForRound(${round.id})" style="white-space:nowrap">📍 GPS</button>
+            <span class="round-wx-status" style="font-size:11px;color:var(--text-dim);flex:1">${round.wxStatus||''}</span>
+          </div>
+          <div class="round-shared" style="grid-template-columns:1fr 1fr 1fr 1fr;">
+            <div class="form-group"><label>Temp (°F)</label><input class="round-temp" type="number" value="${round.temp||''}" onchange="updateRound(${round.id},'temp',this.value)" placeholder="72" style="${missingTemp?roundMissingStyle:''}"></div>
+            <div class="form-group"><label>Wind Dir</label><select class="round-winddir" onchange="updateRound(${round.id},'windDir',this.value)" style="${!round.windDir?roundMissingStyle:''}">
+              <option value="">--</option>${['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'].map(d=>`<option value="${d}" ${round.windDir===d?'selected':''}>${d}</option>`).join('')}
+            </select></div>
+            <div class="form-group"><label>Wind Speed (mph)</label><input class="round-windspeed" type="number" step="0.1" value="${round.windSpeed||''}" onchange="updateRound(${round.id},'windSpeed',this.value)" placeholder="5" style="${!round.windSpeed?roundMissingStyle:''}"></div>
+            <div class="form-group"><label>Conditions</label><input type="text" class="round-conditions" value="${round.conditions||''}" onchange="updateRound(${round.id},'conditions',this.value)" placeholder="e.g. Sunny"></div>
+          </div>
+        </div>
+        ${readingsHtml}
+      </div>
+    </div>`;
+  }).join('');
+  updateReadingsSummary();
+}
+
+// ===== LIBRARY =====
+function loadLibrary() { try { library=JSON.parse(localStorage.getItem(SK_LIBRARY))||[]; } catch(e){ library=[]; } }
+function saveLibrary() { localStorage.setItem(SK_LIBRARY, JSON.stringify(library)); }
+function renderLibrary() {
+  const el=document.getElementById('libraryList');
+  if(library.length===0){ el.innerHTML='<p style="color:var(--text-dim);font-size:13px;padding:10px 0;">No saved forms yet.</p>'; return; }
+  el.innerHTML = library.map((item,i)=>`
+    <div class="lib-item">
+      <div class="lib-info"><div class="lib-title">${item.title}</div><div class="lib-date">${item.date} — ${item.readingCount} readings</div></div>
+      <div class="lib-actions">
+        <button class="btn btn-sm btn-primary" onclick="viewLibraryItem(${i})">Open</button>
+        <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteLibraryItem(${i});})">Delete</button>
+      </div>
+    </div>`).join('');
+}
+function deleteLibraryItem(idx) {
+  var answer = confirm('Delete this saved form?');
+  if(!answer) return;
+  library.splice(idx, 1);
+  saveLibrary();
+  renderLibrary();
+  showToast('Deleted');
+}
+function viewLibraryItem(idx) {
+  var item = library[idx];
+  var html = generatePdfHtml(item.data);
+  var w = window.open('');
+  if(!w) { alert('Popup blocked. Allow popups for this site and try again.'); return; }
+  w.document.open();
+  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + item.title + '</title>');
+  w.document.write('<style>body{margin:0;padding:20px;font-family:Arial,sans-serif;}@media print{@page{size:letter portrait;margin:0.4in;}}</style>');
+  w.document.write('</head><body>');
+  w.document.write(html);
+  w.document.write('</body></html>');
+  w.document.close();
+}
+
+// ===== CLEAR =====
+function clearAll() {
+  if(!confirm('Clear ALL data for this session? Saved presets and library are kept.')) return;
+  localStorage.removeItem(SK);
+  rounds=[]; roundCounter=0;
+  document.querySelectorAll('#panel-info input:not([type="date"]),#panel-info textarea').forEach(el=>el.value='');
+  document.querySelectorAll('#panel-instruments input[type="text"],#panel-instruments input[type="datetime-local"]').forEach(el=>el.value='');
+  document.getElementById('siteDate').valueAsDate = new Date();
+  document.querySelectorAll('.checklist-btn').forEach(b=>b.className='checklist-btn');
+  document.querySelectorAll('.checklist-comment').forEach(c=>c.classList.remove('show'));
+  addRound(); renderRounds(); showToast('Cleared');
+}
+
+// ===== PDF GENERATION =====
+function collectFormData() {
+  const si = {
+    wellId:document.getElementById('wellId').value,
+    projectNum:document.getElementById('projectNum').value,phase:document.getElementById('phase').value,
+    siteDate:document.getElementById('siteDate').value,
+    employees:document.getElementById('employees').value,
+    siteMPs:(document.getElementById('siteMPs')||{}).value||'',
+  };
+  // Add instrument fields directly to si
+  si.pidModel=document.getElementById('pidModel').value;
+  si.pidDT=document.getElementById('pidDateTime').value;
+  si.pidR=document.getElementById('pidReading').value;
+  si.dustModel=document.getElementById('dustModel').value;
+  si.dustDT=document.getElementById('dustDateTime').value;
+  si.dustR=document.getElementById('dustReading').value;
+  si.soundModel=document.getElementById('soundModel').value;
+  si.soundDT=document.getElementById('soundDateTime').value;
+  si.soundR=document.getElementById('soundReading').value;
+  si.extraModel=document.getElementById('extraModel').value;
+  si.extraDT=document.getElementById('extraDateTime').value;
+  si.extraR=document.getElementById('extraReading').value;
+  const inst = {};
+  return { si, inst, chk:getChecklistData(), rounds:JSON.parse(JSON.stringify(rounds)) };
+}
+
+function generatePdfHtml(data) {
+  const {si, inst, chk, rounds:savedRounds} = data;
+  let dateStr=si.siteDate;
+  if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=`${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;}
+  function fmtDT(v){if(!v)return'';const d=new Date(v);return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()} ${d.toTimeString().slice(0,5)}`;}
+
+  // Flatten readings chronologically
+  const allReadings = [];
+  const chronoRounds = [...savedRounds].reverse();
+  chronoRounds.forEach(round=>{
+    const chronoReadings = [...round.readings].reverse();
+    chronoReadings.forEach(rd=>{
+      allReadings.push({
+        time:rd.time, monitorPoint:rd.monitorPoint, voc:rd.voc, dust:rd.dust,
+        visibleDust:rd.visibleDust, noise:rd.noise, odors:rd.odors,
+        wind:(round.windDir?(round.windDir+(round.windSpeed?' '+round.windSpeed+' mph':'')):''), temp:round.temp, comments:rd.comments
+      });
+    });
+  });
+
+  const rowsPage1 = 12;
+  const rowsPageN = 22;
+  let totalPages = 1;
+  if(allReadings.length > rowsPage1) totalPages += Math.ceil((allReadings.length - rowsPage1) / rowsPageN);
+
+  function chkRow(items, prefix) {
+    return items.map((text,i)=>{
+      const key=prefix+'_'+i; const val=chk[key]||''; const comment=chk[key+'_comment']||'';
+      return `<tr><td style="text-align:left;padding:3px 4px;font-size:7.5pt;border:1px solid #000;">${text}</td>
+        <td style="text-align:center;border:1px solid #000;font-size:7.5pt;">${val==='N/A'?'✓':''}</td>
+        <td style="text-align:center;border:1px solid #000;font-size:7.5pt;">${val==='YES'?'✓':''}</td>
+        <td style="text-align:center;border:1px solid #000;font-size:7.5pt;">${val==='NO'?'✓':''}</td>
+        <td style="text-align:left;padding:2px 3px;border:1px solid #000;font-size:7pt;">${comment}</td></tr>`;
+    }).join('');
+  }
+  const readingsHeader = `<tr style="background:#e8e8e8;">
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:7%;">Time</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:8%;">Monitor<br>Point</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:8%;">VOC<br>(ppm)</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:9%;">PM10 Dust<br>(mg/m³)</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:7%;">Visible<br>Dust?</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:7%;">Noise<br>(dB)</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:6%;">Odors<br>Y/N</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:6.5pt;font-weight:bold;width:12%;">Wind from<br>Direction/<br>Speed</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:6%;">TEMP<br>(°F)</th>
+    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:30%;">Comments</th></tr>`;
+  function readingRow(r) {
+    return `<tr>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.time||''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.monitorPoint||''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.voc?r.voc+' ppm':''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.dust?r.dust+' mg/m³':''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.visibleDust||''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.noise?r.noise+' dB':''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.odors||''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7pt;">${r.wind||''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.temp?r.temp+'°F':''}</td>
+      <td style="border:1px solid #000;padding:2px 3px;text-align:left;font-size:7pt;">${r.comments||''}</td></tr>`;
+  }
+  function emptyRow(){return '<tr>'+Array(10).fill('<td style="border:1px solid #000;height:16px;">&nbsp;</td>').join('')+'</tr>';}
+  function readingRows(slice, maxRows) {
+    let html = slice.map(r=>readingRow(r)).join('');
+    for(let i=slice.length;i<maxRows;i++) html+=emptyRow();
+    return html;
+  }
+  function headerBlock(){return `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;"><img src="${LOGO_B64}" style="height:32px;"><div style="font-size:14pt;font-weight:bold;text-align:center;flex:1;">Air Quality Monitoring Log</div></div>`;}
+  function siteInfoBlock(){return `<table style="width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:2px;">
+    <tr><td style="border:1px solid #000;padding:2px 4px;width:30%;"><b>Location ID:</b> ${si.wellId}</td><td style="border:1px solid #000;padding:2px 4px;width:25%;"><b>Project Number:</b> ${si.projectNum}</td><td style="border:1px solid #000;padding:2px 4px;width:20%;"><b>Phase:</b> ${si.phase}</td><td style="border:1px solid #000;padding:2px 4px;width:25%;"><b>Date:</b> ${dateStr}</td></tr>
+    <tr><td colspan="4" style="border:1px solid #000;padding:2px 4px;"><b>Employee(s):</b> ${si.employees}</td></tr></table>`;}
+  function actionLevelBlock(){return `<div style="font-size:8pt;padding:2px 4px;border:1px solid #000;margin-bottom:4px;background:#f5f5f5;"><b>Action Levels:</b> VOC = 2 ppmv &nbsp;&nbsp; Dust = 0.050 mg/m³ &nbsp;&nbsp; Opacity 20%</div>`;}
+  function footerNote(){return `<div style="font-size:7pt;padding:3px 0;border-top:1px solid #000;margin-top:2px;"><b>Note:</b> Check in with Atlas Field Staff when temperature reaches 95°F. Record names of Atlas staff in Comments column.</div>`;}
+  function instPdfSection(){
+    const si2=data.si||si;
+    const rows=[
+      {name:'VOC Monitor'+(si2.pidModel?' ('+si2.pidModel+')':''),dt:si2.pidDT||'',r:si2.pidR||''},
+      {name:'Dust Monitor'+(si2.dustModel?' ('+si2.dustModel+')':''),dt:si2.dustDT||'',r:si2.dustR||''},
+      {name:'Sound Monitor'+(si2.soundModel?' ('+si2.soundModel+')':''),dt:si2.soundDT||'',r:si2.soundR||''},
+    ];
+    if(si2.extraModel){rows.push({name:si2.extraModel,dt:si2.extraDT||'',r:si2.extraR||''});}
+    const instRows=rows.map(r=>`<tr><td style="border:1px solid #000;padding:3px 4px;font-size:7.5pt;">${r.name}</td><td style="border:1px solid #000;padding:3px 4px;font-size:7.5pt;text-align:center;">${fmtDT(r.dt)}</td><td style="border:1px solid #000;padding:3px 4px;font-size:7.5pt;text-align:center;">${r.r}</td></tr>`).join('');
+    return `<table style="width:100%;border-collapse:collapse;margin-bottom:4px;"><tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:60%;">Instruments</th><th style="text-align:center;border:1px solid #000;font-size:7.5pt;width:20%;">Date/Time</th><th style="text-align:center;border:1px solid #000;font-size:7.5pt;width:20%;">Bump/Cal Reading</th></tr>${instRows}</table>`;
+  }
+
+  const p1Slice = allReadings.slice(0, rowsPage1);
+  let page1 = `<div style="font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
+    ${headerBlock()}${siteInfoBlock()}${actionLevelBlock()}
+    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
+      <tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:50%;">DUST MONITORING PROCEDURES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">N/A</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">YES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">NO</th><th style="border:1px solid #000;font-size:7.5pt;width:29%;">COMMENTS</th></tr>
+      ${chkRow(dustProcItems,'proc')}</table>
+    ${instPdfSection()}
+    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
+      <tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:50%;">DUST MITIGATION MEASURES CHECKLIST</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">N/A</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">YES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">NO</th><th style="border:1px solid #000;font-size:7.5pt;width:29%;">COMMENTS</th></tr>
+      ${chkRow(dustMitItems,'mit')}</table>
+    <div style="text-align:center;font-size:11pt;font-weight:bold;margin:4px 0 2px;">Air Quality Monitoring</div>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">${readingsHeader}${readingRows(p1Slice, rowsPage1)}</table>
+    ${footerNote()}
+    <div style="text-align:center;font-size:8pt;margin-top:4px;">PAGE 1 OF ${totalPages}</div></div>`;
+
+  let addPages = '';
+  let idx = rowsPage1; let pageNum = 2;
+  while(idx < allReadings.length) {
+    const slice = allReadings.slice(idx, idx+rowsPageN);
+    addPages += `<div style="page-break-before:always;font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
+      ${headerBlock()}${siteInfoBlock()}${actionLevelBlock()}
+      <div style="text-align:center;font-size:11pt;font-weight:bold;margin:4px 0 2px;">Air Quality Monitoring</div>
+      <table style="width:100%;border-collapse:collapse;">${readingsHeader}${readingRows(slice, rowsPageN)}</table>
+      <div style="font-size:7pt;padding:3px 0;border-top:1px solid #000;margin-top:4px;"><b>Note:</b> Attach an Air Monitoring Field Map. Mark all monitoring point locations.</div>
+      ${footerNote()}
+      <div style="text-align:center;font-size:8pt;margin-top:4px;">PAGE ${pageNum} OF ${totalPages}</div></div>`;
+    idx += rowsPageN; pageNum++;
+  }
+  return page1 + addPages;
+}
+
+function generatePDF() {
+  const data = collectFormData();
+  const si = data.si;
+  let dateStr=si.siteDate;
+  if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=`${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;}
+
+  // Count total readings
+  let totalReadings = 0;
+  data.rounds.forEach(r=>{ totalReadings+=r.readings.length; });
+
+  const fullHtml = generatePdfHtml(data);
+
+  // Save to library (data only, not HTML — much smaller)
+  const libEntry = {
+    title: `${si.wellId||'No Well'} — ${dateStr||'undated'}`,
+    date: dateStr || new Date().toLocaleDateString(),
+    readingCount: totalReadings,
+    data: data,
+    savedAt: new Date().toISOString()
+  };
+  library.unshift(libEntry);
+  saveLibrary();
+  renderLibrary();
+
+  // Show preview modal
+  document.getElementById('print-output').innerHTML = fullHtml;
+  showToast('Saved to library');
+  showPdfPreview(fullHtml);
+}
+function showPdfPreview(html){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;flex-direction:column';
+  const toolbar=document.createElement('div');
+  toolbar.style.cssText='background:var(--atlas-dark);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0';
+  toolbar.innerHTML='<span style="color:#fff;font-weight:700;font-size:14px">Report Preview</span>';
+  const btns=document.createElement('div');btns.style.cssText='display:flex;gap:8px';
+  const printBtn=document.createElement('button');
+  printBtn.textContent='🖨 Print / Save PDF';
+  printBtn.style.cssText='padding:8px 14px;background:var(--atlas-primary);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+  printBtn.onclick=function(){modal.remove();setTimeout(function(){window.print();},300);};
+  const closeBtn=document.createElement('button');
+  closeBtn.textContent='✕ Close';
+  closeBtn.style.cssText='padding:8px 12px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+  closeBtn.onclick=function(){modal.remove();};
+  btns.appendChild(printBtn);btns.appendChild(closeBtn);
+  toolbar.appendChild(btns);modal.appendChild(toolbar);
+  const frame=document.createElement('iframe');
+  frame.style.cssText='flex:1;border:none;background:#fff';
+  modal.appendChild(frame);
+  document.body.appendChild(modal);
+  frame.contentDocument.open();
+  frame.contentDocument.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>body{margin:20px;font-family:Arial,sans-serif;}@media print{body{margin:0}}</style></head><body>'+html+'</body></html>');
+  frame.contentDocument.close();
+}
+
+// ===== INSTRUMENTS =====
+function renderInstrumentsList() {
+  return; // instruments now use fixed fields
+  const el = document.getElementById('instrumentsList');
+  if(!el) return;
+  if(instruments.length===0){
+    el.innerHTML='<p style="color:var(--text-dim);font-size:13px;padding:8px 0;">No instruments added yet. Tap + Add Instrument above.</p>';
+    return;
+  }
+  el.innerHTML = instruments.map((inst,i)=>`
+    <div class="instrument-block" style="padding:12px 0;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div class="inst-name">${inst.name}</div>
+          ${inst.notes?`<div class="inst-detail">${inst.notes}</div>`:''}
+        </div>
+        <button class="reading-delete" onclick="removeInstrument(${i})" title="Remove">×</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Date/Time of Bump/Cal</label>
+          <input type="datetime-local" value="${inst.dateTime||''}" onchange="updateInstrument(${i},'dateTime',this.value)">
+        </div>
+        <div class="form-group"><label>Bump/Cal Reading</label>
+          <input type="text" value="${inst.reading||''}" placeholder="e.g. 98.5 ppm, 0.001 mg/m³" onchange="updateInstrument(${i},'reading',this.value)">
+        </div>
+      </div>
+    </div>`).join('');
+}
+function addInstrument() {
+  // Show modal to add instrument
+  const saved = presets.instruments||[];
+  let html = '<div style="margin-bottom:12px">';
+  if(saved.length>0){
+    html += '<label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px">Saved Instruments</label>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
+    saved.forEach((s,i)=>{ html+=`<button onclick="addSavedInstrument(${i})" style="padding:6px 12px;border:1px solid var(--atlas-primary);border-radius:6px;background:#fff;color:var(--atlas-primary);font-size:12px;font-weight:600;cursor:pointer">${s.name}</button>`; });
+    html += '</div>';
+  }
+  html += '<label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px">Instrument Name</label>';
+  html += '<input type="text" id="newInstName" style="width:100%;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:14px;margin-bottom:8px" placeholder="e.g. MultiRAE PID, Aeroqual 500">';
+  html += '<label style="font-size:11px;font-weight:600;color:var(--text-dim);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:4px">Notes (optional)</label>';
+  html += '<input type="text" id="newInstNotes" style="width:100%;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:14px" placeholder="Cal procedure, serial #, etc.">';
+  html += '</div>';
+
+  const modal = document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:400px;max-height:80vh;overflow-y:auto">
+    <div style="font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text)">Add Instrument</div>
+    ${html}
+    <div style="display:flex;gap:8px;margin-top:4px">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
+      <button onclick="confirmAddInstrument(this)" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Add</button>
+    </div>
+    <div style="margin-top:10px;border-top:1px solid var(--card-border);padding-top:10px">
+      <button onclick="saveInstrumentPreset(this)" style="width:100%;padding:8px;border:1px dashed var(--atlas-primary);border-radius:6px;background:none;cursor:pointer;font-size:12px;color:var(--atlas-primary);font-family:inherit">+ Save as preset for future use</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.remove();});
+  setTimeout(()=>{const n=document.getElementById('newInstName');if(n)n.focus();},100);
+}
+function confirmAddInstrument(btn) {
+  const name=(document.getElementById('newInstName')||{}).value||'';
+  const notes=(document.getElementById('newInstNotes')||{}).value||'';
+  if(!name.trim()){alert('Please enter an instrument name');return;}
+  const now=new Date();
+  const dtStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'T'+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  instruments.push({name:name.trim(),notes:notes.trim(),dateTime:dtStr,reading:''});
+  btn.closest('[style*=fixed]').remove();
+  renderInstrumentsList();saveData();showToast('Instrument added');
+}
+function addSavedInstrument(idx) {
+  const s=presets.instruments[idx];
+  const now=new Date();
+  const dtStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'T'+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  instruments.push({name:s.name,notes:s.notes||'',dateTime:dtStr,reading:''});
+  document.querySelector('[style*=fixed]').remove();
+  renderInstrumentsList();saveData();showToast(s.name+' added');
+}
+function saveInstrumentPreset(btn) {
+  const name=(document.getElementById('newInstName')||{}).value||'';
+  const notes=(document.getElementById('newInstNotes')||{}).value||'';
+  if(!name.trim()){alert('Enter a name first');return;}
+  if(!presets.instruments)presets.instruments=[];
+  if(presets.instruments.some(p=>p.name===name.trim())){showToast('Already saved');return;}
+  presets.instruments.push({name:name.trim(),notes:notes.trim()});
+  savePresets();showToast('Preset saved');
+  btn.textContent='✓ Saved as preset';btn.style.color='var(--success)';
+}
+function removeInstrument(idx) {
+  instruments.splice(idx,1);renderInstrumentsList();saveData();
+}
+function updateInstrument(idx,field,val) {
+  if(instruments[idx])instruments[idx][field]=val;
+  saveData();
+}
+
+// ===== INSTRUMENT PRESETS =====
+function applyInstPreset(type,val){
+  if(!val)return;
+  document.getElementById(type+'Model').value=val;saveData();
+}
+function saveInstPreset(type){
+  const val=document.getElementById(type+'Model').value.trim();
+  if(!val){showToast('Enter instrument name first');return;}
+  const key=type+'Instruments';
+  if(!presets[key])presets[key]=[];
+  if(presets[key].includes(val)){showToast('Already saved');return;}
+  presets[key].push(val);savePresets();
+  renderInstPresetDropdowns();showToast('Saved');
+}
+function renderInstPresetDropdowns(){
+  ['pid','dust','sound','extra'].forEach(type=>{
+    const sel=document.getElementById(type+'ModelSelect');
+    if(!sel)return;
+    const key=type+'Instruments';
+    sel.innerHTML='<option value="">-- Saved --</option>';
+    (presets[key]||[]).forEach(v=>sel.innerHTML+=`<option value="${v}">${v}</option>`);
+  });
+}
+function toggleExtraInst(){
+  const f=document.getElementById('extraInstFields');
+  const btn=document.getElementById('extraInstToggle');
+  const showing=f.style.display!=='none';
+  f.style.display=showing?'none':'block';
+  btn.textContent=showing?'+ Add':'− Remove';
+}
+
+// ===== WEATHER =====
+function deg2compass(d){const dirs=['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];return dirs[Math.round(d/22.5)%16];}
+function wxCode(c){const m={0:'Clear',1:'Mainly clear',2:'Partly cloudy',3:'Overcast',45:'Foggy',48:'Icy fog',51:'Light drizzle',53:'Drizzle',61:'Light rain',63:'Rain',65:'Heavy rain',71:'Light snow',73:'Snow',75:'Heavy snow',80:'Rain showers',81:'Rain showers',82:'Heavy showers',95:'Thunderstorm',96:'Thunderstorm w/ hail',99:'Thunderstorm w/ hail'};return m[c]||'Unknown';}
+async function fetchWeatherForRound(rid){
+  const r=rounds.find(r=>r.id===rid);if(!r)return;
+  const roundEl=document.querySelector('[data-round="'+rid+'"]');if(!roundEl)return;
+  const zipInput=roundEl.querySelector('.round-wxzip');
+  const statusEl=roundEl.querySelector('.round-wx-status');
+  const zip=(zipInput?zipInput.value.trim():'')||r.wxZip||'';
+  if(!zip||!/^\d{5}$/.test(zip)){if(statusEl)statusEl.textContent='⚠ Enter a ZIP first';return;}
+  if(zipInput)r.wxZip=zip;
+  if(statusEl)statusEl.textContent='Looking up...';
+  try{
+    const gr=await fetch('https://api.zippopotam.us/us/'+zip);
+    if(!gr.ok)throw new Error('ZIP not found');
+    const gd=await gr.json();
+    const lat=parseFloat(gd.places[0].latitude),lon=parseFloat(gd.places[0].longitude),city=gd.places[0]['place name'];
+    const wr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=weathercode,windspeed_10m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=1');
+    const wd=await wr.json();
+    applyWeatherToRound(rid,wd,city,roundEl,statusEl);
+  }catch(e){if(statusEl)statusEl.textContent='⚠ '+(e.message||'Error');}
+}
+async function fetchWeatherGPSForRound(rid){
+  const r=rounds.find(r=>r.id===rid);if(!r)return;
+  const roundEl=document.querySelector('[data-round="'+rid+'"]');if(!roundEl)return;
+  const statusEl=roundEl.querySelector('.round-wx-status');
+  if(!navigator.geolocation){if(statusEl)statusEl.textContent='⚠ Geolocation not supported';return;}
+  if(statusEl)statusEl.textContent='📍 Getting location...';
+  navigator.geolocation.getCurrentPosition(async function(pos){
+    try{
+      const lat=pos.coords.latitude,lon=pos.coords.longitude;
+      const wr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=weathercode,windspeed_10m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=1');
+      const wd=await wr.json();
+      applyWeatherToRound(rid,wd,'GPS',roundEl,statusEl);
+    }catch(e){if(statusEl)statusEl.textContent='⚠ Could not get weather';}
+  },function(){if(statusEl)statusEl.textContent='⚠ Location denied. Try ZIP.';});
+}
+function applyWeatherToRound(rid,wd,location,roundEl,statusEl){
+  const r=rounds.find(r=>r.id===rid);if(!r)return;
+  const c=wd.current,daily=wd.daily;
+  const hi=Math.round(daily.temperature_2m_max[0]),lo=Math.round(daily.temperature_2m_min[0]);
+  const windSpd=Math.round(c.windspeed_10m);
+  const windDir=deg2compass(c.winddirection_10m);
+  const conditions=wxCode(c.weathercode);
+  // Update data
+  r.temp=String(Math.round((hi+lo)/2));r.windDir=windDir;r.windSpeed=String(windSpd);r.conditions=conditions;
+  const warn=hi>=95?' ⚠ HEAT ADVISORY':'';
+  r.wxStatus='✓ '+location+' — High: '+hi+'°F'+warn;
+  saveData();
+  // Update DOM directly - no full re-render
+  const tempEl=roundEl.querySelector('.round-temp');if(tempEl)tempEl.value=r.temp;
+  const dirEl=roundEl.querySelector('.round-winddir');if(dirEl)dirEl.value=windDir;
+  const spdEl=roundEl.querySelector('.round-windspeed');if(spdEl)spdEl.value=windSpd;
+  const condEl=roundEl.querySelector('.round-conditions');if(condEl)condEl.value=conditions;
+  if(statusEl){statusEl.textContent=r.wxStatus;statusEl.style.color=hi>=95?'#dc2626':'var(--text-dim)';}
+}
+
+// fetchWeatherGPS and fetchWeatherZip removed - weather is now per-round
+
+// ===== SAFETY PANEL =====
+function buildSafetyPanel(){
+  const sv=document.getElementById('panel-safety');
+  if(sv._built)return;sv._built=true;
+  sv.style.padding='12px';sv.style.paddingBottom='90px';
+
+  // ── CORE Health card ──
+  const coreCard=document.createElement('div');coreCard.className='section-card';
+  coreCard.innerHTML='<div class="section-title" style="color:#dc2626">🚨 Injury & Incident Reporting</div>';
+
+  const coreDesc=document.createElement('div');
+  coreDesc.style.cssText='font-size:13px;line-height:1.7;margin-bottom:16px;color:var(--text)';
+  coreDesc.innerHTML='<b>Any injury, illness, or vehicle accident — no matter how minor — must be reported to CORE Health immediately.</b><br><br>'
+    +'This includes non-life-threatening injuries, exposure incidents, and all at-fault and non at-fault MVAs. For life-threatening emergencies, call 911 first, then notify CORE Health.<br><br>'
+    +'CORE Health is staffed by registered nurses and an occupational medical director — 24 hours a day, 7 days a week.';
+  coreCard.appendChild(coreDesc);
+
+  const callBtn=document.createElement('a');
+  callBtn.href='tel:18552826331';
+  callBtn.style.cssText='display:flex;align-items:center;justify-content:center;gap:12px;background:#c0392b;color:#fff;border-radius:10px;padding:18px 20px;text-decoration:none;font-size:20px;font-weight:700;letter-spacing:0.02em;margin-bottom:10px;box-shadow:0 3px 12px rgba(192,57,43,0.35)';
+  callBtn.innerHTML='📞 Call CORE Health — 855-282-6331';
+  coreCard.appendChild(callBtn);
+
+  const coreNote=document.createElement('div');
+  coreNote.style.cssText='font-size:11px;color:var(--text-dim);text-align:center;margin-bottom:8px';
+  coreNote.textContent='Tap to call · Available 24/7 · Speak with a live nurse';
+  coreCard.appendChild(coreNote);
+  sv.appendChild(coreCard);
+
+  // ── Stop Work Authority card ──
+  const swaCard=document.createElement('div');swaCard.className='section-card';
+  swaCard.innerHTML='<div class="section-title" style="color:#dc2626">✋ Stop Work Authority</div>';
+  const swaBox=document.createElement('div');
+  swaBox.style.cssText='background:#fff8e6;border:2px solid #e6a817;border-radius:8px;padding:14px 16px;font-size:13px;line-height:1.8;color:#3a2a00';
+  swaBox.innerHTML='<div style="font-size:15px;font-weight:700;margin-bottom:8px;color:#1a1a1a">Employee Authorization to STOP their Work</div>'
+    +'I have been given authority and duty, without fear of reprimand or retaliation, to immediately <b>STOP</b> the work task I was about to perform if it presents a danger to me, my co-workers or the public. I am also obligated to report any unsafe condition related to my work activity immediately to my direct supervisor.'
+    +'<div style="margin-top:12px;font-size:12px;color:#666;font-style:italic">— Jacque Hinman, Director and CEO, Atlas Technical Consultants</div>';
+  swaCard.appendChild(swaBox);
+  sv.appendChild(swaCard);
+
+  // ── Safety Links card ──
+  const linksCard=document.createElement('div');linksCard.className='section-card';
+  linksCard.innerHTML='<div class="section-title">Atlas Safety Links (IndustrySafe)</div>';
+
+  const links=[
+    {label:'JSA Master List',sub:'Job Safety Analysis reference',url:'https://app.industrysafe.com/ATCASSOCIA/'},
+    {label:'BBS Observation',sub:'Behavior Based Safety · One per month',url:'https://app.industrysafe.com/ATCASSOCIA/observations/'},
+    {label:'Incident / Near Miss Report',sub:'Report incidents & hazard recognition',url:'https://app.industrysafe.com/atcassocia/incidents/'},
+    {label:'DSR Site Audit',sub:'Daily Safety Report Audit · One per month',url:'https://app.industrysafe.com/ATCASSOCIA/inspections/'},
+  ];
+  links.forEach(function(lnk){
+    const a=document.createElement('a');
+    a.href=lnk.url;a.target='_blank';a.rel='noopener';
+    a.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border:1px solid var(--card-border);border-radius:8px;text-decoration:none;margin-bottom:8px;background:var(--card);transition:background 0.15s';
+    a.onmouseenter=function(){this.style.background='var(--atlas-light)';};
+    a.onmouseleave=function(){this.style.background='var(--card)';};
+    const txt=document.createElement('div');
+    txt.innerHTML='<div style="font-size:14px;font-weight:600;color:var(--atlas-primary)">'+lnk.label+'</div>'
+      +'<div style="font-size:12px;color:var(--text-dim);margin-top:2px">'+lnk.sub+'</div>';
+    const arrow=document.createElement('div');
+    arrow.style.cssText='font-size:18px;color:var(--atlas-primary);flex-shrink:0;margin-left:10px';
+    arrow.textContent='›';
+    a.appendChild(txt);a.appendChild(arrow);
+    linksCard.appendChild(a);
+  });
+  sv.appendChild(linksCard);
+}
+
+// ===== WELCOME SCREEN =====
+function buildWelcomeScreen(){
+  const ws=document.getElementById('welcome-screen');
+  if(ws._built)return;ws._built=true;
+  ws.innerHTML='';
+
+  // Logo
+  const logo=document.createElement('img');
+  logo.src=document.querySelector('.app-header img').src;
+  logo.style.cssText='width:220px;max-width:85%;height:auto;object-fit:contain;margin-bottom:8px';
+  ws.appendChild(logo);
+
+  // Title
+  const t=document.createElement('div');
+  t.style.cssText='font-size:22px;font-weight:700;color:var(--atlas-primary);margin-bottom:4px';
+  t.textContent='Air Quality Monitoring Log';ws.appendChild(t);
+  const s=document.createElement('div');
+  s.style.cssText='font-size:13px;color:var(--text-dim);margin-bottom:20px';
+  s.textContent='Atlas Technical Consultants';ws.appendChild(s);
+
+  // Brief instructions
+  const inst=document.createElement('div');
+  inst.style.cssText='background:var(--card);border:1px solid var(--card-border);border-radius:10px;padding:16px;text-align:left;width:100%;max-width:400px;margin-bottom:16px;font-size:13px;line-height:1.8';
+  inst.innerHTML='<div style="font-weight:700;margin-bottom:8px;font-size:14px;color:var(--atlas-primary)">How to use</div>'
+    +'<div><b>1 · Site Info</b> — Location, project, employees, weather.</div>'
+    +'<div><b>2 · Instruments</b> — Record bump/cal for each instrument.</div>'
+    +'<div><b>3 · Readings</b> — Add monitoring rounds throughout the day.</div>'
+    +'<div><b>4 · Checklists</b> — Complete dust procedures &amp; mitigation.</div>'
+    +'<div><b>5 · Library</b> — Saved reports, backup &amp; settings.</div>'
+    +'<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--card-border);font-size:12px;color:var(--text-dim)">🏠 Tap the Atlas logo at any time to return here.</div>';
+  ws.appendChild(inst);
+
+  // Buttons
+  const startBtn=document.createElement('button');
+  startBtn.textContent='Start New Log';
+  startBtn.style.cssText='padding:14px 32px;background:var(--atlas-primary);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px;width:100%;max-width:280px';
+  startBtn.onclick=function(){switchTab('info');};
+  ws.appendChild(startBtn);
+
+  const guideBtn=document.createElement('button');
+  guideBtn.textContent='📖 Full Guide';
+  guideBtn.style.cssText='padding:10px 20px;background:none;border:1px solid var(--atlas-primary);color:var(--atlas-primary);border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;width:100%;max-width:280px';
+  guideBtn.onclick=function(){showFullGuide();};
+  ws.appendChild(guideBtn);
+}
+function showFullGuide(){
+  const sections=[
+    {h:'Site Info',b:'Fill in Location ID, project number, phase, date and employee names at the start of the day. Use the weather section to auto-fill temperature and wind data by entering your zip code or using GPS.'},
+    {h:'Instruments',b:'Three standard instrument types are pre-defined: VOC/PID monitor, Dust/PM10 monitor, and Sound Level monitor. Enter the specific model name for each instrument being used today and save it for quick loading on future sessions. Record the date/time and result of each bump/cal. A 4th optional slot is available for any additional instrument.'},
+    {h:'Readings',b:'Tap + New Round to start a monitoring round. Each round has shared conditions (temp, wind). Add individual readings per monitoring point within each round. VOC and dust readings above action levels are flagged automatically in red.'},
+    {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for any item marked N/A or NO.'},
+    {h:'Library',b:'All generated PDFs are saved here. Tap Open to view a saved report. Use Backup to export all data to a JSON file and Restore to reload it on a new device.'},
+    {h:'Safety',b:'The Safety tab provides quick access to CORE Health injury reporting (tap to call 24/7), the Stop Work Authority statement, and links to Atlas safety resources in IndustrySafe.'},
+    {h:'Tips',b:'• Tap the Atlas logo at any time to return to this home screen.<br>• Swipe left or right to move between tabs.<br>• Weather auto-fills temperature, wind speed and direction. Check for heat advisories above 95°F.<br>• The Generate PDF button saves the report to the Library and opens the print dialog.'},
+  ];
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;overflow-y:auto;padding:20px';
+  let html='<div style="background:var(--card);border-radius:12px;padding:20px;max-width:500px;margin:0 auto">';
+  html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><div style="font-size:17px;font-weight:700;color:var(--text)">Full Guide</div><button onclick="this.parentElement.parentElement.parentElement.remove()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-dim)">×</button></div>';
+  sections.forEach(function(s){
+    html+='<div style="margin-bottom:16px;padding-bottom:16px;border-bottom:1px solid var(--card-border)">';
+    html+='<div style="font-weight:700;font-size:14px;color:var(--atlas-primary);margin-bottom:6px">'+s.h+'</div>';
+    html+='<div style="font-size:13px;line-height:1.7;color:var(--text)">'+s.b+'</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  modal.innerHTML=html;
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
+// ===== CONFIRM DELETE =====
+function confirmDelete(btn, onConfirm){
+  if(btn._pending){
+    clearTimeout(btn._pendingTimer);
+    btn._pending=false;
+    onConfirm();
+    return;
+  }
+  btn._pending=true;
+  const origText=btn.textContent;
+  const origStyle=btn.getAttribute('style')||'';
+  btn.textContent='Sure?';
+  btn.style.background='#c0392b';btn.style.color='#fff';btn.style.borderRadius='4px';btn.style.border='none';
+  btn._pendingTimer=setTimeout(function(){
+    btn._pending=false;
+    btn.textContent=origText;
+    btn.setAttribute('style',origStyle);
+  },2500);
+  // Cancel if they tap elsewhere
+  setTimeout(function(){
+    var cancel=function(e){
+      if(e.target===btn)return;
+      if(btn._pending){
+        btn._pending=false;
+        btn.textContent=origText;
+        btn.setAttribute('style',origStyle);
+        clearTimeout(btn._pendingTimer);
+      }
+      document.removeEventListener('touchstart',cancel,true);
+      document.removeEventListener('mousedown',cancel,true);
+    };
+    document.addEventListener('touchstart',cancel,true);
+    document.addEventListener('mousedown',cancel,true);
+  },50);
+}
+
+// ===== MONITORING POINTS =====
+function getSiteMPs(){
+  const el=document.getElementById('siteMPs');
+  const val=el?el.value.trim():'';
+  if(!val)return['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8','MP-9','MP-10'];
+  const mps=val.split(',').map(s=>s.trim()).filter(Boolean);
+  return mps.length?mps:['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8','MP-9','MP-10'];
+}
+function saveSiteMPs(){
+  saveData();
+  // Re-render rounds so MP dropdowns update
+  renderRounds();
+}
+function saveMPPresetFromSite(){
+  const mps=getSiteMPs();
+  const wid=document.getElementById('wellId').value.trim()||'default';
+  if(!presets.mpPresets)presets.mpPresets={};
+  presets.mpPresets[wid]=mps;
+  savePresets();showToast('MPs saved for '+wid);
+}
+
+// ===== READINGS SUMMARY =====
+function updateReadingsSummary(){
+  const el=document.getElementById('readingsSummary');if(!el)return;
+  const totalRounds=rounds.length;
+  let totalReadings=0,actionHits=0,incomplete=0;
+  rounds.forEach(function(r){
+    totalReadings+=r.readings.length;
+    r.readings.forEach(function(rd){
+      const v=parseFloat(rd.voc),d=parseFloat(rd.dust);
+      if(v>=2||d>=0.050)actionHits++;
+      if(!rd.voc&&rd.voc!=='0'||!rd.dust&&rd.dust!=='0'||!rd.visibleDust||!rd.noise&&rd.noise!=='0'||!rd.odors)incomplete++;
+    });
+  });
+  let html='<div style="font-size:12px;color:var(--text-dim);display:flex;gap:16px;flex-wrap:wrap;width:100%">';
+  html+='<span><b style="color:var(--atlas-primary);font-size:15px">'+totalRounds+'</b> round'+(totalRounds!==1?'s':'')+'</span>';
+  html+='<span><b style="color:var(--atlas-primary);font-size:15px">'+totalReadings+'</b> reading'+(totalReadings!==1?'s':'')+'</span>';
+  if(actionHits>0)html+='<span style="color:#dc2626;font-weight:700">⚠ '+actionHits+' ACTION LEVEL'+(actionHits!==1?' HITS':'')+'</span>';
+  else if(totalReadings>0)html+='<span style="color:var(--success)">✓ No action levels</span>';
+  if(incomplete>0)html+='<span style="color:#f59e0b">● '+incomplete+' incomplete</span>';
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+// ===== FULLSCREEN READINGS =====
+let _readingsFullscreen=false;
+function toggleReadingsFullscreen(){
+  _readingsFullscreen=!_readingsFullscreen;
+  const btn=document.getElementById('readingsFullscreenBtn');
+  const header=document.querySelector('.app-header');
+  const tabBar=document.querySelector('.tab-bar');
+  const bottomBar=document.querySelector('.bottom-bar');
+  const summary=document.getElementById('readingsSummary');
+  if(header)header.style.display=_readingsFullscreen?'none':'';
+  if(tabBar)tabBar.style.display=_readingsFullscreen?'none':'flex';
+  if(bottomBar)bottomBar.style.display=_readingsFullscreen?'none':'flex';
+  if(summary)summary.style.display=_readingsFullscreen?'none':'flex';
+  if(btn){btn.textContent=_readingsFullscreen?'✕ Exit':'⛶';btn.style.background=_readingsFullscreen?'var(--atlas-primary)':'';btn.style.color=_readingsFullscreen?'#fff':'';}
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ===== CONFIGURE MONITORING POINTS (site-level - see getSiteMPs) =====
+function configureRoundMPs(rid){
+  const r=rounds.find(r=>r.id===rid);if(!r)return;
+  const current=(r.customMPs&&r.customMPs.length)?r.customMPs.join(', '):['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8','MP-9','MP-10'].join(', ');
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:380px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">Configure Monitoring Points</div>
+    <p style="font-size:12px;color:var(--text-dim);margin-bottom:12px;line-height:1.5">Enter monitoring point names separated by commas. These will appear in the MP dropdown for this round.</p>
+    <textarea id="mpConfigInput" style="width:100%;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:14px;font-family:inherit;min-height:80px;resize:vertical">${current}</textarea>
+    <div style="margin-top:4px;font-size:11px;color:var(--text-dim);margin-bottom:12px">e.g. MP-1, MP-2, Upwind, Downwind, Property Line</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
+      <button onclick="applyMPConfig(${rid},this)" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Apply</button>
+    </div>
+    <button onclick="saveMPPreset(${rid},this)" style="width:100%;margin-top:8px;padding:8px;border:1px dashed var(--atlas-primary);border-radius:6px;background:none;cursor:pointer;font-size:12px;color:var(--atlas-primary);font-family:inherit">+ Save as preset for this location</button>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  setTimeout(function(){const i=document.getElementById('mpConfigInput');if(i){i.focus();i.select();}},100);
+}
+function applyMPConfig(rid,btn){
+  const r=rounds.find(r=>r.id===rid);if(!r)return;
+  const val=document.getElementById('mpConfigInput').value;
+  const mps=val.split(',').map(s=>s.trim()).filter(Boolean);
+  r.customMPs=mps.length?mps:[];
+  btn.closest('[style*=fixed]').remove();
+  renderRounds();saveData();showToast('Monitoring points updated');
+}
+function saveMPPreset(rid,btn){
+  const r=rounds.find(r=>r.id===rid);if(!r)return;
+  const val=document.getElementById('mpConfigInput').value;
+  const mps=val.split(',').map(s=>s.trim()).filter(Boolean);
+  if(!mps.length){showToast('Enter MPs first');return;}
+  const wid=document.getElementById('wellId').value.trim()||'default';
+  if(!presets.mpPresets)presets.mpPresets={};
+  presets.mpPresets[wid]=mps;
+  savePresets();showToast('Saved for '+wid);
+  btn.textContent='✓ Saved';btn.style.color='var(--success)';
+}
+
+// ===== STAY AWAKE =====
+let _wakeLock=null;
+async function toggleWakeLock(){
+  const btn=document.getElementById('wakeBtn');
+  if(_wakeLock){
+    try{await _wakeLock.release();}catch(e){}
+    _wakeLock=null;
+    if(btn){btn.textContent='👁 Stay Awake';btn.style.opacity='0.5';btn.style.background='';}
+    showToast('Screen lock re-enabled');
+    return;
+  }
+  if(!('wakeLock' in navigator)){showToast('Wake lock not supported on this device');return;}
+  try{
+    _wakeLock=await navigator.wakeLock.request('screen');
+    _wakeLock.addEventListener('release',function(){
+      _wakeLock=null;
+      const b=document.getElementById('wakeBtn');
+      if(b){b.textContent='👁 Stay Awake';b.style.opacity='0.5';b.style.background='';}
+    });
+    if(btn){btn.textContent='👁 Screen On';btn.style.opacity='1';btn.style.background='var(--atlas-primary)';btn.style.color='#fff';}
+    showToast('Screen will stay on');
+  }catch(e){showToast('Could not enable: '+e.message);}
+}
+
+// ===== DARK MODE =====
+function toggleDark(){
+  const on=document.body.classList.toggle('dark');
+  localStorage.setItem('atlas_aq_dark',on?'1':'0');
+  document.getElementById('darkModeBtn').textContent=on?'☀️ Light mode':'🌙 Dark mode';
+}
+if(localStorage.getItem('atlas_aq_dark')==='1'){
+  document.body.classList.add('dark');
+  document.addEventListener('DOMContentLoaded',function(){
+    const b=document.getElementById('darkModeBtn');if(b)b.textContent='☀️ Light mode';
+  });
+}
+
+// ===== BACKUP / RESTORE =====
+function exportData(){
+  const data={
+    main:localStorage.getItem('atlas_aq_v3'),
+    presets:localStorage.getItem('atlas_aq_presets_v3'),
+    wells:localStorage.getItem('atlas_aq_wells_v3'),
+    library:localStorage.getItem('atlas_aq_library_v3'),
+    exportedAt:new Date().toISOString()
+  };
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='atlas_aq_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();showToast('Backup downloaded');
+}
+function importData(){document.getElementById('importFile').click();}
+function handleImport(e){
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=JSON.parse(ev.target.result);
+      if(data.main)localStorage.setItem('atlas_aq_v3',data.main);
+      if(data.presets)localStorage.setItem('atlas_aq_presets_v3',data.presets);
+      if(data.wells)localStorage.setItem('atlas_aq_wells_v3',data.wells);
+      if(data.library)localStorage.setItem('atlas_aq_library_v3',data.library);
+      showToast('Restored — reloading...');
+      setTimeout(()=>location.reload(),1000);
+    }catch(err){showToast('Error reading backup file');}
+  };
+  reader.readAsText(file);
+}
+
+// ===== GO =====
+init();
+</script>
+</body>
+</html>
