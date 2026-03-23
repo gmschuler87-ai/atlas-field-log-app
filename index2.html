@@ -725,11 +725,31 @@ function parseEntryTime(text){
   return -1; // no time
 }
 function goReview(lid){
-  var notes=fv(lid,'scratchpad').trim();
   goStage(lid,4);
   document.getElementById('l'+lid+'-review-list').innerHTML='';
-  var lines=notes.split('\n').map(function(l){return l.trim();}).filter(Boolean);
-  var items=lines.map(function(line){return{text:line,original:line,section:'activities',keep:true};});
+  // Prefer scratchpadEntries (live JS object) over hidden textarea
+  var items=[];
+  var entries=logs[lid]&&logs[lid].scratchpadEntries;
+  if(entries&&entries.length){
+    // Each entry may contain multi-line text (e.g. pasted block) — split those out
+    entries.forEach(function(e){
+      var noteLines=(e.n||'').split('\n').map(function(l){return l.trim();}).filter(Boolean);
+      if(noteLines.length<=1){
+        var text=e.t?(e.t+' - '+(e.n||'').trim()):(e.n||'').trim();
+        if(text)items.push({text:text,original:text,section:'activities',keep:true});
+      } else {
+        // Multi-line: first line gets the time, rest are continuation lines
+        noteLines.forEach(function(line,li){
+          var text=li===0&&e.t?(e.t+' - '+line):line;
+          if(text)items.push({text:text,original:text,section:'activities',keep:true});
+        });
+      }
+    });
+  } else {
+    var notes=fv(lid,'scratchpad').trim();
+    var lines=notes.split('\n').map(function(l){return l.trim();}).filter(Boolean);
+    items=lines.map(function(line){return{text:line,original:line,section:'activities',keep:true};});
+  }
 
   // Group untimed lines with the timed entry above them
   // Each group: {time, entries:[]} where entries preserves original order
@@ -843,18 +863,34 @@ function buildReport(lid){
     var item=keptItems[i];
     if(item.type==='photo'){
       var photoGroup=[];while(i<keptItems.length&&keptItems[i].type==='photo'){photoGroup.push(keptItems[i]);i++;}
+      // Layout: group photos into rows smartly
+      // Portrait = 3 per row, Landscape = 2 per row, mixed = 2 per row
       var gi=0;
       while(gi<photoGroup.length){
-        var p1=photoGroup[gi];var p1portrait=(p1.portrait!==false);var cellsHtml2='';var rowPx2;
-        if(p1portrait&&gi+1<photoGroup.length&&(photoGroup[gi+1].portrait!==false)){
-          var grp2=[photoGroup[gi],photoGroup[gi+1]];
-          grp2.forEach(function(p){var ct=p.caption||'';var bd=p.linkedEntry?'<div style="font-size:8px;padding:2px 5px;border-radius:8px;background:#EDE9FF;border:0.5px solid #7C5CBF;color:#4B2EA0;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📷 '+esc(p.linkedEntry.slice(0,50))+(p.linkedEntry.length>50?'…':'')+'</div>':'';cellsHtml2+='<td style="width:50%;padding:4px;vertical-align:top;border-right:0.5px solid #ddd"><img src="'+p.dataUrl+'" style="width:100%;max-height:220px;object-fit:cover;display:block;border-radius:2px;margin-bottom:2px"><div style="font-size:8px;color:#555">'+esc(ct)+'</div>'+bd+'</td>';});
-          rowPx2=245;gi+=2;
-        }else{
-          var ct1=p1.caption||'';var bd1=p1.linkedEntry?'<div style="font-size:8px;padding:2px 5px;border-radius:8px;background:#EDE9FF;border:0.5px solid #7C5CBF;color:#4B2EA0;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📷 '+esc(p1.linkedEntry.slice(0,50))+(p1.linkedEntry.length>50?'…':'')+'</div>':'';var imgH1=p1portrait?'220px':'160px';
-          cellsHtml2='<td style="width:100%;padding:4px;vertical-align:top"><img src="'+p1.dataUrl+'" style="width:100%;max-height:'+imgH1+';object-fit:cover;display:block;border-radius:2px;margin-bottom:2px"><div style="font-size:8px;color:#555">'+esc(ct1)+'</div>'+bd1+'</td>';
-          rowPx2=p1portrait?245:185;gi+=1;
+        // Determine how many go in this row
+        var p0=photoGroup[gi];
+        var isPortrait0=(p0.portrait!==false);
+        var perRow=isPortrait0?3:2;
+        // Grab up to perRow photos that are the same orientation
+        var rowPhotos=[];
+        for(var ri=0;ri<perRow&&gi+ri<photoGroup.length;ri++){
+          var pp=photoGroup[gi+ri];
+          var ppPortrait=(pp.portrait!==false);
+          // Mixed orientation: stop at 2
+          if(ri>0&&ppPortrait!==isPortrait0&&rowPhotos.length>=2)break;
+          rowPhotos.push(pp);
         }
+        gi+=rowPhotos.length;
+        var colW=Math.floor(100/rowPhotos.length);
+        var imgH=isPortrait0?'160px':'120px';
+        var cellsHtml2='';
+        rowPhotos.forEach(function(p,pi){
+          var ct=p.caption||'';
+          var bd=p.linkedEntry?'<div style="font-size:8px;padding:2px 5px;border-radius:8px;background:#EDE9FF;border:0.5px solid #7C5CBF;color:#4B2EA0;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📷 '+esc(p.linkedEntry.slice(0,50))+(p.linkedEntry.length>50?'…':'')+'</div>':'';
+          var borderR=pi<rowPhotos.length-1?'border-right:0.5px solid #ddd;':'';
+          cellsHtml2+='<td style="width:'+colW+'%;padding:4px;vertical-align:top;'+borderR+'"><img src="'+p.dataUrl+'" style="width:100%;height:'+imgH+';object-fit:contain;display:block;border-radius:2px;margin-bottom:2px;background:#f5f5f5"><div style="font-size:8px;color:#555">'+esc(ct)+'</div>'+bd+'</td>';
+        });
+        var rowPx2=isPortrait0?185:145;
         allRows.push({html:'<tr><td style="padding:0;border-left:2px solid #333;border-right:2px solid #333;border-bottom:0.5px solid #bbb"><table style="width:100%;border-collapse:collapse"><tr>'+cellsHtml2+'</tr></table></td></tr>',px:rowPx2});
       }
     }else{
@@ -1110,6 +1146,7 @@ function buildLogDOM(lid,projData){
       if(target.tagName==='BUTTON'||target.tagName==='A')return;
       target=target.parentElement;
     }
+    if(pane._notesLocked&&getCurrentStage(lid)===2)return;
     var cur=getCurrentStage(lid);
     if(dx<0&&cur<5){if(cur+1===4){goReview(lid);}else if(cur+1===5){buildReport(lid);}else{goStage(lid,cur+1);}}
     else if(dx>0&&cur>1){if(cur-1===4){goStage(lid,3);}else{goStage(lid,cur-1);}}
@@ -1348,7 +1385,34 @@ function buildLogDOM(lid,projData){
     row.addEventListener('dragover',function(e){e.preventDefault();if(entryList._dragging&&entryList._dragging!==row)row.classList.add('drag-over');});
     row.addEventListener('dragleave',function(){row.classList.remove('drag-over');});
     row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');var dragging=entryList._dragging;if(!dragging||dragging===row)return;entryList.insertBefore(dragging,row);syncScratchpad();});
-    row.appendChild(drag);row.appendChild(timeInp);row.appendChild(textInp);row.appendChild(delBtn);
+    // Swipe left to delete
+    var _rsx=0,_rsy=0,_rsActive=false;
+    row.addEventListener('touchstart',function(e){var t=e.touches[0];_rsx=t.clientX;_rsy=t.clientY;_rsActive=true;},{passive:true});
+    row.addEventListener('touchmove',function(e){if(!_rsActive)return;var t=e.touches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;if(Math.abs(dy)>Math.abs(dx)){_rsActive=false;return;}if(dx<-60){row.style.background='#fde8e8';row.style.transition='background 0.15s';}else{row.style.background='';}},{passive:true});
+    row.addEventListener('touchend',function(e){if(!_rsActive)return;_rsActive=false;var t=e.changedTouches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;row.style.background='';if(dx<-80&&Math.abs(dy)<40){armDelete();}},{passive:true});
+    // Mic button for voice input
+    var micBtn=el('button');micBtn.textContent='🎤';micBtn.type='button';
+    micBtn.style.cssText='flex-shrink:0;padding:8px 10px;font-size:18px;border:none;background:none;cursor:pointer;opacity:0.5';
+    micBtn.title='Voice input';
+    if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
+      micBtn.addEventListener('click',function(){
+        var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+        var recog=new SR();recog.lang='en-US';recog.interimResults=false;recog.maxAlternatives=1;
+        micBtn.style.opacity='1';micBtn.textContent='🔴';
+        recog.onresult=function(e){
+          var words=e.results[0][0].transcript;
+          textInp.value=(textInp.value.trim()?textInp.value.trim()+' ':'')+words;
+          textInp.style.height='auto';textInp.style.height=textInp.scrollHeight+'px';
+          syncScratchpad();
+        };
+        recog.onerror=function(){micBtn.textContent='🎤';micBtn.style.opacity='0.5';};
+        recog.onend=function(){micBtn.textContent='🎤';micBtn.style.opacity='0.5';};
+        recog.start();
+      });
+    } else {
+      micBtn.style.display='none'; // hide if not supported
+    }
+    row.appendChild(drag);row.appendChild(timeInp);row.appendChild(textInp);row.appendChild(micBtn);row.appendChild(delBtn);
     return row;
   }
 
@@ -1377,31 +1441,51 @@ function buildLogDOM(lid,projData){
   document.getElementById('file-input-sink').appendChild(photoInput);
 
   // Toolbar
-  var tsBtn=btn('','btn-sm');tsBtn.innerHTML='<span style="display:flex;flex-direction:column;align-items:center;line-height:1.2"><span>+ Timestamp</span><span style="font-size:10px">Entry</span></span>';tsBtn.title='Add entry with current time';tsBtn.style.fontSize='11px';tsBtn.style.padding='5px 8px';
-  tsBtn.style.cssText='flex:1;font-size:12px;padding:10px 8px;min-height:48px';
-  tsBtn.innerHTML='<span style="display:flex;flex-direction:column;align-items:center;line-height:1.2"><span>+ Timestamp</span><span style="font-size:10px">Entry</span></span>';
+  // Live clock on timestamp button
+  var tsBtn=btn('','btn-primary');
+  tsBtn.id='l'+lid+'-ts-btn';
+  tsBtn.style.cssText='width:100%;font-size:15px;padding:14px 8px;min-height:56px;display:flex;flex-direction:column;align-items:center;gap:2px;border-radius:8px;font-weight:700';
+  var tsBtnTime=el('span');tsBtnTime.style.cssText='font-size:22px;font-weight:900;letter-spacing:2px;font-family:monospace';
+  var tsBtnLabel=el('span');tsBtnLabel.style.cssText='font-size:11px;opacity:0.85;font-weight:500';tsBtnLabel.textContent='+ Timestamp Entry';
+  tsBtn.appendChild(tsBtnTime);tsBtn.appendChild(tsBtnLabel);
+  function updateTsClock(){
+    var now=new Date();
+    var h=String(now.getHours()).padStart(2,'0');
+    var m=String(now.getMinutes()).padStart(2,'0');
+    tsBtnTime.textContent=h+m;
+  }
+  updateTsClock();
+  var tsClock=setInterval(updateTsClock,5000);
+  tsBtn.title='Add entry with current time';
   tsBtn.addEventListener('click',function(){
     var ts=new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false}).replace(':','');
-    var rows=Array.from(entryList.querySelectorAll('.entry-row'));
     var target=(lastFocusedRow&&entryList.contains(lastFocusedRow))?lastFocusedRow:null;
     if(target){
       var ti=target.querySelector('.entry-time');
       var tf=target.querySelector('.entry-text');
-      if(ti&&!ti.value){ti.value=ts;ti.classList.toggle('has-value',true);syncScratchpad();if(tf)setTimeout(function(){tf.focus();},50);return;}
+      if(ti&&!ti.value){ti.value=ts;syncScratchpad();if(tf)setTimeout(function(){tf.focus();},50);return;}
     }
     addEntry(ts,'',true);
+    setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});},80);
   });
-  var addBtn=btn('+ Entry','btn-sm');addBtn.title='Add blank entry at bottom';addBtn.style.cssText='flex:1;font-size:13px;padding:10px 8px;min-height:48px';
-  addBtn.addEventListener('click',function(){addEntry('','',false);});
 
-  var toolbar=div('ta-footer');toolbar.style.cssText='display:flex;gap:8px;align-items:center;padding:6px 8px';
-  toolbar.appendChild(tsBtn);toolbar.appendChild(addBtn);
+  var addBtn=btn('+ Entry','btn-sm');addBtn.title='Add blank entry at bottom';
+  addBtn.style.cssText='font-size:13px;padding:10px 8px;min-height:48px;flex:1';
+  addBtn.addEventListener('click',function(){
+    addEntry('','',false);
+    setTimeout(function(){window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});},80);
+  });
 
-  // Quick-add Field Details button
-  var quickAddBtn=btn('👤 + Field Details','btn-sm');
-  quickAddBtn.style.cssText='flex:1;font-size:12px;padding:10px 8px;min-height:48px;background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker)';
+  var quickAddBtn=btn('👤 Field Details','btn-sm');
+  quickAddBtn.style.cssText='font-size:12px;padding:10px 8px;min-height:48px;flex:1;background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker)';
   quickAddBtn.addEventListener('click',function(){showQuickFieldDetails(lid);});
-  toolbar.appendChild(quickAddBtn);
+
+  var toolbar=div('ta-footer');
+  toolbar.style.cssText='display:flex;flex-direction:column;gap:6px;padding:8px';
+  toolbar.appendChild(tsBtn);
+  var toolbarRow2=div();toolbarRow2.style.cssText='display:flex;gap:6px';
+  toolbarRow2.appendChild(addBtn);toolbarRow2.appendChild(quickAddBtn);
+  toolbar.appendChild(toolbarRow2);
 
   var notesWrap=div();notesWrap.style.cssText='border:0.5px solid var(--color-border-secondary,rgba(0,0,0,0.3));border-radius:8px;overflow:hidden';
   notesWrap.appendChild(entryList);notesWrap.appendChild(toolbar);notesWrap.appendChild(scratch);
@@ -1458,8 +1542,57 @@ function buildLogDOM(lid,projData){
   var notesHint=div();notesHint.style.cssText='font-size:11px;color:var(--color-text-secondary,#666);margin-top:10px;line-height:1.6;border-top:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));padding-top:8px';
   notesHint.innerHTML='Document all field activities throughout the day including: personnel on site, work performed, equipment operated, observations, samples collected, waste generated, site conditions, visitor arrivals/departures, and any incidents or deviations. Use timestamps (e.g. 0730) for each entry.';
 
-  var notesCard=div('card');notesCard.innerHTML='<div class="card-title">Field notes</div>';
-  notesCard.appendChild(phraseBar);notesCard.appendChild(notesWrap);notesCard.appendChild(moveBtn);notesCard.appendChild(reviewBtnWrap);notesCard.appendChild(notesHint);
+  // Fullscreen & Lock controls in card title
+  var notesTitleRow=div();notesTitleRow.style.cssText='display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem';
+  var notesTitleText=el('span');notesTitleText.className='card-title';notesTitleText.style.cssText='margin:0;padding:0;border:none';notesTitleText.textContent='Field notes';
+  var notesControls=div();notesControls.style.cssText='display:flex;gap:6px;align-items:center';
+
+  // Lock to notes toggle
+  var lockBtn=btn('🔒 Lock','btn-sm');
+  lockBtn.style.cssText='font-size:11px;padding:4px 8px;background:none;border:1px solid var(--atlas-border-strong);color:var(--atlas-text-secondary)';
+  lockBtn.title='Prevent accidental page swipes';
+  var _notesLocked=false;
+  lockBtn.addEventListener('click',function(){
+    _notesLocked=!_notesLocked;
+    lockBtn.textContent=_notesLocked?'🔓 Unlock':'🔒 Lock';
+    lockBtn.style.background=_notesLocked?'var(--atlas-primary)':'none';
+    lockBtn.style.color=_notesLocked?'#fff':'var(--atlas-text-secondary)';
+    // Store on pane so swipe handler can check
+    pane._notesLocked=_notesLocked;
+  });
+
+  // Fullscreen toggle
+  var fsBtn=btn('⛶','btn-sm');
+  fsBtn.style.cssText='font-size:16px;padding:4px 10px;background:none;border:1px solid var(--atlas-border-strong);color:var(--atlas-text-secondary)';
+  fsBtn.title='Fullscreen notes';
+  var _notesFull=false;
+  var appHeader=document.querySelector('.app-header');
+  var topNavEl=document.getElementById('top-nav');
+  fsBtn.addEventListener('click',function(){
+    _notesFull=!_notesFull;
+    fsBtn.textContent=_notesFull?'✕ Exit':'⛶';
+    fsBtn.style.background=_notesFull?'var(--atlas-primary)':'none';
+    fsBtn.style.color=_notesFull?'#fff':'var(--atlas-text-secondary)';
+    // Hide/show header, top nav, stage nav, phrase bar, move btn, review btn
+    var stageNav=document.getElementById('l'+lid+'-stage-label');
+    var stageNavBar=stageNav?stageNav.closest('.stage-nav'):null;
+    if(appHeader)appHeader.style.display=_notesFull?'none':'';
+    if(topNavEl)topNavEl.style.display=_notesFull?'none':'';
+    if(stageNavBar)stageNavBar.style.display=_notesFull?'none':'';
+    phraseBar.style.display=_notesFull?'none':'';
+    moveBtn.style.display=_notesFull?'none':'';
+    reviewBtnWrap.style.display=_notesFull?'none':'';
+    notesHint.style.display=_notesFull?'none':'';
+    p2NavWrap.style.display=_notesFull?'none':'';
+    notesTitleRow.style.display=_notesFull?'none':'flex';
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+
+  notesControls.appendChild(lockBtn);notesControls.appendChild(fsBtn);
+  notesTitleRow.appendChild(notesTitleText);notesTitleRow.appendChild(notesControls);
+
+  var notesCard=div('card');
+  notesCard.appendChild(notesTitleRow);notesCard.appendChild(phraseBar);notesCard.appendChild(notesWrap);notesCard.appendChild(moveBtn);notesCard.appendChild(reviewBtnWrap);notesCard.appendChild(notesHint);
 
   // Page 2 nav
   var p2NavWrap=div('page-nav-bar');
@@ -1615,7 +1748,14 @@ function buildLogDOM(lid,projData){
     reader.readAsDataURL(file);rvPhotoInput.value='';
   });
 
-  var rvCard=div('card');rvCard.innerHTML='<div class="card-title">Review entries</div><p style="font-size:13px;color:var(--color-text-secondary,#666);margin-bottom:1rem">Review entries below. Discard any not needed in the final report. Edit text directly if adjustments are needed. Add photos here.</p>';
+  var rvCard=div('card');rvCard.innerHTML='<div class="card-title">Review entries</div>';
+  // Photo callout banner
+  var photoBanner=div();
+  photoBanner.style.cssText='background:#fff8e6;border:1.5px solid #e6a817;border-radius:8px;padding:10px 12px;margin-bottom:12px;display:flex;align-items:center;gap:10px';
+  photoBanner.innerHTML='<span style="font-size:22px">📷</span><div><div style="font-weight:700;font-size:13px;color:#7a4f00">This is the only place to add photos to the report</div><div style="font-size:12px;color:#7a4f00;margin-top:2px">Photos cannot be added from the Notes page. Add them here before building the report.</div></div>';
+  rvCard.appendChild(photoBanner);
+  rvPhotoBtn.style.cssText='margin-bottom:12px;width:100%;padding:12px;font-size:14px;font-weight:600';
+  rvPhotoBtn.innerHTML='📷 Add Photo to Report';
   rvCard.appendChild(rvPhotoBtn);
   var rvList=div();rvList.id='l'+lid+'-review-list';rvCard.appendChild(rvList);
 
