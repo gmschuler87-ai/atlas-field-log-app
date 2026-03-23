@@ -967,13 +967,12 @@ function generatePDF() {
   saveLibrary();
   renderLibrary();
 
-  // Show preview modal then clear session
+  // End session immediately — report is safely in library
   document.getElementById('print-output').innerHTML = fullHtml;
   showToast('Saved to library');
-  showPdfPreview(fullHtml, function(){
-    // After preview closed — end session
-    endSession();
-  });
+  endSession();
+  // Show preview after session cleared
+  showPdfPreview(fullHtml);
 }
 function endSession(){
   localStorage.removeItem(SK);
@@ -988,7 +987,7 @@ function endSession(){
   showToast('Session ended — report saved to Library');
   showHome();
 }
-function showPdfPreview(html, onClose){
+function showPdfPreview(html){
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:300;display:flex;flex-direction:column';
   const toolbar=document.createElement('div');
@@ -1002,7 +1001,7 @@ function showPdfPreview(html, onClose){
   const closeBtn=document.createElement('button');
   closeBtn.textContent='✕ Close';
   closeBtn.style.cssText='padding:8px 12px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  closeBtn.onclick=function(){modal.remove();if(onClose)onClose();};
+  closeBtn.onclick=function(){modal.remove();};
   btns.appendChild(printBtn);btns.appendChild(closeBtn);
   toolbar.appendChild(btns);modal.appendChild(toolbar);
   const frame=document.createElement('iframe');
