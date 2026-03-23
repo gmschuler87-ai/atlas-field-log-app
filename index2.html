@@ -95,13 +95,13 @@ textarea{resize:vertical;line-height:1.5}
 .crew-pills-label{font-size:11px;color:var(--atlas-text-secondary);white-space:nowrap;flex-shrink:0}
 .equip-inputs{display:flex;flex-direction:column;gap:6px;margin-top:4px}
 .ta-footer{display:flex;gap:6px;padding:6px 8px;background:var(--atlas-bg-subtle);border-top:1px solid var(--atlas-border)}
-.entry-row{display:flex;gap:6px;align-items:flex-start;padding:6px 8px;border-bottom:1px solid var(--atlas-border);background:#fff;transition:background 0.1s}
+.entry-row{display:flex;gap:6px;align-items:flex-start;padding:10px 8px;border-bottom:1px solid var(--atlas-border);background:#fff;transition:background 0.1s}
 .entry-row:last-child{border-bottom:none}
 .entry-row.drag-over{background:#e8f4f8;border-color:var(--atlas-primary)}
 .entry-drag{cursor:grab;color:var(--atlas-text-secondary);font-size:16px;padding:2px 2px;user-select:none;flex-shrink:0;margin-top:6px;opacity:0.4}
 .entry-drag:hover{opacity:1}
-.entry-time{width:72px;flex-shrink:0;padding:10px 8px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:14px;font-family:inherit;background:#fff}
-.entry-text{flex:1;padding:10px 8px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:14px;font-family:inherit;resize:none;min-height:42px;line-height:1.5;background:#fff}
+.entry-time{width:72px;flex-shrink:0;padding:12px 8px;border:1px solid var(--atlas-border-strong);border-radius:8px;font-size:15px;font-family:inherit;background:#fff}
+.entry-text{flex:1;padding:12px 10px;border:1px solid var(--atlas-border-strong);border-radius:8px;font-size:15px;font-family:inherit;resize:none;min-height:72px;line-height:1.6;background:#fff}
 .entry-del{flex-shrink:0;padding:10px 12px;font-size:15px;color:#c0392b;border:none;background:none;cursor:pointer;opacity:0.5;font-family:inherit}
 .entry-del:hover{opacity:1}
 .divider{font-size:11px;font-weight:700;color:var(--atlas-primary);text-transform:uppercase;letter-spacing:0.06em;margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid var(--atlas-border)}
@@ -151,7 +151,7 @@ textarea{resize:vertical;line-height:1.5}
 .welcome-btn-primary:hover{background:var(--atlas-primary-dark)}
 .welcome-btn-secondary{background:none;border:2px solid var(--atlas-primary);color:var(--atlas-primary)}
 .welcome-btn-secondary:hover{background:var(--atlas-bg-subtle)}
-@media(max-width:600px){.fr2{grid-template-columns:1fr}.entry-row{flex-wrap:wrap;gap:4px}.entry-drag{display:none}.entry-time{width:90px;font-size:16px}.entry-text{width:100%;flex-basis:100%;font-size:16px;min-height:52px}.entry-del{padding:6px 10px;margin-left:auto}.ta-footer{flex-wrap:wrap;gap:6px}.ta-footer .btn-sm{font-size:14px;padding:8px 14px;min-height:42px}}
+@media(max-width:600px){.fr2{grid-template-columns:1fr}.entry-row{flex-wrap:wrap;gap:4px}.entry-drag{display:none}.entry-time{width:90px;font-size:16px}.entry-text{width:100%;flex-basis:100%;font-size:16px;min-height:90px}.entry-del{padding:6px 10px;margin-left:auto}.ta-footer{flex-wrap:wrap;gap:6px}.ta-footer .btn-sm{font-size:14px;padding:8px 14px;min-height:42px}}
 
 .page-nav-bar{position:sticky;bottom:0;z-index:90;background:var(--atlas-bg-card);border-top:2px solid var(--atlas-primary);padding:10px 1rem;display:flex;gap:8px;justify-content:space-between;margin-top:1rem;box-shadow:0 -2px 12px rgba(61,110,126,0.15)}
 .page-nav-bar .btn{flex:1;padding:12px 8px;font-size:14px;min-height:48px}
@@ -1278,7 +1278,7 @@ function buildLogDOM(lid,projData){
     var timeInp=el('input');timeInp.className='entry-time';timeInp.placeholder='0730';timeInp.value=timeVal||'';timeInp.maxLength=4;
     timeInp.addEventListener('input',function(){timeInp.value=timeInp.value.replace(/\D/g,'');syncScratchpad();});
     timeInp.addEventListener('focus',function(){lastFocusedRow=row;});
-    var textInp=el('textarea');textInp.className='entry-text';textInp.placeholder='Describe activity...';textInp.value=noteVal||'';textInp.rows=1;
+    var textInp=el('textarea');textInp.className='entry-text';textInp.placeholder='Describe activity...';textInp.value=noteVal||'';textInp.rows=3;
     textInp.addEventListener('focus',function(){lastFocusedRow=row;});
     textInp.addEventListener('input',function(){this.style.height='auto';this.style.height=this.scrollHeight+'px';syncScratchpad();});
     var delBtn=el('button','entry-del');delBtn.textContent='✕';delBtn.title='Hold to delete';delBtn.type='button';
