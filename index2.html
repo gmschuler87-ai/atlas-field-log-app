@@ -595,6 +595,14 @@ function goStage(lid,n){
   var prev=document.getElementById('l'+lid+'-prev-arrow');if(prev)prev.disabled=(n===1);
   var next=document.getElementById('l'+lid+'-next-arrow');if(next)next.disabled=(n===5);
   for(var di=1;di<=5;di++){var dot=document.getElementById('l'+lid+'-dot-'+di);if(!dot)continue;dot.className='stage-dot'+(di<n?' done':(di===n?' active':''));}
+  // Scroll: notes page goes to bottom (most recent entry), all others go to top
+  setTimeout(function(){
+    if(n===2){
+      window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+    } else {
+      window.scrollTo({top:0,behavior:'smooth'});
+    }
+  },50);
   saveLogs();
 }
 
