@@ -111,6 +111,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--atlas-dark);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:700;opacity:0;transition:.25s;z-index:200;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.2);}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
+/* ── TAP BUTTONS (visible dust / odors) ── */
+.tap-btn-group{display:flex;gap:8px;height:var(--touch);}
+.tap-btn{flex:1;height:var(--touch);border-radius:10px;border:2px solid var(--input-border);font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;transition:.1s;background:var(--input-bg);color:var(--text-dim);}
+.tap-btn-inactive{background:var(--input-bg);border-color:var(--input-border);color:var(--text-dim);}
+.tap-btn-yes{background:#fef2f2;border-color:#dc2626;color:#dc2626;}
+.tap-btn-no{background:#f0fdf4;border-color:#059669;color:#059669;}
+body.dark .tap-btn-inactive{background:var(--input-bg);border-color:var(--input-border);}
+
 /* ── MISC ── */
 .action-info{font-size:13px;color:var(--text-dim);line-height:1.6;padding:4px 0;}
 .action-info strong{color:var(--warning);font-weight:700;}
@@ -777,12 +785,26 @@ function renderRounds() {
           <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-dust" value="${rd.voc}" onchange="updateReading(${round.id},${rd.id},'voc',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
           <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" inputmode="decimal" enterkeyhint="next" data-next="input-noise" value="${rd.dust}" onchange="updateReading(${round.id},${rd.id},'dust',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
         </div>
-        <div class="form-row">
-          <div class="form-group"><label>Visible Dust?</label><select class="input-visdust" onchange="updateReading(${round.id},${rd.id},'visibleDust',this.value);if(this.value)advanceToNext(this);" data-next="input-noise" style="${missingVis?missingStyle:''}"><option value="">--</option><option value="No" ${rd.visibleDust==='No'?'selected':''}>No</option><option value="Yes" ${rd.visibleDust==='Yes'?'selected':''}>Yes</option></select></div>
-          <div class="form-group"><label>Noise (dB)</label><input class="input-noise" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-comments" value="${rd.noise}" onchange="updateReading(${round.id},${rd.id},'noise',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${missingNoise?missingStyle:''}"></div>
+        <div class="form-row full">
+          <div class="form-group"><label>Noise (dB)</label><input class="input-noise" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-visdust-yes" value="${rd.noise}" onchange="updateReading(${round.id},${rd.id},'noise',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>Odors</label><select class="input-odors" onchange="updateReading(${round.id},${rd.id},'odors',this.value);if(this.value)advanceToNext(this);" data-next="input-comments" style="${missingOdors?missingStyle:''}"><option value="">--</option><option value="N" ${rd.odors==='N'?'selected':''}>N</option><option value="Y" ${rd.odors==='Y'?'selected':''}>Y</option></select></div>
+          <div class="form-group">
+            <label>Visible Dust?</label>
+            <div class="tap-btn-group input-visdust-yes" data-next="input-odors-n" tabindex="-1">
+              <button class="tap-btn ${rd.visibleDust==='No'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','No',${round.id},${rd.id},'input-odors-n')">No</button>
+              <button class="tap-btn ${rd.visibleDust==='Yes'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','Yes',${round.id},${rd.id},'input-odors-n')">Yes</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Odors?</label>
+            <div class="tap-btn-group input-odors-n" data-next="input-comments" tabindex="-1">
+              <button class="tap-btn ${rd.odors==='N'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'odors','N',${round.id},${rd.id},'input-comments')">No</button>
+              <button class="tap-btn ${rd.odors==='Y'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'odors','Y',${round.id},${rd.id},'input-comments')">Yes</button>
+            </div>
+          </div>
+        </div>
+        <div class="form-row full">
           <div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" value="${rd.comments||''}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="Notes..."></div>
         </div>
       </div>`;
@@ -1724,17 +1746,46 @@ async function toggleWakeLock(){
   }catch(e){showToast('Could not enable: '+e.message);}
 }
 
+// ===== TAP FIELD (visible dust / odors) =====
+function setTapField(btn, field, val, rid, readId, nextClass){
+  // Update data
+  updateReading(rid, readId, field, val);
+  // Update button states in this group
+  const group = btn.parentElement;
+  group.querySelectorAll('.tap-btn').forEach(function(b){
+    b.className = 'tap-btn tap-btn-inactive';
+  });
+  if(val==='No'||val==='N') btn.className='tap-btn tap-btn-no';
+  else btn.className='tap-btn tap-btn-yes';
+  // Auto-advance to next field
+  const card = btn.closest('.reading-item');
+  if(card && nextClass){
+    const next = card.querySelector('.'+nextClass);
+    if(next){
+      setTimeout(function(){
+        if(next.focus) next.focus();
+        if(next.select && next.type !== 'number') next.select();
+      }, 50);
+    }
+  }
+}
+
 // ===== FIELD AUTO-ADVANCE =====
 function advanceToNext(el){
-  // Find the next input/select in the same reading-item by class
   const card = el.closest('.reading-item');
   if(!card) return;
   const nextClass = el.dataset.next;
   if(!nextClass) return;
   const next = card.querySelector('.'+nextClass);
   if(next){
-    next.focus();
-    if(next.select && next.type !== 'number') next.select();
+    // If it's a tap-btn-group, focus the first button
+    if(next.classList.contains('tap-btn-group')){
+      const firstBtn = next.querySelector('.tap-btn');
+      if(firstBtn) firstBtn.focus();
+    } else {
+      next.focus();
+      if(next.select && next.type !== 'number') next.select();
+    }
   }
 }
 
