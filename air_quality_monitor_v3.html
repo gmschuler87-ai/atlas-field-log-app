@@ -308,7 +308,8 @@ body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
 
 <!-- ===== BOTTOM BAR ===== -->
 <div class="bottom-bar">
-  <button class="btn btn-primary btn-block" onclick="generatePDF()">📄 Generate & Save PDF</button>
+  <button class="btn btn-primary" style="flex:1" onclick="generatePDF()">📄 Generate PDF</button>
+  <button class="btn btn-danger" style="white-space:nowrap" onclick="promptEndSession()">End Session</button>
 </div>
 
 <script>
@@ -772,13 +773,74 @@ function renderLibrary() {
       <div class="lib-info"><div class="lib-title">${item.title}</div><div class="lib-date">${item.date} — ${item.readingCount} readings</div></div>
       <div class="lib-actions">
         <button class="btn btn-sm btn-primary" onclick="viewLibraryItem(${i})">Open</button>
+        <button class="btn btn-sm btn-outline" onclick="resumeLibraryItem(${i})">Resume</button>
         <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteLibraryItem(${i});})">Delete</button>
       </div>
     </div>`).join('');
 }
+function resumeLibraryItem(idx) {
+  const item = library[idx];
+  if(!item || !item.data) { showToast('No data in this report'); return; }
+
+  // Check for active session first
+  const hasSession = rounds.some(r=>r.readings.length>0) ||
+    document.getElementById('wellId').value.trim() ||
+    document.getElementById('employees').value.trim();
+
+  function doResume() {
+    const d = item.data;
+    const si = d.si || {};
+
+    // Restore form fields
+    ['wellId','projectNum','phase','siteDate','employees','siteMPs',
+     'pidModel','pidDateTime','pidReading','dustModel','dustDateTime','dustReading',
+     'soundModel','soundDateTime','soundReading','extraModel','extraDateTime','extraReading'
+    ].forEach(function(id){
+      const el = document.getElementById(id);
+      if(el && si[id] !== undefined) el.value = si[id];
+    });
+
+    // Restore rounds
+    rounds = d.rounds ? JSON.parse(JSON.stringify(d.rounds)) : [];
+    roundCounter = rounds.length ? Math.max.apply(null, rounds.map(r=>r.id)) : 0;
+
+    // Restore checklists
+    if(d.chk) window._pendingChecklists = d.chk;
+
+    // Re-render everything
+    renderRounds();
+    renderAllPresetDropdowns();
+    if(window._pendingChecklists) restoreChecklists();
+
+    // Save as active session
+    saveData();
+    showToast('Session resumed');
+    switchTab('readings');
+  }
+
+  if(hasSession) {
+    // Use two-tap confirm pattern via a modal instead of confirm()
+    const modal = document.createElement('div');
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.innerHTML = `<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:340px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">Resume this report?</div>
+      <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">This will replace your current active session. Your current session will be lost unless you generate a PDF first.</p>
+      <div style="display:flex;gap:8px">
+        <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
+        <button onclick="this.closest('[style*=fixed]').remove();doResume()" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Resume</button>
+      </div>
+    </div>`;
+    // doResume needs to be accessible from onclick
+    modal._doResume = doResume;
+    modal.querySelector('button:last-child').onclick = function(){modal.remove(); doResume();};
+    modal.addEventListener('click', function(e){if(e.target===modal)modal.remove();});
+    document.body.appendChild(modal);
+  } else {
+    doResume();
+  }
+}
+
 function deleteLibraryItem(idx) {
-  var answer = confirm('Delete this saved form?');
-  if(!answer) return;
   library.splice(idx, 1);
   saveLibrary();
   renderLibrary();
@@ -967,13 +1029,47 @@ function generatePDF() {
   saveLibrary();
   renderLibrary();
 
-  // End session immediately — report is safely in library
   document.getElementById('print-output').innerHTML = fullHtml;
   showToast('Saved to library');
-  endSession();
-  // Show preview after session cleared
   showPdfPreview(fullHtml);
 }
+function promptEndSession(){
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML=`<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:340px">
+    <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">End this session?</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">The current session will be saved to the Library and the form will be cleared for a new log. Make sure you have generated a PDF first if you need a printed copy.</p>
+    <div style="display:flex;gap:8px">
+      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
+      <button id="confirmEndBtn" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--danger);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">End Session</button>
+    </div>
+  </div>`;
+  modal.querySelector('#confirmEndBtn').onclick=function(){
+    modal.remove();
+    // Save to library first if there's anything worth saving
+    const data=collectFormData();
+    const si=data.si;
+    const totalReadings=rounds.reduce(function(n,r){return n+r.readings.length;},0);
+    if(totalReadings>0||si.wellId||si.employees){
+      let dateStr=si.siteDate;
+      if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=(d.getMonth()+1)+'/'+(d.getDate())+'/'+(d.getFullYear());}
+      const libEntry={
+        title:(si.wellId||'Untitled')+' — '+(dateStr||new Date().toLocaleDateString()),
+        date:dateStr||new Date().toLocaleDateString(),
+        readingCount:totalReadings,
+        data:data,
+        savedAt:new Date().toISOString()
+      };
+      library.unshift(libEntry);
+      saveLibrary();
+      renderLibrary();
+    }
+    endSession();
+  };
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
 function endSession(){
   localStorage.removeItem(SK);
   rounds=[];roundCounter=0;
@@ -1297,8 +1393,13 @@ function buildWelcomeScreen(){
   startBtn.style.cssText='padding:'+(hasSession?'10px 20px':'14px 32px')+';background:'+(hasSession?'none':'var(--atlas-primary)')+';color:'+(hasSession?'var(--atlas-primary)':'#fff')+';border:'+(hasSession?'1px solid var(--atlas-primary)':'none')+';border-radius:8px;font-size:'+(hasSession?'13px':'15px')+';font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;width:100%;max-width:280px';
   startBtn.onclick=function(){
     if(hasSession){
-      if(!confirm('Clear current session and start fresh?'))return;
-      clearAll();
+      const modal=document.createElement('div');
+      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
+      modal.innerHTML='<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:320px"><div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">Start fresh?</div><p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">This will clear the current session. Any unsaved data will be lost.</p><div style="display:flex;gap:8px"><button onclick="this.parentElement.parentElement.parentElement.remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button><button id="confirmNewBtn" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--danger);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Clear & Start</button></div></div>';
+      modal.querySelector('#confirmNewBtn').onclick=function(){modal.remove();clearAll();switchTab('info');};
+      modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+      document.body.appendChild(modal);
+      return;
     }
     switchTab('info');
   };
@@ -1319,13 +1420,14 @@ function buildWelcomeScreen(){
 }
 function showFullGuide(){
   const sections=[
-    {h:'Site Info',b:'Fill in Location ID, project number, phase, date and employee names at the start of the day. Use the weather section to auto-fill temperature and wind data by entering your zip code or using GPS.'},
-    {h:'Instruments',b:'Three standard instrument types are pre-defined: VOC/PID monitor, Dust/PM10 monitor, and Sound Level monitor. Enter the specific model name for each instrument being used today and save it for quick loading on future sessions. Record the date/time and result of each bump/cal. A 4th optional slot is available for any additional instrument.'},
-    {h:'Readings',b:'Tap + New Round to start a monitoring round. Each round has shared conditions (temp, wind). Add individual readings per monitoring point within each round. VOC and dust readings above action levels are flagged automatically in red.'},
+    {h:'Site Info',b:'Fill in Location ID, project number, phase, date, and employee names at the start of the day. Enter your monitoring point names (e.g. Upwind, Downwind, Property Line N) in the Monitoring Points field — these populate the MP dropdown in every round. Save them as a preset tied to the Location ID for quick loading next time.'},
+    {h:'Instruments',b:'Three standard instrument types are always shown: VOC/PID monitor, Dust/PM10 monitor, and Sound Level monitor. Enter the specific model name for each instrument being used today and tap Save to store it for future sessions. Record the date/time and bump/cal result for each. A 4th optional slot can be expanded for any additional instrument.'},
+    {h:'Readings',b:'Tap + New Round to start a monitoring round. Each round has its own weather section — enter a ZIP code or tap GPS to auto-fill temp, wind speed, wind direction, and conditions in one tap. All fields stay editable if the auto-fill is wrong. Add individual readings per monitoring point within each round. VOC ≥ 2 ppm and dust ≥ 0.050 mg/m³ are flagged red automatically. The round header shows a ⚠ ACTION badge if any reading inside it hit an action level. Use ⛶ to go fullscreen while taking readings.'},
     {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for any item marked N/A or NO.'},
-    {h:'Library',b:'All generated PDFs are saved here. Tap Open to view a saved report. Use Backup to export all data to a JSON file and Restore to reload it on a new device.'},
-    {h:'Safety',b:'The Safety tab provides quick access to CORE Health injury reporting (tap to call 24/7), the Stop Work Authority statement, and links to Atlas safety resources in IndustrySafe.'},
-    {h:'Tips',b:'• Tap the Atlas logo at any time to return to this home screen.<br>• Swipe left or right to move between tabs.<br>• Weather auto-fills temperature, wind speed and direction. Check for heat advisories above 95°F.<br>• The Generate PDF button saves the report to the Library and opens the print dialog.'},
+    {h:'Library',b:'Saved reports are listed here. Tap Open to view a report as a PDF. Tap Resume to reload a saved report back into the active session for editing. Use Backup to export all data to a JSON file and Restore to reload it on a new device.'},
+    {h:'Ending a Session',b:'When you are done for the day, tap Generate PDF to save a copy to the Library and open the print dialog. Then tap End Session in the bottom bar — you will be asked to confirm, and the session data will be saved to the Library before the form clears. The next time you open the app the home screen will show a clean start.'},
+    {h:'Safety',b:'The Safety tab provides quick access to CORE Health injury reporting (tap to call 24/7), the full Stop Work Authority statement, and links to Atlas safety resources in IndustrySafe including JSA Master List, BBS Observations, Incident/Near Miss reporting, and DSR Site Audits.'},
+    {h:'Tips',b:'• Tap the Atlas logo at any time to return to the home screen.<br>• Swipe left or right to move between tabs.<br>• Each round has its own Get Weather / GPS button — weather is not shared between rounds.<br>• The summary bar at the top of Readings shows total rounds, readings, and any action level hits at a glance.<br>• 👁 Stay Awake in the Library tab keeps the screen on while monitoring.<br>• Two-tap delete on all buttons — first tap turns red and says Sure?, second tap confirms.'},
   ];
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;overflow-y:auto;padding:20px';
