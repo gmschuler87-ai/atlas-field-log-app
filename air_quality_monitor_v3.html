@@ -838,122 +838,109 @@ function collectFormData() {
 }
 
 function generatePdfHtml(data) {
-  const {si, inst, chk, rounds:savedRounds} = data;
+  const {si, chk, rounds:savedRounds} = data;
   let dateStr=si.siteDate;
-  if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=`${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;}
-  function fmtDT(v){if(!v)return'';const d=new Date(v);return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()} ${d.toTimeString().slice(0,5)}`;}
+  if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=(d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();}
+  function fmtDT(v){if(!v)return'';const d=new Date(v);return (d.getMonth()+1)+'/'+d.getDate()+' '+d.toTimeString().slice(0,5);}
 
   // Flatten readings chronologically
-  const allReadings = [];
-  const chronoRounds = [...savedRounds].reverse();
-  chronoRounds.forEach(round=>{
-    const chronoReadings = [...round.readings].reverse();
-    chronoReadings.forEach(rd=>{
+  const allReadings=[];
+  [...savedRounds].reverse().forEach(function(round){
+    [...round.readings].reverse().forEach(function(rd){
       allReadings.push({
-        time:rd.time, monitorPoint:rd.monitorPoint, voc:rd.voc, dust:rd.dust,
-        visibleDust:rd.visibleDust, noise:rd.noise, odors:rd.odors,
-        wind:(round.windDir?(round.windDir+(round.windSpeed?' '+round.windSpeed+' mph':'')):''), temp:round.temp, comments:rd.comments
+        time:rd.time||'', mp:rd.monitorPoint||'',
+        voc:rd.voc||'', dust:rd.dust||'',
+        vis:rd.visibleDust||'', noise:rd.noise||'', odors:rd.odors||'',
+        wind:(round.windDir||round.windSpeed)?((round.windDir||'')+(round.windSpeed?' '+round.windSpeed+' mph':'')):'',
+        temp:round.temp||'', cond:round.conditions||'', comments:rd.comments||''
       });
     });
   });
 
+  const css = '<style>*{box-sizing:border-box;margin:0;padding:0;}body{font-family:Arial,sans-serif;font-size:7pt;color:#000;}table{border-collapse:collapse;width:100%;}td,th{border:1px solid #000;padding:2px 3px;}th{background:#e0e0e0;font-weight:bold;text-align:center;}.hdr{display:flex;align-items:center;gap:8px;margin-bottom:4px;}.hdr img{height:28px;}.hdr h1{font-size:11pt;font-weight:bold;}.info td{font-size:7pt;}.section-title{font-size:8pt;font-weight:bold;background:#d4c5a0;text-align:left;padding:3px 4px;}.al{font-size:7pt;padding:2px 4px;border:1px solid #000;background:#f5f5f5;margin:3px 0;}.foot{font-size:6.5pt;border-top:1px solid #000;padding-top:2px;margin-top:3px;}@page{size:letter portrait;margin:0.35in;}@media print{body{margin:0;}}</style>';
 
+  function hdr(){
+    return '<div class="hdr"><img src="'+LOGO_B64+'"><h1>Air Quality Monitoring Log</h1></div>'
+      +'<table class="info" style="margin-bottom:3px"><tr>'
+      +'<td style="width:30%"><b>Location:</b> '+(si.wellId||'')+'</td>'
+      +'<td style="width:25%"><b>Project:</b> '+(si.projectNum||'')+'</td>'
+      +'<td style="width:20%"><b>Phase:</b> '+(si.phase||'')+'</td>'
+      +'<td style="width:25%"><b>Date:</b> '+(dateStr||'')+'</td>'
+      +'</tr><tr><td colspan="4"><b>Employee(s):</b> '+(si.employees||'')+'</td></tr></table>'
+      +'<div class="al"><b>Action Levels:</b> VOC = 2 ppmv &nbsp; Dust = 0.050 mg/m\u00b3 &nbsp; Opacity 20%</div>';
+  }
 
-  function chkRow(items, prefix) {
-    return items.map((text,i)=>{
-      const key=prefix+'_'+i; const val=chk[key]||''; const comment=chk[key+'_comment']||'';
-      return `<tr><td style="text-align:left;padding:3px 4px;font-size:7.5pt;border:1px solid #000;">${text}</td>
-        <td style="text-align:center;border:1px solid #000;font-size:7.5pt;">${val==='N/A'?'✓':''}</td>
-        <td style="text-align:center;border:1px solid #000;font-size:7.5pt;">${val==='YES'?'✓':''}</td>
-        <td style="text-align:center;border:1px solid #000;font-size:7.5pt;">${val==='NO'?'✓':''}</td>
-        <td style="text-align:left;padding:2px 3px;border:1px solid #000;font-size:7pt;">${comment}</td></tr>`;
+  // Checklist rows
+  function chkRows(items, prefix){
+    return items.map(function(text,i){
+      const key=prefix+'_'+i, val=chk[key]||'', cmt=chk[key+'_comment']||'';
+      return '<tr><td style="text-align:left;font-size:6.5pt">'+text+'</td>'
+        +'<td style="width:5%;text-align:center">'+(val==='N/A'?'✓':'')+'</td>'
+        +'<td style="width:5%;text-align:center">'+(val==='YES'?'✓':'')+'</td>'
+        +'<td style="width:5%;text-align:center">'+(val==='NO'?'✓':'')+'</td>'
+        +'<td style="width:28%;font-size:6.5pt;text-align:left">'+cmt+'</td></tr>';
     }).join('');
   }
-  const readingsHeader = `<tr style="background:#e8e8e8;">
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:7%;">Time</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:8%;">Monitor<br>Point</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:8%;">VOC<br>(ppm)</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:9%;">PM10 Dust<br>(mg/m³)</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:7%;">Visible<br>Dust?</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:7%;">Noise<br>(dB)</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:6%;">Odors<br>Y/N</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:6.5pt;font-weight:bold;width:12%;">Wind from<br>Direction/<br>Speed</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:6%;">TEMP<br>(°F)</th>
-    <th style="border:1px solid #000;padding:3px 2px;font-size:7pt;font-weight:bold;width:30%;">Comments</th></tr>`;
-  function readingRow(r) {
-    return `<tr>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.time||''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.monitorPoint||''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.voc?r.voc+' ppm':''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.dust?r.dust+' mg/m³':''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.visibleDust||''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.noise?r.noise+' dB':''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.odors||''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7pt;">${r.wind||''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:center;font-size:7.5pt;">${r.temp?r.temp+'°F':''}</td>
-      <td style="border:1px solid #000;padding:2px 3px;text-align:left;font-size:7pt;">${r.comments||''}</td></tr>`;
+  function chkHeader(title){
+    return '<tr><th class="section-title" style="text-align:left;width:57%">'+title+'</th>'
+      +'<th style="width:5%">N/A</th><th style="width:5%">YES</th><th style="width:5%">NO</th>'
+      +'<th style="width:28%">Comments</th></tr>';
   }
-  function emptyRow(){return '<tr>'+Array(10).fill('<td style="border:1px solid #000;height:16px;">&nbsp;</td>').join('')+'</tr>';}
-  function readingRows(slice, maxRows) {
-    let html = slice.map(r=>readingRow(r)).join('');
-    // Add a few blank rows for handwriting, but don't force a full page
-    const pad = Math.min(5, maxRows - slice.length);
-    for(let i=0;i<pad;i++) html+=emptyRow();
-    return html;
-  }
-  function headerBlock(){return `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;"><img src="${LOGO_B64}" style="height:32px;"><div style="font-size:14pt;font-weight:bold;text-align:center;flex:1;">Air Quality Monitoring Log</div></div>`;}
-  function siteInfoBlock(){return `<table style="width:100%;border-collapse:collapse;font-size:8pt;margin-bottom:2px;">
-    <tr><td style="border:1px solid #000;padding:2px 4px;width:30%;"><b>Location ID:</b> ${si.wellId}</td><td style="border:1px solid #000;padding:2px 4px;width:25%;"><b>Project Number:</b> ${si.projectNum}</td><td style="border:1px solid #000;padding:2px 4px;width:20%;"><b>Phase:</b> ${si.phase}</td><td style="border:1px solid #000;padding:2px 4px;width:25%;"><b>Date:</b> ${dateStr}</td></tr>
-    <tr><td colspan="4" style="border:1px solid #000;padding:2px 4px;"><b>Employee(s):</b> ${si.employees}</td></tr></table>`;}
-  function actionLevelBlock(){return `<div style="font-size:8pt;padding:2px 4px;border:1px solid #000;margin-bottom:4px;background:#f5f5f5;"><b>Action Levels:</b> VOC = 2 ppmv &nbsp;&nbsp; Dust = 0.050 mg/m³ &nbsp;&nbsp; Opacity 20%</div>`;}
-  function footerNote(){return `<div style="font-size:7pt;padding:3px 0;border-top:1px solid #000;margin-top:2px;"><b>Note:</b> Check in with Atlas Field Staff when temperature reaches 95°F. Record names of Atlas staff in Comments column.</div>`;}
-  function instPdfSection(){
-    const si2=data.si||si;
+
+  // Instruments
+  function instSection(){
     const rows=[
-      {name:'VOC Monitor'+(si2.pidModel?' ('+si2.pidModel+')':''),dt:si2.pidDT||'',r:si2.pidR||''},
-      {name:'Dust Monitor'+(si2.dustModel?' ('+si2.dustModel+')':''),dt:si2.dustDT||'',r:si2.dustR||''},
-      {name:'Sound Monitor'+(si2.soundModel?' ('+si2.soundModel+')':''),dt:si2.soundDT||'',r:si2.soundR||''},
+      {n:'VOC Monitor'+(si.pidModel?' ('+si.pidModel+')':''), dt:fmtDT(si.pidDT||''), r:si.pidR||''},
+      {n:'Dust Monitor'+(si.dustModel?' ('+si.dustModel+')':''), dt:fmtDT(si.dustDT||''), r:si.dustR||''},
+      {n:'Sound Monitor'+(si.soundModel?' ('+si.soundModel+')':''), dt:fmtDT(si.soundDT||''), r:si.soundR||''},
     ];
-    if(si2.extraModel){rows.push({name:si2.extraModel,dt:si2.extraDT||'',r:si2.extraR||''});}
-    const instRows=rows.map(r=>`<tr><td style="border:1px solid #000;padding:3px 4px;font-size:7.5pt;">${r.name}</td><td style="border:1px solid #000;padding:3px 4px;font-size:7.5pt;text-align:center;">${fmtDT(r.dt)}</td><td style="border:1px solid #000;padding:3px 4px;font-size:7.5pt;text-align:center;">${r.r}</td></tr>`).join('');
-    return `<table style="width:100%;border-collapse:collapse;margin-bottom:4px;"><tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:60%;">Instruments</th><th style="text-align:center;border:1px solid #000;font-size:7.5pt;width:20%;">Date/Time</th><th style="text-align:center;border:1px solid #000;font-size:7.5pt;width:20%;">Bump/Cal Reading</th></tr>${instRows}</table>`;
+    if(si.extraModel)rows.push({n:si.extraModel, dt:fmtDT(si.extraDT||''), r:si.extraR||''});
+    return '<table style="margin:3px 0"><tr><th class="section-title" style="text-align:left;width:55%">Instruments — Bump/Cal</th>'
+      +'<th style="width:25%">Date/Time</th><th style="width:20%">Reading</th></tr>'
+      +rows.map(function(r){return '<tr><td style="font-size:6.5pt">'+r.n+'</td><td style="text-align:center">'+r.dt+'</td><td style="text-align:center">'+r.r+'</td></tr>';}).join('')
+      +'</table>';
   }
 
-  // Build single flowing document - browser handles natural page breaks
-  // Only add explicit continuation pages if readings overflow
-  const READINGS_PER_PAGE = 18;
-  let pages = '';
-  let pageNum = 1;
-
-  // Page 1: full header + checklists + instruments + first batch of readings
-  const p1Readings = allReadings.slice(0, READINGS_PER_PAGE);
-  pages += `<div style="font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
-    ${headerBlock()}${siteInfoBlock()}${actionLevelBlock()}
-    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
-      <tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:50%;">DUST MONITORING PROCEDURES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">N/A</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">YES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">NO</th><th style="border:1px solid #000;font-size:7.5pt;width:29%;">COMMENTS</th></tr>
-      ${chkRow(dustProcItems,'proc')}</table>
-    ${instPdfSection()}
-    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
-      <tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:50%;">DUST MITIGATION MEASURES CHECKLIST</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">N/A</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">YES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">NO</th><th style="border:1px solid #000;font-size:7.5pt;width:29%;">COMMENTS</th></tr>
-      ${chkRow(dustMitItems,'mit')}</table>
-    <div style="text-align:center;font-size:11pt;font-weight:bold;margin:4px 0 2px;">Air Quality Monitoring</div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">${readingsHeader}${readingRows(p1Readings, READINGS_PER_PAGE)}</table>
-    ${footerNote()}
-  </div>`;
-
-  // Continuation pages only if needed
-  let idx = READINGS_PER_PAGE; pageNum = 2;
-  while(idx < allReadings.length) {
-    const slice = allReadings.slice(idx, idx+READINGS_PER_PAGE);
-    pages += `<div style="page-break-before:always;font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
-      ${headerBlock()}${siteInfoBlock()}${actionLevelBlock()}
-      <div style="text-align:center;font-size:11pt;font-weight:bold;margin:4px 0 2px;">Air Quality Monitoring (cont.)</div>
-      <table style="width:100%;border-collapse:collapse;">${readingsHeader}${readingRows(slice, READINGS_PER_PAGE)}</table>
-      ${footerNote()}
-    </div>`;
-    idx += READINGS_PER_PAGE; pageNum++;
+  // Readings table
+  const readHdr='<tr><th style="width:7%">Time</th><th style="width:8%">MP</th>'
+    +'<th style="width:7%">VOC<br>(ppm)</th><th style="width:9%">PM10<br>(mg/m\u00b3)</th>'
+    +'<th style="width:6%">Vis<br>Dust</th><th style="width:7%">Noise<br>(dB)</th>'
+    +'<th style="width:5%">Odor</th><th style="width:10%">Wind/Spd</th>'
+    +'<th style="width:6%">Temp<br>(\u00b0F)</th><th>Comments</th></tr>';
+  function readRow(r){
+    return '<tr>'
+      +'<td style="text-align:center">'+r.time+'</td>'
+      +'<td style="text-align:center">'+r.mp+'</td>'
+      +'<td style="text-align:center">'+(r.voc||'')+'</td>'
+      +'<td style="text-align:center">'+(r.dust||'')+'</td>'
+      +'<td style="text-align:center">'+r.vis+'</td>'
+      +'<td style="text-align:center">'+r.noise+'</td>'
+      +'<td style="text-align:center">'+r.odors+'</td>'
+      +'<td style="text-align:center">'+r.wind+'</td>'
+      +'<td style="text-align:center">'+r.temp+'</td>'
+      +'<td>'+r.comments+'</td></tr>';
   }
-  return pages;
+  function blankRow(){return '<tr>'+'<td style="height:14px">&nbsp;</td>'.repeat(10)+'</tr>';}
+
+  const foot='<div class="foot"><b>Note:</b> Check in with Atlas Field Staff when temperature reaches 95\u00b0F.</div>';
+
+  // ── PAGE 1: header + checklists + instruments ──
+  let html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+css+'</head><body>';
+  html+=hdr();
+  html+='<table style="margin-bottom:3px">'+chkHeader('DUST MONITORING PROCEDURES')+chkRows(dustProcItems,'proc')+'</table>';
+  html+=instSection();
+  html+='<table style="margin-bottom:3px">'+chkHeader('DUST MITIGATION MEASURES')+chkRows(dustMitItems,'mit')+'</table>';
+
+  // ── READINGS — start on same page, overflow naturally ──
+  html+='<div style="font-size:8pt;font-weight:bold;text-align:center;margin:3px 0">AIR QUALITY READINGS</div>';
+  html+='<table>'+readHdr;
+  allReadings.forEach(function(r){html+=readRow(r);});
+  // 5 blank rows
+  for(var i=0;i<5;i++)html+=blankRow();
+  html+='</table>';
+  html+=foot;
+  html+='</body></html>';
+  return html;
 }
 
 function generatePDF() {
