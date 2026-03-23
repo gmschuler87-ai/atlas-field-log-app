@@ -563,9 +563,9 @@ function showWelcome(){
     instructions.style.cssText='text-align:left;background:var(--color-background-secondary,#f0f0ee);border-radius:10px;padding:1rem 1.2rem;max-width:320px;width:100%;font-size:13px;line-height:1.7;color:var(--color-text-primary,#1a1a1a)';
     instructions.innerHTML='<div style="font-weight:600;margin-bottom:8px;font-size:14px">How to use</div>'
       +'<div><b>1 · Project Info</b> — Date, project, location, weather.</div>'
-      +'<div><b>2 · Notes</b> — Your main working page all day.</div>'
+      +'<div><b>2 · Notes</b> — Your main working page. Swipe left/right to change pages.</div>'
       +'<div><b>3 · Field Details</b> — Crew, scope, equipment, samples.</div>'
-      +'<div><b>4 · Review</b> — Edit entries, add photos.</div>'
+      +'<div><b>4 · Review</b> — Entries auto-sort by time. Edit, reorder, add photos.</div>'
       +'<div><b>5 · Report</b> — Build, print or email the PDF.</div>'
       +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(61,110,126,0.2);font-size:12px;color:var(--atlas-text-secondary)">🏠 <b>Tap the Atlas logo</b> in the top-left at any time to return to this screen.</div>';
 
@@ -1281,16 +1281,40 @@ function buildLogDOM(lid,projData){
     var textInp=el('textarea');textInp.className='entry-text';textInp.placeholder='Describe activity...';textInp.value=noteVal||'';textInp.rows=3;
     textInp.addEventListener('focus',function(){lastFocusedRow=row;});
     textInp.addEventListener('input',function(){this.style.height='auto';this.style.height=this.scrollHeight+'px';syncScratchpad();});
-    var delBtn=el('button','entry-del');delBtn.textContent='✕';delBtn.title='Hold to delete';delBtn.type='button';
-    var delTimer=null;var delConfirming=false;
-    function startDel(){delTimer=setTimeout(function(){delConfirming=true;delBtn.style.background='#A32D2D';delBtn.style.color='#fff';delBtn.style.borderRadius='6px';delTimer=setTimeout(function(){
-      if(entryList.querySelectorAll('.entry-row').length===1){textInp.value='';timeInp.value='';syncScratchpad();}else{row.remove();syncScratchpad();}
-      delConfirming=false;
-    },400);},500);}
-    function cancelDel(){clearTimeout(delTimer);if(delConfirming){delBtn.style.background='';delBtn.style.color='';delBtn.style.borderRadius='';delConfirming=false;}}
-    delBtn.addEventListener('mousedown',startDel);delBtn.addEventListener('touchstart',function(e){e.preventDefault();startDel();},{passive:false});
-    delBtn.addEventListener('mouseup',cancelDel);delBtn.addEventListener('mouseleave',cancelDel);
-    delBtn.addEventListener('touchend',cancelDel);delBtn.addEventListener('touchcancel',cancelDel);
+    var delBtn=el('button','entry-del');delBtn.textContent='✕';delBtn.title='Delete entry';delBtn.type='button';
+    var _delPending=false,_delCancel=null;
+    delBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(!_delPending){
+        // First tap — arm it
+        _delPending=true;
+        delBtn.textContent='Sure?';
+        delBtn.style.cssText='flex-shrink:0;padding:6px 10px;font-size:12px;font-weight:700;color:#fff;background:#c0392b;border:none;border-radius:6px;cursor:pointer;margin-left:auto';
+        _delCancel=setTimeout(function(){
+          _delPending=false;
+          delBtn.textContent='✕';delBtn.style.cssText='';
+        },2500);
+        // Cancel if they tap anywhere else
+        var cancelOnBlur=function(){
+          if(_delPending){_delPending=false;delBtn.textContent='✕';delBtn.style.cssText='';clearTimeout(_delCancel);}
+          document.removeEventListener('touchstart',cancelOnBlur,true);
+          document.removeEventListener('mousedown',cancelOnBlur,true);
+        };
+        setTimeout(function(){
+          document.addEventListener('touchstart',cancelOnBlur,true);
+          document.addEventListener('mousedown',cancelOnBlur,true);
+        },50);
+      } else {
+        // Second tap — confirm delete
+        clearTimeout(_delCancel);_delPending=false;
+        if(entryList.querySelectorAll('.entry-row').length===1){
+          textInp.value='';timeInp.value='';syncScratchpad();
+          delBtn.textContent='✕';delBtn.style.cssText='';
+        }else{
+          row.remove();syncScratchpad();
+        }
+      }
+    });
     row.addEventListener('dragstart',function(e){e.dataTransfer.effectAllowed='move';row.style.opacity='0.4';entryList._dragging=row;});
     row.addEventListener('dragend',function(){row.style.opacity='';entryList._dragging=null;entryList.querySelectorAll('.entry-row').forEach(function(r){r.classList.remove('drag-over');});syncScratchpad();});
     row.addEventListener('dragover',function(e){e.preventDefault();if(entryList._dragging&&entryList._dragging!==row)row.classList.add('drag-over');});
@@ -1416,6 +1440,16 @@ function buildLogDOM(lid,projData){
   p2NavWrap.appendChild(p2BackBtn);p2NavWrap.appendChild(p2FwdBtn);
 
   s2.appendChild(notesCard);s2.appendChild(p2NavWrap);
+  // Scroll-to-bottom button for notes page
+  var scrollDownBtn=el('button');
+  scrollDownBtn.id='l'+lid+'-scroll-down';
+  scrollDownBtn.textContent='⬇';
+  scrollDownBtn.title='Scroll to bottom';
+  scrollDownBtn.style.cssText='position:sticky;bottom:70px;left:100%;margin-right:8px;display:block;z-index:50;width:44px;height:44px;border-radius:50%;background:var(--atlas-primary);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0.85;transform:translateX(-8px)';
+  scrollDownBtn.addEventListener('click',function(){
+    window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'});
+  });
+  s2.appendChild(scrollDownBtn);
   pane.appendChild(s2);
 
   // ════════════════════════════════════
@@ -1688,12 +1722,12 @@ function showFullGuide(){
   var sections=[
     {head:'Overview',body:'This app helps you document daily field work and generate a formal Atlas Daily Field Report. Everything is saved locally on your device — no login required.'},
     {head:'1 · Project Info',body:'Fill this out at the start of each day. Enter the date (auto-fills to today), project number, phase, office, PM, location, well ID, and client.\n\n<b>Saving values for reuse:</b> Type a value into any field and tap the Save button next to it. It saves as a chip below the field. On future logs, tap the chip to auto-fill the field instantly.\n\n<b>Saved projects:</b> Use Save current at the top to save all header fields together as a named project. Load it on future logs from the dropdown.\n\n<b>Scope checkboxes:</b> Check the scopes that apply today. For a task not listed, type it in the custom scope field and tap Add.\n\n<b>Weather:</b> Enter your zip and tap Get Weather, or tap the GPS button to auto-fill from your location.'},
-    {head:'2 · Notes',body:'This is your main working page. Stay here most of the day.\n\n<b>Adding entries:</b> Tap <b>+ Timestamp Entry</b> to add a new row with the current time filled in. Tap <b>+ Entry</b> for a blank row. Each entry has a time field (4-digit military, e.g. 0730) and a text field.\n\n<b>Quick phrases:</b> The green chips at the top are one-tap phrases that insert into your current entry. H&S tailgate conducted, Work suspended - weather, and Scope change: are included by default. Tap + Phrase to add your own.\n\n<b>Scope changes:</b> When scope changes mid-day, tap the Scope change: chip and finish the sentence with what changed. This timestamps the change and it goes into the report.\n\n<b>👤 + Field Details button:</b> Tap this anytime to quickly add crew, visitors, or scope items without leaving the notes page.\n\n<b>Reordering:</b> Drag the ⋮⋮ handle on any entry to reorder it.\n\n<b>Deleting:</b> Hold the ✕ button for half a second to delete a row — prevents accidental deletions.'},
+    {head:'2 · Notes',body:'This is your main working page. Stay here most of the day.\n\n<b>Adding entries:</b> Tap <b>+ Timestamp Entry</b> to add a new row with the current time filled in. Tap <b>+ Entry</b> for a blank row. Each entry has a time field (4-digit military, e.g. 0730) and a text field.\n\n<b>Scroll to bottom:</b> Tap the ⬇ button floating on the right side to jump straight to the bottom where your entry buttons are — useful when you have many entries and the keyboard is open.\n\n<b>Quick phrases:</b> The green chips at the top are one-tap phrases that insert into your current entry. H&S tailgate conducted, Work suspended - weather, and Scope change: are included by default. Tap + Phrase to add your own.\n\n<b>Scope changes:</b> When scope changes mid-day, tap the Scope change: chip and finish the sentence with what changed. This timestamps the change and it goes into the report.\n\n<b>👤 + Field Details button:</b> Tap this anytime to quickly add crew, visitors, or scope items without leaving the notes page.\n\n<b>Reordering:</b> Drag the ⋮⋮ handle on any entry to reorder it.\n\n<b>Deleting:</b> Tap ✕ once — it turns red and asks Sure? Tap it again to confirm. Tap anywhere else to cancel.'},
     {head:'3 · Field Details',body:'Track crew, scope, equipment, waste, and samples. Update this throughout the day as things change.\n\n<b>Personnel:</b> Add Atlas reps, subcontractors, and visitors as they arrive. Tap Save names to store them for future logs.\n\n<b>Scope of Work:</b> Write the formal Atlas scope and contractor scope here. These go directly into the report.\n\n<b>Equipment:</b> Tap equipment pills to check them. Add one-off items for today only, or tap Save to add to your permanent list.\n\n<b>Mileage:</b> Enter total mileage for the day.'},
-    {head:'4 · Review',body:'Tap Review entries to move your notes to this page. All entries are kept by default.\n\nTap <b>Discard</b> on any entry to remove it from the report (you can bring it back).\n\nTap any entry text to edit it directly. Drag entries to reorder.\n\n<b>📷 Photos:</b> Added here, not during note-taking. Device storage is limited to 5MB — photos would fill it fast and corrupt your text saves. Add photos here for anything that needs to be in the report.\n\n<b>⚠ Photos do not save to drafts.</b> If you archive or draft before building the report, photos are lost. Build the report first if photos matter that day.'},
+    {head:'4 · Review',body:'Tap Review entries to move your notes to this page. All entries are kept by default.\n\n<b>Auto-sort:</b> Entries are automatically sorted by their timestamp when you arrive on this page. If you typed entries out of order, they will be sorted correctly here. You can still drag to reorder manually after.\n\nTap <b>Discard</b> on any entry to remove it from the report (you can bring it back).\n\nTap any entry text to edit it directly. Drag entries to reorder.\n\n<b>📷 Photos:</b> Added here, not during note-taking. Device storage is limited to 5MB — photos would fill it fast and corrupt your text saves. Add photos here for anything that needs to be in the report.\n\n<b>⚠ Photos do not save to drafts.</b> If you archive or draft before building the report, photos are lost. Build the report first if photos matter that day.'},
     {head:'5 · Report',body:'Tap <b>Build report</b> to generate the formatted Atlas Daily Field Report.\n\nTap <b>Print / Save PDF</b> to open the print dialog. On mobile, choose Save as PDF from your print options.\n\nTap <b>✉ Email</b> to pre-fill an email with report details — attach the PDF file manually.\n\nThe report is also saved to your Library automatically.'},
-    {head:'Library',body:'All completed reports and drafts are stored here, grouped by project number. Tap View to open a report. Tap Resume to reopen a draft. You can edit report text directly before printing.\n\n<b>⬇ Backup / ⬆ Restore:</b> Backup exports everything — logs, saved projects, crew names, equipment, library — to a JSON file. Restore loads it back. Use it when switching phones, or save one periodically in case your browser clears storage.\n\n<b>Where it saves:</b> Android — Downloads folder (find it in the Files app). iPhone — a share sheet appears, tap Save to Files and choose a location.\n\nThis is the only way to move your data between devices — there is no cloud sync.'},
-    {head:'Tips',body:'• <b>Tap the Atlas logo</b> in the top-left corner from any screen to return to the home screen.\n• The <b>📝 Notes</b> button at the bottom takes you straight back to your notes from any page.\n• Multiple logs can be open at once — useful if covering two sites in one day.\n• Dark mode toggle is the 🌙 button in the top nav.\n• The 👁 button keeps your screen awake while actively logging.'},
+    {head:'Library',body:'All completed reports and drafts are stored here, grouped by project number. Tap View to open a report. Tap Resume to reopen a draft. You can edit report text directly before printing.\n\n<b>🌙 Dark mode / 👁 Stay awake:</b> Both buttons are at the bottom of the Library screen. Dark mode switches the app to a dark theme. Stay awake prevents your screen from turning off while you are actively logging.\n\n<b>⬇ Backup / ⬆ Restore:</b> Backup exports everything — logs, saved projects, crew names, equipment, library — to a JSON file. Restore loads it back. Use it when switching phones, or save one periodically in case your browser clears storage.\n\n<b>Where it saves:</b> Android — Downloads folder (find it in the Files app). iPhone — a share sheet appears, tap Save to Files and choose a location.\n\nThis is the only way to move your data between devices — there is no cloud sync.'},
+    {head:'Tips',body:'• <b>Tap the Atlas logo</b> in the top-left corner from any screen to return to the home screen.\n• <b>Swipe left or right</b> anywhere on the page to move between the 5 pages — no need to tap the arrows.\n• The <b>📝 Notes</b> button at the bottom takes you straight back to your notes from any page.\n• Multiple logs can be open at once — useful if covering two sites in one day. Logs scroll horizontally in the tab bar.\n• <b>Dark mode</b> and <b>Stay awake</b> are in the Library screen at the bottom.'},
   ];
 
 
