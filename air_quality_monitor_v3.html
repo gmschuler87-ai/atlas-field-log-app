@@ -906,7 +906,9 @@ function generatePdfHtml(data) {
   function emptyRow(){return '<tr>'+Array(10).fill('<td style="border:1px solid #000;height:16px;">&nbsp;</td>').join('')+'</tr>';}
   function readingRows(slice, maxRows) {
     let html = slice.map(r=>readingRow(r)).join('');
-    for(let i=slice.length;i<maxRows;i++) html+=emptyRow();
+    // Add a few blank rows for handwriting, but don't force a full page
+    const pad = Math.min(5, maxRows - slice.length);
+    for(let i=0;i<pad;i++) html+=emptyRow();
     return html;
   }
   function headerBlock(){return `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;"><img src="${LOGO_B64}" style="height:32px;"><div style="font-size:14pt;font-weight:bold;text-align:center;flex:1;">Air Quality Monitoring Log</div></div>`;}
@@ -1289,12 +1291,6 @@ function buildWelcomeScreen(){
   const ws=document.getElementById('welcome-screen');
   // Always rebuild so session status stays current
   ws.innerHTML='';
-
-  // Logo
-  const logo=document.createElement('img');
-  logo.src=document.querySelector('.app-header img').src;
-  logo.style.cssText='width:220px;max-width:85%;height:auto;object-fit:contain;margin-bottom:8px';
-  ws.appendChild(logo);
 
   // Title
   const t=document.createElement('div');
