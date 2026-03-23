@@ -667,6 +667,18 @@ function addReadingToRound(rid) {
     voc:'', dust:'', visibleDust:'', noise:'', odors:'', comments:''
   });
   renderRounds(); saveData();
+  // Scroll to the new reading (first .reading-item in this round) and focus VOC
+  setTimeout(function(){
+    const roundEl = document.querySelector('[data-round="'+rid+'"]');
+    if(!roundEl) return;
+    const firstReading = roundEl.querySelector('.reading-item');
+    if(!firstReading) return;
+    firstReading.scrollIntoView({behavior:'smooth', block:'center'});
+    setTimeout(function(){
+      const vocInput = firstReading.querySelector('.input-voc');
+      if(vocInput) vocInput.focus();
+    }, 400);
+  }, 80);
 }
 function updateReading(rid, readId, field, val) {
   const r=rounds.find(r=>r.id===rid); if(!r) return;
