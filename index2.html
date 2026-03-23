@@ -1357,7 +1357,7 @@ function buildLogDOM(lid,projData){
     var textInp=el('textarea');textInp.className='entry-text';textInp.placeholder='Describe activity...';textInp.value=noteVal||'';textInp.rows=3;
     textInp.addEventListener('focus',function(){lastFocusedRow=row;});
     textInp.addEventListener('input',function(){this.style.height='auto';this.style.height=this.scrollHeight+'px';syncScratchpad();});
-    var delBtn=el('button','entry-del');delBtn.textContent='✕';delBtn.title='Delete entry';delBtn.type='button';
+    var delBtn=el('button','entry-del');delBtn.textContent='🗑';delBtn.title='Delete entry';delBtn.type='button';delBtn.style.cssText='flex-shrink:0;padding:4px 8px;font-size:14px;border:none;background:none;cursor:pointer;opacity:0.2;align-self:center;transition:opacity 0.15s';delBtn.addEventListener('mouseenter',function(){delBtn.style.opacity='0.8';});delBtn.addEventListener('mouseleave',function(){if(!_delPending)delBtn.style.opacity='0.2';});
     var _delPending=false,_delCancel=null;
     function doDelete(){
       clearTimeout(_delCancel);_delPending=false;
@@ -1399,11 +1399,24 @@ function buildLogDOM(lid,projData){
     row.addEventListener('dragover',function(e){e.preventDefault();if(entryList._dragging&&entryList._dragging!==row)row.classList.add('drag-over');});
     row.addEventListener('dragleave',function(){row.classList.remove('drag-over');});
     row.addEventListener('drop',function(e){e.preventDefault();row.classList.remove('drag-over');var dragging=entryList._dragging;if(!dragging||dragging===row)return;entryList.insertBefore(dragging,row);syncScratchpad();});
-    // Swipe left to delete
+    // Swipe left to trigger delete confirmation
     var _rsx=0,_rsy=0,_rsActive=false;
     row.addEventListener('touchstart',function(e){var t=e.touches[0];_rsx=t.clientX;_rsy=t.clientY;_rsActive=true;},{passive:true});
-    row.addEventListener('touchmove',function(e){if(!_rsActive)return;var t=e.touches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;if(Math.abs(dy)>Math.abs(dx)){_rsActive=false;return;}if(dx<-60){row.style.background='#fde8e8';row.style.transition='background 0.15s';}else{row.style.background='';}},{passive:true});
-    row.addEventListener('touchend',function(e){if(!_rsActive)return;_rsActive=false;var t=e.changedTouches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;row.style.background='';if(dx<-80&&Math.abs(dy)<40){armDelete();}},{passive:true});
+    row.addEventListener('touchmove',function(e){if(!_rsActive)return;var t=e.touches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;if(Math.abs(dy)>Math.abs(dx)*0.8){_rsActive=false;return;}if(dx<-50){row.style.background='#fde8e8';}else{row.style.background='';}},{passive:true});
+    row.addEventListener('touchend',function(e){if(!_rsActive)return;_rsActive=false;var t=e.changedTouches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;row.style.background='';if(dx<-70&&Math.abs(dy)<50){
+      // Show inline delete confirm bar instead of a button
+      if(row.querySelector('.del-confirm'))return;
+      var bar=div('del-confirm');
+      bar.style.cssText='display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fde8e8;border-top:1px solid #f5b7b1;font-size:13px;color:#922b21';
+      bar.innerHTML='<span>Delete this entry?</span>';
+      var yesBtn=el('button');yesBtn.textContent='Yes, delete';yesBtn.style.cssText='padding:5px 12px;background:#c0392b;color:#fff;border:none;border-radius:6px;font-size:13px;cursor:pointer;font-family:inherit';
+      var noBtn=el('button');noBtn.textContent='Keep';noBtn.style.cssText='padding:5px 10px;background:none;border:none;font-size:13px;cursor:pointer;color:#555;font-family:inherit';
+      yesBtn.addEventListener('click',function(){doDelete();});
+      noBtn.addEventListener('click',function(){bar.remove();});
+      bar.appendChild(noBtn);bar.appendChild(yesBtn);
+      row.appendChild(bar);
+      setTimeout(function(){if(bar.parentNode)bar.remove();},4000);
+    }},{passive:true});
     // Mic button for voice input
     var micBtn=el('button');micBtn.textContent='🎤';micBtn.type='button';
     micBtn.style.cssText='flex-shrink:0;padding:8px 10px;font-size:18px;border:none;background:none;cursor:pointer;opacity:0.5';
@@ -1583,11 +1596,16 @@ function buildLogDOM(lid,projData){
   var appHeader=document.querySelector('.app-header');
   var topNavEl=document.getElementById('top-nav');
   fsBtn.addEventListener('click',function(){
+    // Only allow fullscreen on mobile
+    if(window.innerWidth>768){
+      fsBtn.textContent='📱 Mobile only';
+      setTimeout(function(){fsBtn.textContent='⛶';},2000);
+      return;
+    }
     _notesFull=!_notesFull;
     fsBtn.textContent=_notesFull?'✕ Exit':'⛶';
     fsBtn.style.background=_notesFull?'var(--atlas-primary)':'none';
     fsBtn.style.color=_notesFull?'#fff':'var(--atlas-text-secondary)';
-    // Hide/show header, top nav, stage nav, phrase bar, move btn, review btn
     var stageNav=document.getElementById('l'+lid+'-stage-label');
     var stageNavBar=stageNav?stageNav.closest('.stage-nav'):null;
     if(appHeader)appHeader.style.display=_notesFull?'none':'';
