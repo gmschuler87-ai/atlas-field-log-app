@@ -354,16 +354,9 @@ function init() {
   renderRounds();
   renderLibrary();
   // Only show home if no meaningful data in current session
-  const hasSession = rounds.some(r=>r.readings.length>0) ||
-    document.getElementById('wellId').value.trim() ||
-    document.getElementById('employees').value.trim();
-  if(hasSession){
-    switchTab('readings');
-  } else {
-    if(rounds.length===0) addRound();
-    renderRounds();
-    showHome();
-  }
+  if(rounds.length===0) addRound();
+  renderRounds();
+  showHome();
 }
 
 // ===== TABS =====
@@ -864,10 +857,7 @@ function generatePdfHtml(data) {
     });
   });
 
-  const rowsPage1 = 12;
-  const rowsPageN = 22;
-  let totalPages = 1;
-  if(allReadings.length > rowsPage1) totalPages += Math.ceil((allReadings.length - rowsPage1) / rowsPageN);
+
 
   function chkRow(items, prefix) {
     return items.map((text,i)=>{
@@ -929,8 +919,15 @@ function generatePdfHtml(data) {
     return `<table style="width:100%;border-collapse:collapse;margin-bottom:4px;"><tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:60%;">Instruments</th><th style="text-align:center;border:1px solid #000;font-size:7.5pt;width:20%;">Date/Time</th><th style="text-align:center;border:1px solid #000;font-size:7.5pt;width:20%;">Bump/Cal Reading</th></tr>${instRows}</table>`;
   }
 
-  const p1Slice = allReadings.slice(0, rowsPage1);
-  let page1 = `<div style="font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
+  // Build single flowing document - browser handles natural page breaks
+  // Only add explicit continuation pages if readings overflow
+  const READINGS_PER_PAGE = 18;
+  let pages = '';
+  let pageNum = 1;
+
+  // Page 1: full header + checklists + instruments + first batch of readings
+  const p1Readings = allReadings.slice(0, READINGS_PER_PAGE);
+  pages += `<div style="font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
     ${headerBlock()}${siteInfoBlock()}${actionLevelBlock()}
     <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">
       <tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:50%;">DUST MONITORING PROCEDURES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">N/A</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">YES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">NO</th><th style="border:1px solid #000;font-size:7.5pt;width:29%;">COMMENTS</th></tr>
@@ -940,24 +937,23 @@ function generatePdfHtml(data) {
       <tr style="background:#d4c5a0;"><th style="text-align:left;padding:3px 4px;font-size:8pt;border:1px solid #000;width:50%;">DUST MITIGATION MEASURES CHECKLIST</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">N/A</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">YES</th><th style="border:1px solid #000;font-size:7.5pt;width:7%;">NO</th><th style="border:1px solid #000;font-size:7.5pt;width:29%;">COMMENTS</th></tr>
       ${chkRow(dustMitItems,'mit')}</table>
     <div style="text-align:center;font-size:11pt;font-weight:bold;margin:4px 0 2px;">Air Quality Monitoring</div>
-    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">${readingsHeader}${readingRows(p1Slice, rowsPage1)}</table>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:4px;">${readingsHeader}${readingRows(p1Readings, READINGS_PER_PAGE)}</table>
     ${footerNote()}
-    <div style="text-align:center;font-size:8pt;margin-top:4px;">PAGE 1 OF ${totalPages}</div></div>`;
+  </div>`;
 
-  let addPages = '';
-  let idx = rowsPage1; let pageNum = 2;
+  // Continuation pages only if needed
+  let idx = READINGS_PER_PAGE; pageNum = 2;
   while(idx < allReadings.length) {
-    const slice = allReadings.slice(idx, idx+rowsPageN);
-    addPages += `<div style="page-break-before:always;font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
+    const slice = allReadings.slice(idx, idx+READINGS_PER_PAGE);
+    pages += `<div style="page-break-before:always;font-family:Arial,Helvetica,sans-serif;width:7.5in;margin:0 auto;color:#000;">
       ${headerBlock()}${siteInfoBlock()}${actionLevelBlock()}
-      <div style="text-align:center;font-size:11pt;font-weight:bold;margin:4px 0 2px;">Air Quality Monitoring</div>
-      <table style="width:100%;border-collapse:collapse;">${readingsHeader}${readingRows(slice, rowsPageN)}</table>
-      <div style="font-size:7pt;padding:3px 0;border-top:1px solid #000;margin-top:4px;"><b>Note:</b> Attach an Air Monitoring Field Map. Mark all monitoring point locations.</div>
+      <div style="text-align:center;font-size:11pt;font-weight:bold;margin:4px 0 2px;">Air Quality Monitoring (cont.)</div>
+      <table style="width:100%;border-collapse:collapse;">${readingsHeader}${readingRows(slice, READINGS_PER_PAGE)}</table>
       ${footerNote()}
-      <div style="text-align:center;font-size:8pt;margin-top:4px;">PAGE ${pageNum} OF ${totalPages}</div></div>`;
-    idx += rowsPageN; pageNum++;
+    </div>`;
+    idx += READINGS_PER_PAGE; pageNum++;
   }
-  return page1 + addPages;
+  return pages;
 }
 
 function generatePDF() {
