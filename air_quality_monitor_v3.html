@@ -318,18 +318,15 @@ body.dark .lib-item{border-color:#1c3347;}
 <!-- ===== READINGS ===== -->
 <div id="panel-readings" class="panel">
   <!-- Summary bar -->
-  <div id="readingsSummary" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:12px 14px;margin-bottom:12px;display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;overflow:hidden"></div>
-  <!-- Controls row -->
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:8px">
-    <span style="font-size:14px;font-weight:800;color:var(--atlas-dark);letter-spacing:.2px">Monitoring Rounds</span>
-    <div style="display:flex;gap:8px;flex-shrink:0">
-      <button class="btn btn-sm btn-outline" id="readingsFullscreenBtn" onclick="toggleReadingsFullscreen()" title="Fullscreen" style="padding:0 10px;height:36px">⛶</button>
-      <button class="btn btn-sm btn-primary" onclick="addRound()" style="height:36px;font-weight:800">+ New Round</button>
-    </div>
+  <div id="readingsSummary" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;overflow:hidden"></div>
+  <!-- Primary action: Add Reading -->
+  <button onclick="addReadingToCurrentRound()" class="btn btn-primary btn-block" style="height:52px;font-size:16px;font-weight:800;letter-spacing:.2px;box-shadow:0 3px 10px rgba(58,107,130,.3);margin-bottom:8px">＋ Add Reading</button>
+  <!-- Secondary actions row -->
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button class="btn btn-outline" onclick="addRound()" style="flex:1;height:40px;font-size:13px;font-weight:700">＋ New Round</button>
+    <button class="btn btn-outline" id="readingsFullscreenBtn" onclick="toggleReadingsFullscreen()" style="height:40px;padding:0 14px;font-size:14px" title="Fullscreen">⛶</button>
   </div>
   <div id="roundsContainer"></div>
-  <!-- Scroll to bottom -->
-  <button onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})" style="position:sticky;bottom:70px;left:100%;display:block;margin-right:8px;width:44px;height:44px;border-radius:50%;background:var(--atlas-primary);color:#fff;border:none;font-size:18px;cursor:pointer;box-shadow:0 2px 8px rgba(0,0,0,0.25);opacity:0.85;transform:translateX(-8px)">⬇</button>
 </div>
 
 <!-- ===== CHECKLISTS ===== -->
@@ -684,6 +681,11 @@ function deleteRound(rid) {
   rounds = rounds.filter(r=>r.id!==rid);
   renderRounds(); saveData();
 }
+function addReadingToCurrentRound(){
+  // Add to most recent round (first in array)
+  if(rounds.length===0){ addRound(); return; }
+  addReadingToRound(rounds[0].id);
+}
 function addReadingToRound(rid) {
   const r=rounds.find(r=>r.id===rid); if(!r) return;
   const now = new Date();
@@ -840,8 +842,8 @@ function renderRounds() {
           <div class="form-group">
             <label>Visible Dust?</label>
             <div class="tap-btn-group input-visdust-yes" data-next="input-odors-n" tabindex="-1" >
-              <button class="tap-btn ${rd.visibleDust==='No'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','No',${round.id},${rd.id},'input-odors-n')">No</button>
-              <button class="tap-btn ${rd.visibleDust==='Yes'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','Yes',${round.id},${rd.id},'input-odors-n')">Yes</button>
+              <button class="tap-btn ${rd.visibleDust==='No'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','No',${round.id},${rd.id},'input-odors-n');scrollToNext(this,'input-odors-n')">No</button>
+              <button class="tap-btn ${rd.visibleDust==='Yes'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','Yes',${round.id},${rd.id},'input-odors-n');scrollToNext(this,'input-odors-n')">Yes</button>
             </div>
           </div>
           <div class="form-group">
@@ -1844,6 +1846,17 @@ function setTapField(btn, field, val, rid, readId, nextClass){
       window.scrollTo({top:0, behavior:'smooth'});
     }, 150);
   }
+}
+
+// ===== SCROLL TO NEXT =====
+function scrollToNext(btn, nextClass){
+  const card = btn.closest('.reading-item');
+  if(!card) return;
+  const next = card.querySelector('.'+nextClass);
+  if(!next) return;
+  setTimeout(function(){
+    next.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 100);
 }
 
 // ===== FIELD AUTO-ADVANCE =====
