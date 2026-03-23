@@ -30,7 +30,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:15px;color:var(--atlas-te
 .app-header-title{color:#fff;font-size:16px;font-weight:700;letter-spacing:0.01em;white-space:nowrap}
 .app-header-date{color:rgba(255,255,255,0.7);font-size:11px;margin-top:1px}
 .logo{width:88px;min-width:88px;display:flex;align-items:center;flex-shrink:0}
-.top-nav-fixed{display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:nowrap;justify-content:center}
+.top-nav-fixed{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
 .top-nav-logs{display:flex;gap:6px;margin-bottom:1rem;align-items:center;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .top-nav-logs::-webkit-scrollbar{display:none}
 .log-tab{padding:7px 14px;border:1px solid var(--atlas-border-strong);border-radius:6px;background:#fff;cursor:pointer;font-size:13px;color:var(--atlas-text-secondary);display:flex;align-items:center;gap:4px;white-space:nowrap;user-select:none;font-weight:500}
@@ -172,8 +172,8 @@ textarea{resize:vertical;line-height:1.5}
 </div>
 <div id="top-nav">
   <div class="top-nav-fixed">
-    <div class="lib-tab" id="lib-tab">Library</div>
-    <div class="lib-tab" id="safety-tab" style="border-color:#c0392b;color:#c0392b">🦺 Safety</div>
+    <div class="lib-tab" id="lib-tab" style="text-align:center;padding:10px 14px;font-size:14px;font-weight:600">📋 Library</div>
+    <div class="lib-tab" id="safety-tab" style="border-color:#c0392b;color:#c0392b;text-align:center;padding:10px 14px;font-size:14px;font-weight:600">🦺 Safety</div>
     <span id="offline-indicator" style="display:none;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5e6c8;color:#7a4f00;border:0.5px solid #c9860a;flex-shrink:0;margin-left:auto">📵 Offline</span>
   </div>
   <div class="top-nav-logs" id="top-nav-logs">
