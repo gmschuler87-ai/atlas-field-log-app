@@ -30,7 +30,9 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:15px;color:var(--atlas-te
 .app-header-title{color:#fff;font-size:16px;font-weight:700;letter-spacing:0.01em;white-space:nowrap}
 .app-header-date{color:rgba(255,255,255,0.7);font-size:11px;margin-top:1px}
 .logo{width:88px;min-width:88px;display:flex;align-items:center;flex-shrink:0}
-.top-nav{display:flex;gap:6px;margin-bottom:1rem;align-items:center;flex-wrap:nowrap;overflow-x:auto}
+.top-nav-fixed{display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:nowrap}
+.top-nav-logs{display:flex;gap:6px;margin-bottom:1rem;align-items:center;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.top-nav-logs::-webkit-scrollbar{display:none}
 .log-tab{padding:7px 14px;border:1px solid var(--atlas-border-strong);border-radius:6px;background:#fff;cursor:pointer;font-size:13px;color:var(--atlas-text-secondary);display:flex;align-items:center;gap:4px;white-space:nowrap;user-select:none;font-weight:500}
 .log-tab.active{background:var(--atlas-primary);color:#fff;border-color:var(--atlas-primary)}
 .xt{font-size:15px;line-height:1;padding:0 2px;opacity:0.7;background:none;border:none;cursor:pointer;color:inherit;font-family:inherit}
@@ -168,11 +170,15 @@ textarea{resize:vertical;line-height:1.5}
       <div class="app-header-date" id="hdr-date"></div>
   </div>
 </div>
-<div class="top-nav" id="top-nav">
-  <button class="new-log-btn" id="new-log-btn">+ New log</button>
-  <div class="lib-tab" id="lib-tab">Library</div>
-  <div class="lib-tab" id="safety-tab" style="border-color:#c0392b;color:#c0392b">🦺 Safety</div>
-  <span id="offline-indicator" style="display:none;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5e6c8;color:#7a4f00;border:0.5px solid #c9860a;flex-shrink:0;margin-left:auto">📵 Offline</span>
+<div id="top-nav">
+  <div class="top-nav-fixed">
+    <div class="lib-tab" id="lib-tab">Library</div>
+    <div class="lib-tab" id="safety-tab" style="border-color:#c0392b;color:#c0392b">🦺 Safety</div>
+    <span id="offline-indicator" style="display:none;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5e6c8;color:#7a4f00;border:0.5px solid #c9860a;flex-shrink:0;margin-left:auto">📵 Offline</span>
+  </div>
+  <div class="top-nav-logs" id="top-nav-logs">
+    <button class="new-log-btn" id="new-log-btn">+ New log</button>
+  </div>
 </div>
 <div id="log-container"></div>
 <div id="welcome-screen" class="welcome-screen hidden"></div>
@@ -413,8 +419,8 @@ function setVal(el,val){if(!el)return;el.value=val;el.classList.toggle('has-valu
 /* ── tabs & nav ── */
 function getDisplayLabel(lid){var proj=fv(lid,'proj')||'';var idx=logOrder.indexOf(lid)+1;if(proj)return proj+' – Log '+idx;var base=logs[lid]?logs[lid].label:'';return base||('Log '+idx);}
 function renderTabs(){
-  var nav=document.getElementById('top-nav');
-  nav.querySelectorAll('.log-tab').forEach(function(t){t.remove();});
+  var logsRow=document.getElementById('top-nav-logs');
+  logsRow.querySelectorAll('.log-tab').forEach(function(t){t.remove();});
   var newBtn=document.getElementById('new-log-btn');
   logOrder.forEach(function(lid){
     var t=div('log-tab'+(lid===activeLid?' active':''));
@@ -424,7 +430,7 @@ function renderTabs(){
     x.addEventListener('click',function(e){e.stopPropagation();closeLog(lid);});
     t.appendChild(lbl2);t.appendChild(x);
     t.addEventListener('click',function(e){if(e.target===x)return;if(lid===activeLid)return;switchToLog(lid);});
-    nav.insertBefore(t,newBtn);
+    logsRow.insertBefore(t,newBtn);
   });
 }
 function renameLog(lid){
