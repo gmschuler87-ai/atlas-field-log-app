@@ -122,12 +122,15 @@ body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
 </head>
 <body>
 
-<div class="app-header" onclick="showHome()" title="Home" style="cursor:pointer">
+<div class="app-header" style="display:flex;align-items:center;justify-content:space-between">
+  <div onclick="showHome()" title="Home" style="cursor:pointer;display:flex;align-items:center;gap:12px;flex:1">
   <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB2ZXJzaW9uPSIxLjEiIHZpZXdCb3g9IjAgMCA2MTIgMzMyIj4KICA8IS0tIEdlbmVyYXRvcjogQWRvYmUgSWxsdXN0cmF0b3IgMjkuOC41LCBTVkcgRXhwb3J0IFBsdWctSW4gLiBTVkcgVmVyc2lvbjogMi4xLjEgQnVpbGQgMikgIC0tPgogIDxkZWZzPgogICAgPHN0eWxlPgogICAgICAuc3QwIHsKICAgICAgICBmaWxsOiAjZmZmZmZmOwogICAgICB9CiAgICA8L3N0eWxlPgogIDwvZGVmcz4KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzEwLDE3Ny4zOWMtNy4xOCwwLTE0LjIzLjE4LTIxLjE3LjQ5LTEuMzYuMDYtMi43Mi4xMi00LjA3LjItMS4zNy4wNy0yLjczLjE1LTQuMDkuMjMtMTcuMDUsMS4wNi0zMy4zNywzLjAxLTQ4Ljk0LDUuNjQtMS40NS4yNC0yLjkuNDktNC4zNC43NC0xLjQ2LjI2LTIuOTEuNTQtNC4zNi44MS0xMTkuMjQsMjIuNDMtMTkxLjAzLDgzLjczLTE5MS4wMyw4My43MywwLDAsNzQuMjgtMzUuMTQsMTc3LjY4LTUxLjQ1LDEuNDMtLjIyLDIuODYtLjQ0LDQuMy0uNjYsMS40My0uMjIsMi44Ni0uNDMsNC4yOS0uNjNsLTEuNjcsNC4wNS0xLjY3LDQuMDMtMTguNDksNDQuNjZoNDkuMDNsMTkuNTItNTAuMzksMS40OC0zLjg1LDEuNS0zLjg2YzEuMzYtLjA5LDIuNzMtLjE3LDQuMDktLjI2LDEuMzctLjA4LDIuNzMtLjE3LDQuMDktLjI1LDExLjEyLS42MiwyMi40MS0uOTYsMzMuODYtLjk2czIzLjUxLjM2LDM0Ljk4LDEuMDJsLTEzLjQ0LTMyLjc5Yy03LjA3LS4zMi0xNC4yNS0uNS0yMS41NC0uNSIvPgogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00MDIuOTUsMjIwLjQ4bC0xLjgzLTQuMDhjMS40Ni4yMSwyLjkyLjQyLDQuMzcuNjQsMS40Ny4yMiwyLjkzLjQ1LDQuMzguNjcsMTAzLjYzLDE2LjI4LDE3OC4xNCw1MS41MiwxNzguMTQsNTEuNTIsMCwwLTcyLjQ2LTYxLjg2LTE5Mi43MS04NC4wNC0xLjQ4LS4yNy0yLjk1LS41NC00LjQ0LS44LTEuNDctLjI2LTIuOTQtLjUxLTQuNDItLjc1bC0xLjc5LTQtMS44Mi00LjA2LTU0LjgzLTEyMi4zaC00Mi4xOWwtNTAuNzUsMTIyLjY0YzE1LjQyLTIuNDYsMzEuNjMtNC4yOCw0OC41Ny01LjIzbDI1Ljc1LTY2LjUyLDI3LjI3LDY2LjU0LDEuNTYsMy44MiwxLjU2LDMuODEsMTMuNDgsMzIuODgsMS41OSwzLjg3LDEuNTgsMy44NSwyMC42LDUwLjI5aDQ3Ljc4bC0yMC4wNC00NC43MS0xLjgxLTQuMDRaIi8+Cjwvc3ZnPg==" style="height:44px;width:auto;flex-shrink:0;object-fit:contain" alt="Atlas">
   <div>
     <div style="color:#fff;font-size:16px;font-weight:700;line-height:1.2">Air Quality Monitoring Log</div>
     <div style="color:rgba(255,255,255,0.7);font-size:11px;margin-top:1px">Atlas Technical Consultants</div>
   </div>
+  </div>
+  <button onclick="showSafety()" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:8px 12px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;flex-shrink:0;font-family:inherit;letter-spacing:0.02em">🦺 Safety</button>
 </div>
 
 <div class="tab-bar">
@@ -136,7 +139,6 @@ body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
   <button class="tab" onclick="switchTab('readings',this)">Readings</button>
   <button class="tab" onclick="switchTab('checklists',this)">Checklists</button>
   <button class="tab" onclick="switchTab('library',this)">Library</button>
-  <button class="tab" id="safety-tab" onclick="switchTab('safety',this)" style="color:#dc2626;border-bottom-color:transparent">🦺 Safety</button>
 </div>
 
 <div class="toast" id="toast">Saved</div>
@@ -172,7 +174,7 @@ body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
           <button class="btn btn-sm btn-outline" onclick="savePreset('projectNum')">Save</button>
         </div>
       </div>
-      <div class="form-group"><label>Phase</label><input type="text" id="phase" onchange="saveData()" placeholder="e.g. Assessment, Remediation"></div>
+      <div class="form-group"><label>Phase</label><input type="text" id="phase" onchange="saveData()" placeholder="Optional — e.g. B1, C2-PA"></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Date</label><input type="date" id="siteDate" onchange="saveData()"></div>
@@ -300,6 +302,11 @@ body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
   </div>
   <p style="font-size:11px;color:var(--text-dim);line-height:1.5;padding-bottom:12px">Backup saves all data to a JSON file. Restore loads it back. Use this when switching devices.</p>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
+  <div class="section-card" style="border:2px solid var(--danger);margin-top:4px">
+    <div class="section-title" style="color:var(--danger)">End Session</div>
+    <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5">Done for the day? This saves the current session to the Library and clears the form for a fresh start. Generate a PDF first if you need a printed copy.</p>
+    <button class="btn btn-danger btn-block" onclick="promptEndSession()">✓ End Session & Save to Library</button>
+  </div>
 </div>
 
 <div id="panel-safety" class="panel"></div>
@@ -308,8 +315,7 @@ body.dark .reading-item{background:#1a2e3a;border-color:#2a4558;}
 
 <!-- ===== BOTTOM BAR ===== -->
 <div class="bottom-bar">
-  <button class="btn btn-primary" style="flex:1" onclick="generatePDF()">📄 Generate PDF</button>
-  <button class="btn btn-danger" style="white-space:nowrap" onclick="promptEndSession()">End Session</button>
+  <button class="btn btn-primary btn-block" onclick="generatePDF()">📄 Generate PDF</button>
 </div>
 
 <script>
@@ -361,7 +367,7 @@ function init() {
 }
 
 // ===== TABS =====
-const TAB_NAMES = ['info','instruments','readings','checklists','library','safety'];
+const TAB_NAMES = ['info','instruments','readings','checklists','library'];
 function switchTab(name, btn) {
   // Hide welcome if showing
   const ws=document.getElementById('welcome-screen');if(ws)ws.style.display='none';
@@ -369,17 +375,31 @@ function switchTab(name, btn) {
   document.querySelector('.bottom-bar').style.display='flex';
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  // Safety panel built lazily
-  if(name==='safety')buildSafetyPanel();
+  if(name==='readings' && rounds.length===0){addRound();renderRounds();}
   const panel=document.getElementById('panel-'+name);
   if(panel)panel.classList.add('active');
   if(btn){btn.classList.add('active');}
   else{document.querySelectorAll('.tab').forEach((t,i)=>{if(TAB_NAMES[i]===name)t.classList.add('active');});}
-  // Safety tab stays red
-  const st=document.getElementById('safety-tab');
-  if(st){st.style.color=name==='safety'?'#fff':'#dc2626';st.style.background=name==='safety'?'#dc2626':'';st.style.borderBottomColor=name==='safety'?'#dc2626':'transparent';}
   window.scrollTo({top:0,behavior:'smooth'});
 }
+function showSafety(){
+  buildSafetyPanel();
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:200;overflow-y:auto;padding-bottom:20px';
+  const toolbar=document.createElement('div');
+  toolbar.style.cssText='background:#c0392b;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1';
+  const ts=document.createElement('span');ts.style.cssText='color:#fff;font-size:15px;font-weight:700';ts.textContent='🦺 Safety';
+  const cb=document.createElement('button');cb.textContent='✕ Close';cb.style.cssText='background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:6px;padding:6px 12px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';cb.onclick=function(){modal.remove();};toolbar.appendChild(ts);toolbar.appendChild(cb);
+  modal.appendChild(toolbar);
+  // Clone safety panel content into modal
+  const sv=document.getElementById('panel-safety');
+  const clone=sv.cloneNode(true);
+  clone.style.display='block';
+  clone.style.padding='12px';
+  modal.appendChild(clone);
+  document.body.appendChild(modal);
+}
+
 function showHome(){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -535,14 +555,19 @@ function getChecklistData() {
 function renderChecklist(cid, items, prefix) {
   document.getElementById(cid).innerHTML = items.map((text,i)=>{
     const key=prefix+'_'+i;
+    // "Not Observed" quick button only for first dust proc item (photographing visible dust)
+    const notObservedBtn = (prefix==='proc' && i===0)
+      ? `<button class="checklist-btn" data-key="${key}" onclick="setChkNotObserved(this)" style="background:#f3f4f6;border-color:#9ca3af;color:#4b5563;margin-left:4px">Not Observed</button>`
+      : '';
     return `<div class="checklist-item"><div class="checklist-text">${text}</div>
-      <div class="checklist-buttons">
+      <div class="checklist-buttons" style="flex-wrap:wrap">
         <button class="checklist-btn" data-key="${key}" onclick="setChk(this,'na')">N/A</button>
         <button class="checklist-btn" data-key="${key}" onclick="setChk(this,'yes')">YES</button>
         <button class="checklist-btn" data-key="${key}" onclick="setChk(this,'no')">NO</button>
+        ${notObservedBtn}
       </div>
       <div class="checklist-comment" id="comment_${key}">
-        <input type="text" class="checklist-comment-input" data-key="${key}" placeholder="Comment (required for N/A or NO)" onchange="saveData()" style="width:100%;padding:6px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;">
+        <input type="text" class="checklist-comment-input" data-key="${key}" placeholder="Comment" onchange="saveData()" style="width:100%;padding:6px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;">
       </div></div>`;
   }).join('');
   setTimeout(restoreChecklists, 100);
@@ -552,7 +577,18 @@ function setChk(btn,val) {
   btn.parentElement.querySelectorAll('.checklist-btn').forEach(s=>s.className='checklist-btn');
   btn.classList.add(val==='na'?'sel-na':val==='yes'?'sel-yes':'sel-no');
   const c=document.getElementById('comment_'+key);
-  if(val==='na'||val==='no') c.classList.add('show'); else c.classList.remove('show');
+  if(val==='no') c.classList.add('show'); else c.classList.remove('show');
+  saveData();
+}
+function setChkNotObserved(btn){
+  const key=btn.dataset.key;
+  btn.closest('.checklist-buttons').querySelectorAll('.checklist-btn').forEach(s=>s.className='checklist-btn');
+  btn.classList.add('sel-no');
+  // Fill comment with "Not observed"
+  const c=document.getElementById('comment_'+key);
+  c.classList.add('show');
+  const inp=c.querySelector('.checklist-comment-input');
+  if(inp)inp.value='Not observed';
   saveData();
 }
 function restoreChecklists() {
@@ -707,7 +743,7 @@ function renderRounds() {
           <div class="form-group"><label>Monitor Point</label><select onchange="updateReading(${round.id},${rd.id},'monitorPoint',this.value)">
             ${getSiteMPs().map(mp=>`<option value="${mp}" ${rd.monitorPoint===mp?'selected':''}>${mp}</option>`).join('')}
           </select></div>
-          <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.01" value="${rd.voc}" onchange="updateReading(${round.id},${rd.id},'voc',this.value)" placeholder="0.00" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
+          <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.1" value="${rd.voc}" onchange="updateReading(${round.id},${rd.id},'voc',this.value)" placeholder="0.0" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
         </div>
         <div class="form-row triple">
           <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" value="${rd.dust}" onchange="updateReading(${round.id},${rd.id},'dust',this.value)" placeholder="0.000" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
@@ -770,7 +806,7 @@ function renderLibrary() {
   if(library.length===0){ el.innerHTML='<p style="color:var(--text-dim);font-size:13px;padding:10px 0;">No saved forms yet.</p>'; return; }
   el.innerHTML = library.map((item,i)=>`
     <div class="lib-item">
-      <div class="lib-info"><div class="lib-title">${item.title}</div><div class="lib-date">${item.date} — ${item.readingCount} readings</div></div>
+      <div class="lib-info"><div class="lib-title">${item.title}</div><div class="lib-date">${item.date} — ${item.readingCount} reading${item.readingCount!==1?'s':''} · Saved ${item.savedAt ? (()=>{const d=new Date(item.savedAt);const now=new Date();const diff=Math.floor((now-d)/60000);if(diff<1)return'just now';if(diff<60)return diff+'m ago';if(diff<1440)return Math.floor(diff/60)+'h ago';return (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear()+' '+d.toTimeString().slice(0,5);})() : ''}</div></div>
       <div class="lib-actions">
         <button class="btn btn-sm btn-primary" onclick="viewLibraryItem(${i})">Open</button>
         <button class="btn btn-sm btn-outline" onclick="resumeLibraryItem(${i})">Resume</button>
@@ -784,8 +820,8 @@ function resumeLibraryItem(idx) {
 
   // Check for active session first
   const hasSession = rounds.some(r=>r.readings.length>0) ||
-    document.getElementById('wellId').value.trim() ||
-    document.getElementById('employees').value.trim();
+    (document.getElementById('wellId').value||'').trim() !== '' ||
+    (document.getElementById('employees').value||'').trim() !== '';
 
   function doResume() {
     const d = item.data;
@@ -847,17 +883,41 @@ function deleteLibraryItem(idx) {
   showToast('Deleted');
 }
 function viewLibraryItem(idx) {
-  var item = library[idx];
-  var html = generatePdfHtml(item.data);
-  var w = window.open('');
-  if(!w) { alert('Popup blocked. Allow popups for this site and try again.'); return; }
-  w.document.open();
-  w.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>' + item.title + '</title>');
-  w.document.write('<style>body{margin:0;padding:20px;font-family:Arial,sans-serif;}@media print{@page{size:letter portrait;margin:0.4in;}}</style>');
-  w.document.write('</head><body>');
-  w.document.write(html);
-  w.document.write('</body></html>');
-  w.document.close();
+  const item = library[idx];
+  const html = generatePdfHtml(item.data);
+  // Show in-app overlay — no popup needed
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column';
+  const toolbar = document.createElement('div');
+  toolbar.style.cssText = 'background:var(--atlas-dark);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px';
+  const title = document.createElement('span');
+  title.style.cssText = 'color:#fff;font-weight:700;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+  title.textContent = item.title;
+  const btnRow = document.createElement('div');
+  btnRow.style.cssText = 'display:flex;gap:6px;flex-shrink:0';
+  const printBtn = document.createElement('button');
+  printBtn.textContent = '🖨 Print';
+  printBtn.style.cssText = 'padding:7px 12px;background:var(--atlas-primary);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
+  printBtn.onclick = function(){
+    const w = window.open('','_blank');
+    if(!w){showToast('Allow popups to print');return;}
+    w.document.open();w.document.write(html);w.document.close();
+    setTimeout(function(){try{w.focus();w.print();}catch(e){}},600);
+  };
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕';
+  closeBtn.style.cssText = 'padding:7px 10px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
+  closeBtn.onclick = function(){modal.remove();};
+  btnRow.appendChild(printBtn);
+  btnRow.appendChild(closeBtn);
+  toolbar.appendChild(title);
+  toolbar.appendChild(btnRow);
+  modal.appendChild(toolbar);
+  const frame = document.createElement('iframe');
+  frame.style.cssText = 'flex:1;border:none;background:#fff';
+  frame.srcdoc = html;
+  modal.appendChild(frame);
+  document.body.appendChild(modal);
 }
 
 // ===== CLEAR =====
@@ -1079,9 +1139,10 @@ function endSession(){
   document.querySelectorAll('#panel-instruments input[type="text"],#panel-instruments input[type="datetime-local"]').forEach(el=>el.value='');
   document.querySelectorAll('.checklist-btn').forEach(b=>b.className='checklist-btn');
   document.querySelectorAll('.checklist-comment').forEach(c=>c.classList.remove('show'));
-  addRound();renderRounds();
+  rounds=[];roundCounter=0;
+  renderRounds();
   showToast('Session ended — report saved to Library');
-  showHome();
+  setTimeout(showHome, 50);
 }
 function showPdfPreview(html){
   // Open in new window so only the report prints, never the app
@@ -1423,9 +1484,9 @@ function showFullGuide(){
     {h:'Site Info',b:'Fill in Location ID, project number, phase, date, and employee names at the start of the day. Enter your monitoring point names (e.g. Upwind, Downwind, Property Line N) in the Monitoring Points field — these populate the MP dropdown in every round. Save them as a preset tied to the Location ID for quick loading next time.'},
     {h:'Instruments',b:'Three standard instrument types are always shown: VOC/PID monitor, Dust/PM10 monitor, and Sound Level monitor. Enter the specific model name for each instrument being used today and tap Save to store it for future sessions. Record the date/time and bump/cal result for each. A 4th optional slot can be expanded for any additional instrument.'},
     {h:'Readings',b:'Tap + New Round to start a monitoring round. Each round has its own weather section — enter a ZIP code or tap GPS to auto-fill temp, wind speed, wind direction, and conditions in one tap. All fields stay editable if the auto-fill is wrong. Add individual readings per monitoring point within each round. VOC ≥ 2 ppm and dust ≥ 0.050 mg/m³ are flagged red automatically. The round header shows a ⚠ ACTION badge if any reading inside it hit an action level. Use ⛶ to go fullscreen while taking readings.'},
-    {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for any item marked N/A or NO.'},
+    {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for items marked NO. N/A needs no comment. The first item has a quick Not Observed button for when no visible dust is present.'},
     {h:'Library',b:'Saved reports are listed here. Tap Open to view a report as a PDF. Tap Resume to reload a saved report back into the active session for editing. Use Backup to export all data to a JSON file and Restore to reload it on a new device.'},
-    {h:'Ending a Session',b:'When you are done for the day, tap Generate PDF to save a copy to the Library and open the print dialog. Then tap End Session in the bottom bar — you will be asked to confirm, and the session data will be saved to the Library before the form clears. The next time you open the app the home screen will show a clean start.'},
+    {h:'Ending a Session',b:'When you are done for the day, tap Generate PDF to save a copy to the Library and open the print dialog. Then go to the Library tab and tap End Session & Save to Library at the bottom — you will be asked to confirm, and the session data will be saved before the form clears. The next time you open the app the home screen will show a clean start.'},
     {h:'Safety',b:'The Safety tab provides quick access to CORE Health injury reporting (tap to call 24/7), the full Stop Work Authority statement, and links to Atlas safety resources in IndustrySafe including JSA Master List, BBS Observations, Incident/Near Miss reporting, and DSR Site Audits.'},
     {h:'Tips',b:'• Tap the Atlas logo at any time to return to the home screen.<br>• Swipe left or right to move between tabs.<br>• Each round has its own Get Weather / GPS button — weather is not shared between rounds.<br>• The summary bar at the top of Readings shows total rounds, readings, and any action level hits at a glance.<br>• 👁 Stay Awake in the Library tab keeps the screen on while monitoring.<br>• Two-tap delete on all buttons — first tap turns red and says Sure?, second tap confirms.'},
   ];
