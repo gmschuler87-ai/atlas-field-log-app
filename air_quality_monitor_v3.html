@@ -26,7 +26,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tab.active{color:#fff;border-bottom-color:var(--atlas-primary);background:rgba(255,255,255,.07);}
 
 /* ── PANELS ── */
-.panel{display:none;padding:14px 12px 100px;}
+.panel{display:none;padding:14px 12px 40px;}
 .panel.active{display:block;}
 
 /* ── CARDS ── */
@@ -62,6 +62,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-block{width:100%;}
 
 /* ── ROUNDS ── */
+/* Background round indigo theme */
+.round-card-bg{border:2px solid #818cf8;border-top:4px solid #6366f1;}
+.round-card-bg .round-body{background:#f5f3ff;}
+.reading-item-bg{background:#eef2ff;border-color:#c7d2fe;}
+body.dark .round-card-bg{border-color:#6366f1;}
+body.dark .round-card-bg .round-body{background:#1e1b4b;}
+body.dark .reading-item-bg{background:#1e1b4b;border-color:#4338ca;}
 .round-card{background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);margin-bottom:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);}
 .round-header{background:linear-gradient(135deg,var(--atlas-dark),var(--atlas-mid));padding:12px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;}
 .round-header-left{display:flex;align-items:center;gap:8px;flex:1;min-width:0;}
@@ -105,7 +112,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .lib-actions .btn{flex:1;}
 
 /* ── BOTTOM BAR ── */
-.bottom-bar{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--card-border);padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.1);}
+.bottom-bar{display:none!important;}
 
 /* ── TOAST ── */
 .toast{position:fixed;top:68px;left:50%;transform:translateX(-50%) translateY(-10px);background:var(--atlas-dark);color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:700;opacity:0;transition:.25s;z-index:200;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.2);}
@@ -115,18 +122,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .mp-tap-grid{display:flex;flex-wrap:wrap;gap:6px;}
 .mp-tap-btn{padding:0 12px;height:38px;border:1.5px solid #f59e0b;border-radius:8px;background:#fffbeb;color:#92400e;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s;}
 .mp-tap-active{background:var(--atlas-primary);border-color:var(--atlas-primary);color:#fff;}
-.mp-tap-unchosen{background:var(--input-bg);border-color:var(--input-border);color:var(--text-dim);}
+.mp-tap-unchosen{background:#f1f5f9;border-color:#e2e8f0;color:#94a3b8;}
 body.dark .mp-tap-btn{background:#2d2000;border-color:#d97706;color:#fcd34d;}
 
 /* ── TAP BUTTONS (visible dust / odors) ── */
 .tap-btn-group{display:flex;gap:8px;height:var(--touch);}
 .tap-btn{flex:1;height:var(--touch);border-radius:10px;border:2px solid #f59e0b;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;transition:.15s;background:#fffbeb;color:#92400e;}
 .tap-btn-inactive{background:#fffbeb;border-color:#f59e0b;color:#92400e;}
-.tap-btn-unchosen{background:var(--input-bg);border-color:var(--input-border);color:var(--text-dim);}
+.tap-btn-unchosen{background:#f1f5f9;border-color:#e2e8f0;color:#94a3b8;}
 .tap-btn-yes{background:var(--atlas-light);border-color:var(--atlas-primary);color:var(--atlas-dark);}
 .tap-btn-no{background:var(--atlas-light);border-color:var(--atlas-primary);color:var(--atlas-dark);}
 body.dark .tap-btn{background:#2d2000;border-color:#d97706;color:#fcd34d;}
 body.dark .tap-btn-inactive{background:#2d2000;border-color:#d97706;color:#fcd34d;}
+body.dark .tap-btn-unchosen{background:#1e293b;border-color:#334155;color:#475569;}
 
 /* ── MISC ── */
 .action-info{font-size:13px;color:var(--text-dim);line-height:1.6;padding:4px 0;}
@@ -182,6 +190,7 @@ body.dark .lib-item{border-color:#1c3347;}
   <button class="tab" onclick="switchTab('checklists',this)">Checklists</button>
   <button class="tab" onclick="switchTab('library',this)">Library</button>
 </div>
+<div id="date-bar" style="display:none;background:var(--atlas-mid);padding:4px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.3px;text-align:right"></div>
 
 <div class="toast" id="toast">Saved</div>
 
@@ -228,7 +237,7 @@ body.dark .lib-item{border-color:#1c3347;}
       <div class="form-group"><label>Phase</label><input type="text" id="phase" onchange="saveData()" placeholder="Optional — e.g. B1, C2-PA"></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Date</label><input type="date" id="siteDate" onchange="saveData()"></div>
+      <div class="form-group"><label>Date</label><input type="date" id="siteDate" onchange="saveData();updateDateBar()"></div>
       <div class="form-group"><label>Employee(s)</label>
         <div class="preset-row">
           <select id="employeeSelect" onchange="addEmployee(this.value);this.value='';" style="flex:1;"><option value="">-- Add --</option></select>
@@ -240,7 +249,30 @@ body.dark .lib-item{border-color:#1c3347;}
   </div>
   <div class="section-card">
     <div class="section-title">Action Levels</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap"><div style="flex:1;min-width:100px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">2.0</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">VOC ppmv</div></div><div style="flex:1;min-width:100px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">0.050</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Dust mg/m³</div></div><div style="flex:1;min-width:100px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">20%</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Opacity</div></div></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+  <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">2.0</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">VOC ppmv</div></div>
+  <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">50</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Dust µg/m³</div></div>
+  <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">20%</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Opacity</div></div>
+</div>
+<div style="font-size:11px;color:var(--text-dim);line-height:1.5">Above background. Exceedance requires <b>sustained 30 seconds</b> before action is required.</div>
+    <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--atlas-light)">
+      <div style="font-size:11px;font-weight:800;color:var(--atlas-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Noise Thresholds</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Noise Action Level (dB)</label>
+          <input type="number" id="noiseActionLevel" inputmode="decimal" placeholder="e.g. 85" onchange="saveData();updateNoiseThreshold()" style="font-size:15px">
+          <div style="font-size:10px;color:var(--text-dim);margin-top:3px">OSHA: 85 dB. Leave blank to log only.</div>
+        </div>
+        <div class="form-group">
+          <label>Sensitive Receptor Nearby?</label>
+          <div style="display:flex;gap:8px;margin-top:4px">
+            <button id="srYesBtn" onclick="setSensitiveReceptor(true)" style="flex:1;height:40px;border-radius:8px;border:1.5px solid var(--input-border);background:var(--input-bg);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:.15s">Yes</button>
+            <button id="srNoBtn" onclick="setSensitiveReceptor(false)" style="flex:1;height:40px;border-radius:8px;border:1.5px solid var(--atlas-primary);background:var(--atlas-light);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--atlas-dark);transition:.15s">No</button>
+          </div>
+          <div id="srNote" style="display:none;font-size:10px;color:#4f46e5;margin-top:3px;font-weight:600">Residential default: 65 dB if no level set above.</div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -249,7 +281,7 @@ body.dark .lib-item{border-color:#1c3347;}
   <div class="section-card">
     <div class="section-title">Instruments — Bump/Cal</div>
     <div class="instrument-block">
-      <div class="inst-name">PID — VOC Monitor</div>
+      <div class="inst-name" style="display:flex;justify-content:space-between;align-items:center">PID — VOC Monitor<button onclick="clearInstrument('pid')" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:0">✕ Clear</button></div>
       <div class="inst-detail">e.g. MultiRAE PID. Bump test daily. Cal if not within 3% of span gas.</div>
       <div class="form-row full"><div class="form-group"><label>Instrument Name / Model</label>
         <div class="preset-row">
@@ -264,7 +296,7 @@ body.dark .lib-item{border-color:#1c3347;}
       </div>
     </div>
     <div class="instrument-block">
-      <div class="inst-name">Dust Monitor — PM10</div>
+      <div class="inst-name" style="display:flex;justify-content:space-between;align-items:center">Dust Monitor — PM10<button onclick="clearInstrument('dustI')" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:0">✕ Clear</button></div>
       <div class="inst-detail">e.g. Aeroqual Series 500. Auto cal on start-up with white cap on. Record final reading after cal.</div>
       <div class="form-row full"><div class="form-group"><label>Instrument Name / Model</label>
         <div class="preset-row">
@@ -275,11 +307,11 @@ body.dark .lib-item{border-color:#1c3347;}
       </div></div>
       <div class="form-row">
         <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="dustDateTime" onchange="saveData()"></div>
-        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="dustReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="e.g. 0.001 mg/m³"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="dustReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="e.g. 0.001 mg/m³ (= 1 µg/m³)"></div>
       </div>
     </div>
     <div class="instrument-block">
-      <div class="inst-name">Sound Level Monitor</div>
+      <div class="inst-name" style="display:flex;justify-content:space-between;align-items:center">Sound Level Monitor<button onclick="clearInstrument('sound')" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:0">✕ Clear</button></div>
       <div class="inst-detail">e.g. Triplett SLM600 or equivalent datalogger.</div>
       <div class="form-row full"><div class="form-group"><label>Instrument Name / Model</label>
         <div class="preset-row">
@@ -317,13 +349,22 @@ body.dark .lib-item{border-color:#1c3347;}
 
 <!-- ===== READINGS ===== -->
 <div id="panel-readings" class="panel">
+  <!-- Background baseline banner (shown after BG round completed) -->
+
+  <div id="bgBanner" style="display:none;background:linear-gradient(135deg,#4338ca,#6366f1);border-radius:10px;padding:14px 16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(99,102,241,.25)">
+    <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.75);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px">📍 Today's Background Baseline</div>
+    <div id="bgBannerValues"></div>
+    <div style="font-size:10px;color:rgba(255,255,255,.55);margin-top:8px;font-style:italic">Action levels are measured above these values</div>
+  </div>
   <!-- Summary bar -->
   <div id="readingsSummary" style="background:var(--card);border:1px solid var(--card-border);border-radius:var(--radius);padding:12px 14px;margin-bottom:10px;display:flex;gap:0;align-items:stretch;flex-wrap:nowrap;overflow:hidden"></div>
   <!-- Primary action: Add Reading -->
-  <button onclick="addReadingToCurrentRound()" class="btn btn-primary btn-block" style="height:52px;font-size:16px;font-weight:800;letter-spacing:.2px;box-shadow:0 3px 10px rgba(58,107,130,.3);margin-bottom:8px">＋ Add Reading</button>
-  <!-- Secondary actions row -->
-  <div style="display:flex;gap:8px;margin-bottom:14px">
+  <button onclick="addReadingToCurrentRound()" id="addReadingTopBtn" class="btn btn-primary btn-block" style="height:52px;font-size:16px;font-weight:800;letter-spacing:.2px;box-shadow:0 3px 10px rgba(58,107,130,.3);margin-bottom:14px">＋ Add Reading</button>
+  <!-- Secondary actions row - visually separated -->
+  <div style="display:flex;gap:8px;margin-bottom:14px;padding-top:6px;border-top:1px solid var(--card-border)">
     <button class="btn btn-outline" onclick="addRound()" style="flex:1;height:40px;font-size:13px;font-weight:700">＋ New Round</button>
+    <button class="btn btn-outline" onclick="addBackgroundRound()" style="height:40px;padding:0 12px;font-size:12px;font-weight:700;border-color:#6366f1;color:#4f46e5" title="Add a new background reading round">＋ New BG</button>
+    <button class="btn btn-outline" onclick="showExceedanceReference()" style="height:40px;padding:0 12px;font-size:12px;font-weight:700;border-color:#dc2626;color:#dc2626" title="Exceedance guidance">⚠ Guidance</button>
     <button class="btn btn-outline" id="readingsFullscreenBtn" onclick="toggleReadingsFullscreen()" style="height:40px;padding:0 14px;font-size:14px" title="Fullscreen">⛶</button>
   </div>
   <div id="roundsContainer"></div>
@@ -337,10 +378,23 @@ body.dark .lib-item{border-color:#1c3347;}
 
 <!-- ===== PDF LIBRARY ===== -->
 <div id="panel-library" class="panel">
+
+  <!-- STEP 1: Wrap up today's session -->
+  <div class="section-card" style="border:2px solid var(--atlas-primary)">
+    <div class="section-title">Wrap Up Today's Log</div>
+    <p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">When you're done for the day, generate a PDF to save a file you can print or share. Then end the session to clear the form for tomorrow.</p>
+    <button class="btn btn-primary btn-block" onclick="generatePDF()" style="height:52px;font-size:16px;font-weight:800;margin-bottom:10px;box-shadow:0 3px 10px rgba(58,107,130,.25)">📄 Generate PDF Report</button>
+    <button class="btn btn-outline btn-block" onclick="promptEndSession()" style="height:46px;font-size:14px;font-weight:700">✓ End Session</button>
+    <p style="font-size:11px;color:var(--text-dim);margin-top:8px;line-height:1.5;text-align:center">Session stays viewable and editable in Saved Reports above.</p>
+  </div>
+
+  <!-- STEP 2: Saved reports -->
   <div class="section-card">
     <div class="section-title">Saved Reports</div>
-    <div id="libraryList"><p style="color:var(--text-dim);font-size:13px;padding:10px 0;">No saved reports yet. Generate a PDF to save one.</p></div>
+    <div id="libraryList"><p style="color:var(--text-dim);font-size:13px;padding:10px 0;">No saved reports yet.</p></div>
   </div>
+
+  <!-- STEP 3: Settings -->
   <div class="section-card">
     <div class="section-title">Settings</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
@@ -353,21 +407,13 @@ body.dark .lib-item{border-color:#1c3347;}
     <p style="font-size:11px;color:var(--text-dim);line-height:1.5;margin-top:10px">Backup exports all data to a JSON file. Use Restore when switching devices.</p>
   </div>
   <input type="file" id="importFile" accept=".json" style="display:none" onchange="handleImport(event)">
-  <div class="section-card" style="border:2px solid var(--danger);margin-top:4px">
-    <div class="section-title" style="color:var(--danger)">End Session</div>
-    <p style="font-size:12px;color:var(--text-dim);margin-bottom:10px;line-height:1.5">Done for the day? This saves the current session to the Library and clears the form for a fresh start. Generate a PDF first if you need a printed copy.</p>
-    <button class="btn btn-danger btn-block" onclick="promptEndSession()">✓ End Session & Save to Library</button>
-  </div>
 </div>
 
 <div id="panel-safety" class="panel"></div>
 <div id="welcome-screen" style="display:none;padding:32px 20px 40px;text-align:center;min-height:100vh;flex-direction:column;align-items:center;justify-content:center;gap:0;background:var(--bg)"></div>
 <div id="print-output"></div>
 
-<!-- ===== BOTTOM BAR ===== -->
-<div class="bottom-bar">
-  <button class="btn btn-primary btn-block" onclick="generatePDF()" style="font-size:15px;letter-spacing:.2px">📄 Generate PDF</button>
-</div>
+
 
 <script>
 // ===== LOGO =====
@@ -411,6 +457,10 @@ function init() {
   renderAllPresetDropdowns();
   initMPStyleToggle();
   renderRounds();
+  renderBgBanner();
+  updateDateBar();
+  if(window._pendingSR!==undefined){setSensitiveReceptor(window._pendingSR);window._pendingSR=undefined;}
+  updateNoiseThreshold();
   renderLibrary();
   // Go to readings if active session, otherwise home screen
   const hasSession = rounds.some(r=>r.readings.length>0) ||
@@ -419,8 +469,6 @@ function init() {
   if(hasSession){
     switchTab('readings');
   } else {
-    if(rounds.length===0) addRound();
-    renderRounds();
     showHome();
   }
 }
@@ -432,10 +480,10 @@ function switchTab(name, btn) {
   const ws=document.getElementById('welcome-screen');if(ws)ws.style.display='none';
   document.querySelector('.app-header').style.display='flex';
   document.querySelector('.tab-bar').style.display='flex';
-  document.querySelector('.bottom-bar').style.display='flex';
+  updateDateBar();
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  if(name==='readings' && rounds.length===0){addRound();renderRounds();}
+  if(name==='readings' && rounds.length===0){promptBackgroundOrSkip();}
   const panel=document.getElementById('panel-'+name);
   if(panel)panel.classList.add('active');
   if(btn){btn.classList.add('active');}
@@ -465,7 +513,7 @@ function showHome(){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
   document.querySelector('.app-header').style.display='none';
   document.querySelector('.tab-bar').style.display='none';
-  document.querySelector('.bottom-bar').style.display='none';
+  const dateBar=document.getElementById('date-bar');if(dateBar)dateBar.style.display='none';
   const ws=document.getElementById('welcome-screen');
   if(ws){ws.style.display='flex';buildWelcomeScreen();}
 }
@@ -574,6 +622,8 @@ function saveData() {
     employees:document.getElementById('employees').value,
     siteMPs:(document.getElementById('siteMPs')||{}).value||'',
     mpStyle:window.mpStyle||'tap',
+    noiseActionLevel:(document.getElementById('noiseActionLevel')||{}).value||'',
+    sensitiveReceptor:window._sensitiveReceptor||false,
 
     pidModel:document.getElementById('pidModel').value,
     pidDateTime:document.getElementById('pidDateTime').value,pidReading:document.getElementById('pidReading').value,
@@ -600,6 +650,8 @@ function loadData() {
     if(d.rounds) rounds=d.rounds;
     if(d.roundCounter) roundCounter=d.roundCounter;
     if(d.mpStyle){window.mpStyle=d.mpStyle;localStorage.setItem('atlas_aq_mp_style',d.mpStyle);}
+    if(d.noiseActionLevel!==undefined){const nel=document.getElementById('noiseActionLevel');if(nel)nel.value=d.noiseActionLevel;}
+    if(d.sensitiveReceptor!==undefined){window._sensitiveReceptor=d.sensitiveReceptor;window._pendingSR=d.sensitiveReceptor;}
     if(d.checklists) window._pendingChecklists=d.checklists;
   } catch(e){}
 }
@@ -658,10 +710,10 @@ function restoreChecklists() {
   const d=window._pendingChecklists;
   Object.keys(d).forEach(key=>{
     if(key.endsWith('_comment')){
-      const inp=document.querySelector(`.checklist-comment-input[data-key="${key.replace('_comment','')}"]`);
+      const inp=document.querySelector('.checklist-comment-input[data-key="'+key.replace('_comment','')+'"]');
       if(inp) inp.value=d[key];
     } else {
-      document.querySelectorAll(`.checklist-btn[data-key="${key}"]`).forEach(btn=>{
+      document.querySelectorAll('.checklist-btn[data-key="'+key+'"]').forEach(btn=>{
         if((d[key]==='N/A'&&btn.textContent==='N/A')||(d[key]==='YES'&&btn.textContent==='YES')||(d[key]==='NO'&&btn.textContent==='NO')) btn.click();
       });
     }
@@ -673,25 +725,76 @@ function addRound() {
   roundCounter++;
   const now = new Date();
   const rh=String(now.getHours()).padStart(2,'0'),rm=String(now.getMinutes()).padStart(2,'0');
-  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', customMPs:[], readings:[] });
+  const isFirstRound = rounds.filter(r=>!r.isBackground).length === 0;
+  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', customMPs:[], readings:[], isBackground:false });
+  renderRounds(); saveData();
+}
+function promptBackgroundOrSkip(){
+  const modal = document.createElement('div');
+  modal.className = 'exceedance-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:22px;width:100%;max-width:340px">'
+    +'<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">Take a background reading?</div>'
+    +'<p style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:18px">The SOP requires a background reading upwind, before work begins. This sets the daily baseline for action level comparisons.</p>'
+    +'<div style="display:flex;gap:10px">'
+      +'<button id="bgSkipBtn" style="flex:1;height:46px;border:1.5px solid var(--input-border);border-radius:8px;background:none;cursor:pointer;font-size:14px;font-weight:700;color:var(--text-dim);font-family:inherit">Skip</button>'
+      +'<button id="bgYesBtn" style="flex:1;height:46px;border:none;border-radius:8px;background:#4f46e5;color:#fff;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit">Yes, take background</button>'
+    +'</div>'
+  +'</div>';
+  modal.querySelector('#bgYesBtn').onclick = function(){
+    modal.remove();
+    addBackgroundRound();
+  };
+  modal.querySelector('#bgSkipBtn').onclick = function(){
+    modal.remove();
+    addRound();
+  };
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+function addBackgroundRound() {
+  roundCounter++;
+  const now = new Date();
+  const rh=String(now.getHours()).padStart(2,'0'),rm=String(now.getMinutes()).padStart(2,'0');
+  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', customMPs:[], readings:[], isBackground:true });
   addReadingToRound(rounds[0].id);
   renderRounds(); saveData();
+  showToast('Background round added');
 }
 function deleteRound(rid) {
   rounds = rounds.filter(r=>r.id!==rid);
   renderRounds(); saveData();
 }
 function addReadingToCurrentRound(){
-  // Add to most recent round (first in array)
-  if(rounds.length===0){ addRound(); return; }
-  addReadingToRound(rounds[0].id);
+  // Find most recent open (non-completed, non-background) perimeter round
+  const openRound = rounds.find(r=>!r.isBackground && !r.collapsed);
+  if(openRound){
+    addReadingToRound(openRound.id);
+    return;
+  }
+  // No open perimeter round — prompt to start one
+  showToast('Start a new round first');
+}
+function updateAddReadingBtn(){
+  const btn = document.getElementById('addReadingTopBtn');
+  if(!btn) return;
+  const openRound = rounds.find(r=>!r.isBackground && !r.collapsed);
+  if(openRound){
+    btn.style.opacity='1';
+    btn.style.pointerEvents='auto';
+    btn.textContent='＋ Add Reading';
+  } else {
+    btn.style.opacity='0.4';
+    btn.style.pointerEvents='none';
+    btn.textContent='＋ Add Reading (open a round first)';
+  }
 }
 function addReadingToRound(rid) {
   const r=rounds.find(r=>r.id===rid); if(!r) return;
   const now = new Date();
   const h=String(now.getHours()).padStart(2,'0'),m=String(now.getMinutes()).padStart(2,'0');
   r.readings.unshift({
-    id: Date.now(), time:h+':'+m, monitorPoint:'',
+    id: Date.now(), time:h+':'+m, monitorPoint:'', _fresh:true,
     voc:'', dust:'', visibleDust:'', noise:'', odors:'', comments:''
   });
   renderRounds(); saveData();
@@ -701,7 +804,11 @@ function addReadingToRound(rid) {
     if(!roundEl) return;
     const firstReading = roundEl.querySelector('.reading-item');
     if(!firstReading) return;
-    firstReading.scrollIntoView({behavior:'smooth', block:'center'});
+    // Scroll so reading card top is visible below sticky header + action buttons
+    const rect = firstReading.getBoundingClientRect();
+    const offset = 120; // header + tab bar
+    const targetY = window.scrollY + rect.top - offset;
+    window.scrollTo({top: targetY, behavior:'smooth'});
     setTimeout(function(){
       const mpGrid = firstReading.querySelector('.mp-tap-grid');
       const mpSelect = firstReading.querySelector('select.input-mp');
@@ -716,9 +823,31 @@ function addReadingToRound(rid) {
 }
 function updateReading(rid, readId, field, val) {
   const r=rounds.find(r=>r.id===rid); if(!r) return;
-  const rd=r.readings.find(x=>x.id===readId); if(rd){rd[field]=val; saveData();}
-  updateReadingStatus(rid, readId);
+  const rd=r.readings.find(x=>x.id===readId);
+  if(rd){
+    // Check each field independently - a new exceedance on any field triggers modal
+    // Snapshot BEFORE update
+    const prevVoc = rd.voc; const prevDust = rd.dust; const prevNoise = rd.noise;
+    rd[field]=val; saveData();
+    // Check each field for new threshold crossing
+    const thresh = getNoiseActionLevel();
+    const newVoc = parseFloat(rd.voc)>=2 && !(parseFloat(prevVoc)>=2);
+    const newDust = parseFloat(rd.dust)>=0.050 && !(parseFloat(prevDust)>=0.050);
+    const newNoise = thresh>0 && parseFloat(rd.noise)>=thresh && !(parseFloat(prevNoise)>=thresh);
+    if(newVoc || newDust || newNoise){
+      const alertField = newVoc?'voc':newDust?'dust':'noise';
+      const alertVal = alertField==='voc'?rd.voc:alertField==='dust'?rd.dust:rd.noise;
+      if(!r.isBackground){
+        setTimeout(function(){ showExceedanceGuidance(alertField, alertVal, r); }, 400);
+      } else {
+        setTimeout(function(){ showBackgroundElevatedNote(alertField, alertVal); }, 400);
+      }
+    }
+  }
+  try { updateReadingStatus(rid, readId); } catch(e) {}
   updateReadingsSummary();
+  renderBgBanner();
+  updateAddReadingBtn();
 }
 function updateRound(rid, field, val) {
   const r=rounds.find(r=>r.id===rid); if(r){r[field]=val; saveData();}
@@ -728,14 +857,15 @@ function updateRound(rid, field, val) {
 function updateReadingStatus(rid, readId) {
   const r=rounds.find(r=>r.id===rid); if(!r) return;
   const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
-  const card = document.querySelector(`[data-reading="${readId}"]`);
+  const card = document.querySelector('[data-reading="'+readId+'"]');
   if(!card) return;
+  const missingMP = !rd.monitorPoint;
   const missingVoc = !rd.voc && rd.voc!=='0';
   const missingDust = !rd.dust && rd.dust!=='0';
   const missingVis = !rd.visibleDust;
   const missingNoise = !rd.noise && rd.noise!=='0';
   const missingOdors = !rd.odors;
-  const hasMissing = missingVoc||missingDust||missingVis||missingNoise||missingOdors;
+  const hasMissing = missingMP||missingVoc||missingDust||missingVis||missingNoise||missingOdors;
   const vocNum=parseFloat(rd.voc); const dustNum=parseFloat(rd.dust);
   const vocAlert=vocNum>=2; const dustAlert=dustNum>=0.050;
   const ms = 'border-color:#f59e0b;background:#fffbeb';
@@ -757,11 +887,14 @@ function updateReadingStatus(rid, readId) {
   // Update individual input styles
   const inputs = card.querySelectorAll('input,select');
   // Map field indices to missing states: VOC=idx2, Dust=idx3, VisDust=idx4, Noise=idx5, Odors=idx6
+  const noiseThresh = getNoiseActionLevel();
+  const noiseAlert = noiseThresh>0 && parseFloat(rd.noise)>=noiseThresh;
   const fieldMap = [
+    {cls:'input-mp', missing:missingMP, danger:false},
     {cls:'input-voc', missing:missingVoc, danger:vocAlert},
     {cls:'input-dust', missing:missingDust, danger:dustAlert},
     {cls:'input-visdust', missing:missingVis, danger:false},
-    {cls:'input-noise', missing:missingNoise, danger:false},
+    {cls:'input-noise', missing:missingNoise, danger:noiseAlert},
     {cls:'input-odors', missing:missingOdors, danger:false}
   ];
   fieldMap.forEach(f=>{
@@ -800,7 +933,11 @@ function deleteReading(rid, readId) {
 
 function renderRounds() {
   const c=document.getElementById('roundsContainer');
-  c.innerHTML = rounds.map((round,ri)=>{
+  // Split: background rounds pinned at top, perimeter rounds below
+  const bgRounds = rounds.filter(r=>r.isBackground && !r.bgCompleted);
+  const periRounds = rounds.filter(r=>!r.isBackground);
+  const orderedRounds = [...bgRounds, ...periRounds];
+  c.innerHTML = orderedRounds.map((round,ri)=>{
     const totalInRound = round.readings.length;
     const readingsHtml = round.readings.map((rd,rdi)=>{
       const readingNum = totalInRound - rdi; // newest first, so count down
@@ -817,44 +954,44 @@ function renderRounds() {
       const hasMissing = missingMP||missingVoc||missingDust||missingVis||missingNoise||missingOdors;
       const missingStyle = 'border-color:#f59e0b;background:#fffbeb;';
       const cardBorder = (vocAlert||dustAlert)?'border-color:var(--danger);':hasMissing?'border-left:3px solid #f59e0b;':'';
-      return `<div class="reading-item" data-reading="${rd.id}" style="${cardBorder}">
+      return `<div class="reading-item ${round.isBackground?'reading-item-bg':''}" data-reading="${rd.id}" style="${cardBorder}">
         <div class="reading-item-header">
-          <span class="reading-mp">#${readingNum} ${rd.monitorPoint} <span class="reading-status">${alert}${hasMissing?'<span style="color:#f59e0b;font-size:10px;margin-left:4px;">● incomplete</span>':(!alert?'<span style="color:var(--success);font-size:10px;margin-left:4px;">✓</span>':'')}</span></span>
+          <span class="reading-mp" style="${round.isBackground?'background:#eef2ff;color:#4338ca;border:1px solid #818cf8;':''}">${round.isBackground?'BG':'#'+readingNum} ${rd.monitorPoint} <span class="reading-status">${alert}${hasMissing?'<span style="color:#f59e0b;font-size:10px;margin-left:4px;">● incomplete</span>':(!alert?'<span style="color:var(--success);font-size:10px;margin-left:4px;">✓</span>':'')}</span></span>
           <button class="reading-delete" onclick="confirmDelete(this,function(){deleteReading(${round.id},${rd.id});})" title="Delete reading">×</button>
         </div>
         <div class="form-row">
           <div class="form-group"><label>Monitor Point</label>
-            ${useMPButtons()
-              ? `<div class="mp-tap-grid input-mp" data-next="input-voc">${getSiteMPs().map(mp=>`<button class="mp-tap-btn${rd.monitorPoint===mp?' mp-tap-active':''}" onclick="selectMPTap(this,'${mp}',${round.id},${rd.id})">${mp}</button>`).join('')}</div>`
-              : `<select class="input-mp" onchange="updateReading(${round.id},${rd.id},'monitorPoint',this.value);advanceToNext(this);" data-next="input-voc">${getSiteMPs().map(mp=>`<option value="${mp}" ${rd.monitorPoint===mp?'selected':''}>${mp}</option>`).join('')}</select>`
+            ${(useMPButtons() && !round.isBackground)
+              ? `<div class="mp-tap-grid input-mp" data-next="input-voc">${getSiteMPs(false).map(mp=>`<button class="mp-tap-btn${rd.monitorPoint===mp?' mp-tap-active':''}" onclick="selectMPTap(this,'${mp}',${round.id},${rd.id})">${mp}</button>`).join('')}</div>`
+              : `<select class="input-mp" onchange="updateReading(${round.id},${rd.id},'monitorPoint',this.value);advanceToNext(this);" data-next="input-voc">${getSiteMPs(round.isBackground).map(mp=>`<option value="${mp}" ${rd.monitorPoint===mp?'selected':''}>${mp}</option>`).join('')}</select>`
             }
           </div>
           <div class="form-group"><label>Time</label><input type="time" value="${rd.time}" onchange="updateReading(${round.id},${rd.id},'time',this.value)"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-dust" value="${rd.voc}" onchange="updateReading(${round.id},${rd.id},'voc',this.value)" onblur="if(this.value!=='')advanceToNext(this);" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
-          <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" inputmode="decimal" enterkeyhint="next" data-next="input-noise" value="${rd.dust}" onchange="updateReading(${round.id},${rd.id},'dust',this.value)" onblur="if(this.value!=='')advanceToNext(this);" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
-        </div>
-        <div class="form-row full">
-          <div class="form-group"><label>Noise (dB)</label><input class="input-noise" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-visdust-yes" value="${rd.noise}" onchange="updateReading(${round.id},${rd.id},'noise',this.value)" onblur="if(this.value!=='')advanceToNext(this);" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${missingNoise?missingStyle:''}"></div>
+          <div class="form-group"><label>VOC (ppm)</label><input class="input-voc" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-noise" value="${rd.voc}" onblur="if(this._processing)return;this._processing=true;setTimeout(()=>{this._processing=false;},300);this.value=normalizeVOC(this.value,this);updateReading(${round.id},${rd.id},'voc',this.value);const _r=rounds.find(r=>r.id===${round.id});const _rd=_r&&_r.readings.find(x=>x.id===${rd.id});if(this.value!==''&&_rd&&_rd._fresh)advanceToNext(this);" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);}" style="${vocAlert?'border-color:var(--danger);background:#fee2e2':missingVoc?missingStyle:''}"></div>
+          <div class="form-group"><label>Noise (dB)</label><input class="input-noise" type="number" step="0.1" inputmode="decimal" enterkeyhint="next" data-next="input-visdust-yes" value="${rd.noise}" onblur="if(this._processing)return;this._processing=true;setTimeout(()=>{this._processing=false;},300);const _nval=this.value;updateReading(${round.id},${rd.id},'noise',_nval);const _rn=rounds.find(r=>r.id===${round.id});const _rdn=_rn&&_rn.readings.find(x=>x.id===${rd.id});if(_nval!==''&&_rdn&&_rdn._fresh){advanceToNext(this);scrollToNext(this,'input-visdust-yes');}" onkeydown="if(event.key==='Enter'){event.preventDefault();advanceToNext(this);scrollToNext(this,'input-visdust-yes');}" style="${missingNoise?missingStyle:''}"></div>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Visible Dust?</label>
-            <div class="tap-btn-group input-visdust-yes" data-next="input-odors-n" tabindex="-1" >
+            <div class="tap-btn-group input-visdust-yes" data-next="input-odors-n" tabindex="-1">
               <button class="tap-btn ${rd.visibleDust==='No'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','No',${round.id},${rd.id},'input-odors-n');scrollToNext(this,'input-odors-n')">No</button>
-              <button class="tap-btn ${rd.visibleDust==='Yes'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','Yes',${round.id},${rd.id},'input-odors-n');scrollToNext(this,'input-odors-n')">Yes</button>
+              <button class="tap-btn ${rd.visibleDust==='Yes'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'visibleDust','Yes',${round.id},${rd.id},'input-odors-n');scrollToNext(this,'input-odors-n');promptComment(this,'Dust: ',${round.id},${rd.id})">Yes</button>
             </div>
           </div>
           <div class="form-group">
             <label>Odors?</label>
-            <div class="tap-btn-group input-odors-n" tabindex="-1" >
-              <button class="tap-btn ${rd.odors==='N'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'odors','N',${round.id},${rd.id},null)">No</button>
-              <button class="tap-btn ${rd.odors==='Y'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'odors','Y',${round.id},${rd.id},null)">Yes</button>
+            <div class="tap-btn-group input-odors-n" data-next="input-dust" tabindex="-1">
+              <button class="tap-btn ${rd.odors==='N'?'tap-btn-no':'tap-btn-inactive'}" onclick="setTapField(this,'odors','N',${round.id},${rd.id},'input-dust');scrollToNext(this,'input-dust')">No</button>
+              <button class="tap-btn ${rd.odors==='Y'?'tap-btn-yes':'tap-btn-inactive'}" onclick="setTapField(this,'odors','Y',${round.id},${rd.id},'input-dust');promptComment(this,'Odor: ',${round.id},${rd.id});scrollToNext(this,'input-dust')">Yes</button>
             </div>
           </div>
         </div>
-        <div style="margin-top:6px">
+        <div class="form-row full">
+          <div class="form-group"><label>PM10 Dust (µg/m³)</label><input class="input-dust" type="number" step="0.001" inputmode="decimal" enterkeyhint="done" value="${rd.dust}" onblur="if(this._processing)return;this._processing=true;setTimeout(()=>{this._processing=false;},300);this.value=normalizeDust(this.value,this);updateReading(${round.id},${rd.id},'dust',this.value);setTimeout(function(){markReadingComplete(${round.id},${rd.id});},500);" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
+        </div>
+        <div style="margin-top:6px" data-comment-container>
           ${rd.comments
             ? `<div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" value="${rd.comments}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="font-size:14px"></div>`
             : `<button onclick="expandComments(this,${round.id},${rd.id})" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit">+ Add comment</button>`
@@ -869,21 +1006,35 @@ function renderRounds() {
     const roundMissingStyle = 'border-color:#f59e0b;background:#fffbeb;';
     const roundHasAlert = round.readings.some(rd=>{const v=parseFloat(rd.voc),d=parseFloat(rd.dust);return v>=2||d>=0.050;});
 
-    return `<div class="round-card" data-round="${round.id}">
-      <div class="round-header" style="flex-direction:column;gap:10px;padding:12px 14px">
+    return `<div class="round-card ${round.isBackground?'round-card-bg':''}" data-round="${round.id}">
+      <div class="round-header" style="flex-direction:column;gap:10px;padding:12px 14px;background:${round.isBackground?'#4f46e5':'linear-gradient(135deg,var(--atlas-dark),var(--atlas-mid))'}">
         <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
-          <span class="round-num" style="color:#fff;font-size:15px">Round ${rounds.length - ri}
-            <span style="font-weight:500;color:rgba(255,255,255,.6);font-size:12px;margin-left:6px">${totalInRound} reading${totalInRound!==1?'s':''}</span>
+          <span class="round-num" style="color:#fff;font-size:15px">
+            ${round.isBackground
+              ? '<span style=\"background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 9px;font-size:12px;font-weight:800;letter-spacing:.5px;color:#fff\">BACKGROUND</span>'
+              : 'Round '+(periRounds.length - (ri - bgRounds.length))+' '}
+            <span style="font-weight:500;color:rgba(255,255,255,.6);font-size:12px">${totalInRound} reading${totalInRound!==1?'s':''}</span>
             ${roundHasAlert?'<span class=\"action-badge\" style=\"margin-left:6px\">⚠ ACTION</span>':''}
+            ${round.collapsed?'<span style=\"font-size:10px;color:rgba(255,255,255,.5);margin-left:6px\">● collapsed</span>':''}
           </span>
-          <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:0 12px;height:34px;font-size:13px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff">Delete</button>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            ${!round.isBackground ? `<button onclick="toggleRoundBackground(${round.id})" title="Mark as background round" style="padding:0 8px;height:34px;font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);border-radius:6px;cursor:pointer;font-family:inherit">BG</button>` : ''}
+            <button onclick="toggleRoundCollapse(${round.id})" style="padding:0 10px;height:34px;font-size:12px;font-weight:700;background:${round.collapsed?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)'};border:1px solid rgba(255,255,255,.25);color:${round.collapsed?'var(--atlas-dark)':'#fff'};border-radius:6px;cursor:pointer;font-family:inherit">${round.collapsed?'▶ Expand':'✓ Done'}</button>
+            <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:0 12px;height:34px;font-size:13px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff">Delete</button>
+          </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;width:100%">
           <span style="font-size:12px;color:rgba(255,255,255,.6);font-weight:600">Round time:</span>
           <input type="time" value="${round.time}" onchange="updateRound(${round.id},'time',this.value)" style="padding:6px 8px;border:1px solid rgba(255,255,255,.3);border-radius:6px;font-size:13px;font-weight:600;background:rgba(255,255,255,.15);color:#fff;font-family:inherit;min-height:36px;-webkit-appearance:none;flex-shrink:0">
         </div>
       </div>
-      <div class="round-body">
+      ${round.isBackground && round.collapsed ? `<div style="padding:10px 14px;background:#eef2ff;border-top:1px solid #c7d2fe;font-size:12px;color:#3730a3">
+        <span style="font-weight:700">Background values: </span>
+        ${round.readings.length===0 ? '<span style=\"color:#4338ca\">No readings recorded</span>' :
+          round.readings.map(r=>`<span style=\"margin-right:12px\">${r.monitorPoint||'MP?'} — VOC: ${r.voc||'—'} ppm, Dust: ${r.dust||'—'} mg/m³</span>`).join('')}
+      </div>` : ''}
+      <div class="round-body" style="${round.collapsed?'display:none':''}">
+        ${round.isBackground?'<div style=\"background:#eef2ff;border:1.5px solid #818cf8;border-radius:8px;padding:12px 14px;margin-bottom:14px\"><div style=\"font-size:13px;font-weight:800;color:#4338ca;margin-bottom:5px\">📍 BACKGROUND READING — Before Work Begins</div><div style=\"font-size:12px;color:#4f46e5;line-height:1.6\">Record baseline concentrations upwind of the excavation area. These values set the daily background — they cannot exceed action levels. The upwind location may be a designated monitoring point. Record wind direction.</div></div>':''}
         <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--card-border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
             <input type="text" class="round-wxzip" placeholder="ZIP" inputmode="numeric" enterkeyhint="search" style="width:72px;padding:6px 8px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;background:var(--input-bg);font-family:inherit" value="${round.wxZip||''}" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchWeatherForRound(${round.id});}">
@@ -901,7 +1052,10 @@ function renderRounds() {
           </div>
         </div>
         ${readingsHtml}
-        <button onclick="addReadingToRound(${round.id})" style="width:100%;margin-top:8px;height:50px;background:var(--atlas-primary);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;box-shadow:0 2px 8px rgba(58,107,130,.25)">+ Add Reading</button>
+        ${round.isBackground
+          ? `<button onclick="completeBackgroundRound(${round.id})" style="width:100%;margin-top:12px;height:54px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;box-shadow:0 3px 12px rgba(79,70,229,.35)">✓ Complete Background Reading</button>`
+          : `<button onclick="addReadingToRound(${round.id})" style="width:100%;margin-top:8px;height:50px;background:var(--atlas-primary);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;box-shadow:0 2px 8px rgba(58,107,130,.25)">+ Add Reading</button>`
+        }
       </div>
     </div>`;
   }).join('');
@@ -922,7 +1076,7 @@ function renderLibrary() {
       </div>
       <div class="lib-actions" style="margin-top:10px">
         <button class="btn btn-sm btn-primary" onclick="viewLibraryItem(${i})">Open</button>
-        <button class="btn btn-sm btn-outline" onclick="resumeLibraryItem(${i})">Resume</button>
+        <button class="btn btn-sm btn-outline" onclick="resumeLibraryItem(${i})">Edit</button>
         <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteLibraryItem(${i});})">Delete</button>
       </div>
     </div>`).join('');
@@ -1021,7 +1175,7 @@ function viewLibraryItem(idx) {
 
 // ===== CLEAR =====
 function clearAll() {
-  if(!confirm('Clear ALL data for this session? Saved presets and library are kept.')) return;
+  // confirm() removed - clearAll is only called from modal confirmations
   localStorage.removeItem(SK);
   rounds=[]; roundCounter=0;
   document.querySelectorAll('#panel-info input:not([type="date"]),#panel-info textarea').forEach(el=>el.value='');
@@ -1072,6 +1226,7 @@ function generatePdfHtml(data) {
         time:rd.time||'', mp:rd.monitorPoint||'',
         voc:rd.voc||'', dust:rd.dust||'',
         vis:rd.visibleDust||'', noise:rd.noise||'', odors:rd.odors||'',
+        background:round.isBackground||false,
         wind:(round.windDir||round.windSpeed)?((round.windDir||'')+(round.windSpeed?' '+round.windSpeed+' mph':'')):'',
         temp:round.temp||'', cond:round.conditions||'', comments:rd.comments||''
       });
@@ -1088,7 +1243,7 @@ function generatePdfHtml(data) {
       +'<td style="width:20%"><b>Phase:</b> '+(si.phase||'')+'</td>'
       +'<td style="width:25%"><b>Date:</b> '+(dateStr||'')+'</td>'
       +'</tr><tr><td colspan="4"><b>Employee(s):</b> '+(si.employees||'')+'</td></tr></table>'
-      +'<div class="al"><b>Action Levels:</b> VOC = 2 ppmv &nbsp; Dust = 0.050 mg/m\u00b3 &nbsp; Opacity 20%</div>';
+      +'<div class="al"><b>Action Levels:</b> VOC = 2 ppmv (above background, 30 sec) &nbsp; Dust = 50 µg/m³ (above background, 30 sec) &nbsp; Opacity 20%</div>';
   }
 
   // Checklist rows
@@ -1124,7 +1279,7 @@ function generatePdfHtml(data) {
 
   // Readings table
   const readHdr='<tr><th style="width:7%">Time</th><th style="width:8%">MP</th>'
-    +'<th style="width:7%">VOC<br>(ppm)</th><th style="width:9%">PM10<br>(mg/m\u00b3)</th>'
+    +'<th style="width:7%">VOC<br>(ppm)</th><th style="width:9%">PM10<br>(µg/m³)</th>'
     +'<th style="width:6%">Vis<br>Dust</th><th style="width:7%">Noise<br>(dB)</th>'
     +'<th style="width:5%">Odor</th><th style="width:10%">Wind/Spd</th>'
     +'<th style="width:6%">Temp<br>(\u00b0F)</th><th>Comments</th></tr>';
@@ -1178,7 +1333,8 @@ function generatePDF() {
 
   // Save to library (data only, not HTML — much smaller)
   const libEntry = {
-    title: `${si.wellId||'No Well'} — ${dateStr||'undated'}`,
+    title: `${si.wellId||'Untitled'} — ${dateStr||'undated'}`,
+    filename: 'ATLAS_AML_'+(si.siteDate?si.siteDate.replace(/-/g,''):'undated')+(si.wellId?'_'+si.wellId.replace(/[^a-zA-Z0-9]/g,'_'):''),
     date: dateStr || new Date().toLocaleDateString(),
     readingCount: totalReadings,
     data: data,
@@ -1194,15 +1350,16 @@ function generatePDF() {
 }
 function promptEndSession(){
   const modal=document.createElement('div');
+  modal.className='exceedance-modal';
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:16px';
-  modal.innerHTML=`<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:340px">
-    <div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">End this session?</div>
-    <p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">The current session will be saved to the Library and the form will be cleared for a new log. Make sure you have generated a PDF first if you need a printed copy.</p>
-    <div style="display:flex;gap:8px">
-      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
-      <button id="confirmEndBtn" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--danger);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">End Session</button>
-    </div>
-  </div>`;
+  modal.innerHTML='<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:340px">'
+    +'<div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">Save and end session?</div>'
+    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">This saves the current session to the Library and clears the form for a new log. Generate a PDF first if you need a printed report.</p>'
+    +'<div style="display:flex;gap:8px">'
+      +'<button onclick="closeTopModal()" style="flex:1;height:44px;border:1.5px solid var(--input-border);border-radius:8px;background:none;cursor:pointer;font-size:14px;font-weight:700;color:var(--text-dim);font-family:inherit">Cancel</button>'
+      +'<button id="confirmEndBtn" style="flex:1;height:44px;border:none;border-radius:8px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit">Save &amp; End</button>'
+    +'</div>'
+  +'</div>';
   modal.querySelector('#confirmEndBtn').onclick=function(){
     modal.remove();
     // Save to library first if there's anything worth saving
@@ -1270,7 +1427,7 @@ function renderInstrumentsList() {
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
         <div>
           <div class="inst-name">${inst.name}</div>
-          ${inst.notes?`<div class="inst-detail">${inst.notes}</div>`:''}
+          ${inst.notes?'<div class="inst-detail">'+inst.notes+'</div>':''}
         </div>
         <button class="reading-delete" onclick="removeInstrument(${i})" title="Remove">×</button>
       </div>
@@ -1306,7 +1463,7 @@ function addInstrument() {
     <div style="font-size:15px;font-weight:700;margin-bottom:14px;color:var(--text)">Add Instrument</div>
     ${html}
     <div style="display:flex;gap:8px;margin-top:4px">
-      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
+      <button onclick="closeTopModal()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
       <button onclick="confirmAddInstrument(this)" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Add</button>
     </div>
     <div style="margin-top:10px;border-top:1px solid var(--card-border);padding-top:10px">
@@ -1324,7 +1481,7 @@ function confirmAddInstrument(btn) {
   const now=new Date();
   const dtStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'T'+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   instruments.push({name:name.trim(),notes:notes.trim(),dateTime:dtStr,reading:''});
-  btn.closest('[style*=fixed]').remove();
+  closeTopModal();
   renderInstrumentsList();saveData();showToast('Instrument added');
 }
 function addSavedInstrument(idx) {
@@ -1332,7 +1489,7 @@ function addSavedInstrument(idx) {
   const now=new Date();
   const dtStr=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0')+'T'+String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   instruments.push({name:s.name,notes:s.notes||'',dateTime:dtStr,reading:''});
-  document.querySelector('[style*=fixed]').remove();
+  closeTopModal();
   renderInstrumentsList();saveData();showToast(s.name+' added');
 }
 function saveInstrumentPreset(btn) {
@@ -1616,7 +1773,7 @@ function showFullGuide(){
   const sections=[
     {h:'Site Info',b:'Fill in Location ID, project number, phase, date, and employee names at the start of the day. Enter your monitoring point names (e.g. Upwind, Downwind, Property Line N) in the Monitoring Points field — these populate the MP dropdown in every round. Save them as a preset tied to the Location ID for quick loading next time.'},
     {h:'Instruments',b:'Three standard instrument types are always shown: VOC/PID monitor, Dust/PM10 monitor, and Sound Level monitor. Enter the specific model name for each instrument being used today and tap Save to store it for future sessions. Record the date/time and bump/cal result for each. A 4th optional slot can be expanded for any additional instrument.'},
-    {h:'Readings',b:'Tap + New Round to start a monitoring round. Each round has its own weather section — enter a ZIP code or tap GPS to auto-fill temp, wind speed, wind direction, and conditions in one tap. All fields stay editable if the auto-fill is wrong. Add individual readings per monitoring point within each round. VOC ≥ 2 ppm and dust ≥ 0.050 mg/m³ are flagged red automatically. The round header shows a ⚠ ACTION badge if any reading inside it hit an action level. Use ⛶ to go fullscreen while taking readings.'},
+    {h:'Readings',b:'Tap + New Round to start a monitoring round. Each round has its own weather section — enter a ZIP code or tap GPS to auto-fill temp, wind speed, wind direction, and conditions in one tap. All fields stay editable if the auto-fill is wrong. Add individual readings per monitoring point within each round. VOC ≥ 2 ppm and dust ≥ 0.050 mg/m³ (= 50 µg/m³) are flagged red automatically. Values are measured and stored in mg/m³ (Aeroqual output) but displayed as µg/m³ per Atlas SOP. The round header shows a ⚠ ACTION badge if any reading inside it hit an action level. Use ⛶ to go fullscreen while taking readings.'},
     {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for items marked NO. N/A needs no comment. The first item has a quick Not Observed button for when no visible dust is present.'},
     {h:'Library',b:'Saved reports are listed here. Tap Open to view a report as a PDF. Tap Resume to reload a saved report back into the active session for editing. Use Backup to export all data to a JSON file and Restore to reload it on a new device.'},
     {h:'Ending a Session',b:'When you are done for the day, tap Generate PDF to save a copy to the Library and open the print dialog. Then go to the Library tab and tap End Session & Save to Library at the bottom — you will be asked to confirm, and the session data will be saved before the form clears. The next time you open the app the home screen will show a clean start.'},
@@ -1680,12 +1837,14 @@ function useMPButtons(){
   if(window.mpStyle === 'drop') return false;
   return getSiteMPs().length <= 8;
 }
-function getSiteMPs(){
+function getSiteMPs(forBackground){
   const el=document.getElementById('siteMPs');
   const val=el?el.value.trim():'';
-  if(!val)return['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8'];
-  const mps=val.split(',').map(s=>s.trim()).filter(Boolean);
-  return mps.length?mps:['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8'];
+  const base = val ? val.split(',').map(s=>s.trim()).filter(Boolean) : ['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8'];
+  const mps = base.length ? base : ['MP-1','MP-2','MP-3','MP-4','MP-5','MP-6','MP-7','MP-8'];
+  // Background rounds get 'BG' as first option (upwind location)
+  if(forBackground) return ['BG', ...mps];
+  return mps;
 }
 function saveSiteMPs(){
   saveData();
@@ -1756,7 +1915,7 @@ function configureRoundMPs(rid){
     <textarea id="mpConfigInput" style="width:100%;padding:8px 10px;border:1px solid var(--input-border);border-radius:6px;font-size:14px;font-family:inherit;min-height:80px;resize:vertical">${current}</textarea>
     <div style="margin-top:4px;font-size:11px;color:var(--text-dim);margin-bottom:12px">e.g. MP-1, MP-2, Upwind, Downwind, Property Line</div>
     <div style="display:flex;gap:8px">
-      <button onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
+      <button onclick="closeTopModal()" style="flex:1;padding:10px;border:1px solid var(--input-border);border-radius:6px;background:none;cursor:pointer;font-size:13px;font-weight:600;color:var(--text-dim);font-family:inherit">Cancel</button>
       <button onclick="applyMPConfig(${rid},this)" style="flex:1;padding:10px;border:none;border-radius:6px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:13px;font-weight:600;font-family:inherit">Apply</button>
     </div>
     <button onclick="saveMPPreset(${rid},this)" style="width:100%;margin-top:8px;padding:8px;border:1px dashed var(--atlas-primary);border-radius:6px;background:none;cursor:pointer;font-size:12px;color:var(--atlas-primary);font-family:inherit">+ Save as preset for this location</button>
@@ -1770,7 +1929,7 @@ function applyMPConfig(rid,btn){
   const val=document.getElementById('mpConfigInput').value;
   const mps=val.split(',').map(s=>s.trim()).filter(Boolean);
   r.customMPs=mps.length?mps:[];
-  btn.closest('[style*=fixed]').remove();
+  closeTopModal();
   renderRounds();saveData();showToast('Monitoring points updated');
 }
 function saveMPPreset(rid,btn){
@@ -1809,9 +1968,45 @@ async function toggleWakeLock(){
   }catch(e){showToast('Could not enable: '+e.message);}
 }
 
+// ===== ALERT LOG =====
+function closeTopModal(){
+  var m=document.querySelectorAll('.exceedance-modal');
+  if(m.length)m[m.length-1].remove();
+}
+function updateAlertBadge(){ /* replaced by reference button */ }
+function showExceedanceReference(){
+  var modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+  modal.className='exceedance-modal';
+  modal.innerHTML='<div style="background:var(--card);border-radius:14px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto">'
+    +'<div style="background:#dc2626;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-radius:14px 14px 0 0;position:sticky;top:0">'
+      +'<span style="font-size:15px;font-weight:800;color:#fff">Action Level Guidance</span>'
+      +'<button onclick="closeTopModal()" style="background:rgba(255,255,255,.2);border:none;color:#fff;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;font-family:inherit">x</button>'
+    +'</div>'
+    +'<div style="padding:16px 18px">'
+      +'<div style="font-size:11px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">VOC</div>'
+      +'<div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px"><b>2 ppmv above background — 30 sec sustained</b></div>'
+      +'<div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">1. Stop all soil disturbance.<br>2. Identify source — excavation face, stockpile, haul truck.<br>3. Apply vapor suppression (Simple Green, Bio-Solve, or equivalent).<br>4. Report to Atlas SHSO then PM.<br>5. Do not resume until below action level.</div>'
+      +'<div style="border-top:1px solid var(--card-border);padding-top:12px">'
+        +'<div style="font-size:11px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Dust</div>'
+        +'<div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px"><b>50 µg/m³ above background — 30 sec sustained</b></div>'
+        +'<div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">1. Stop dust-generating activities.<br>2. Water spray, cover stockpiles, reduce vehicle speeds.<br>3. Consider Soil-Sement® for suppression.<br>4. Report to Atlas SHSO then PM.<br>5. Do not resume until below action level.</div>'
+      +'</div>'
+      +'<div style="border-top:1px solid var(--card-border);padding-top:12px">'
+        +'<div style="font-size:11px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Noise</div>'
+        +'<div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px"><b>Per permit or level set in Site Info</b></div>'
+        +'<div style="font-size:12px;color:var(--text-dim);line-height:1.7">1. Identify source, notify contractor.<br>2. Barriers, mufflers, reduce simultaneous operations.<br>3. Report to SHSO if near sensitive receptors.<br>4. Consider suspending if exceedance persists.</div>'
+      +'</div>'
+    +'</div>'
+  +'</div>';
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+function reviewAlert(f){ showExceedanceReference(); }
+
 // ===== EXPAND COMMENTS =====
 function expandComments(btn, rid, readId){
-  const container = btn.parentElement;
+  const container = btn.closest('[data-comment-container]')||btn.parentElement;
   container.innerHTML = '<div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" placeholder="Notes..." style="font-size:14px"></div>';
   const inp = container.querySelector('input');
   inp.onchange = function(){updateReading(rid, readId, 'comments', this.value);};
@@ -1840,11 +2035,6 @@ function setTapField(btn, field, val, rid, readId, nextClass){
         if(next.select && next.type !== 'number') next.select();
       }, 50);
     }
-  } else if(!nextClass){
-    // Odors = last field — scroll to top to show summary + Add Reading
-    setTimeout(function(){
-      window.scrollTo({top:0, behavior:'smooth'});
-    }, 150);
   }
 }
 
@@ -1880,6 +2070,14 @@ function advanceToNext(el){
 
 // ===== MP STYLE =====
 window.mpStyle = localStorage.getItem('atlas_aq_mp_style') || 'tap';
+window._noiseThreshold = 0; // updated by updateNoiseThreshold()
+window._alertLog = [];
+function updateNoiseThreshold(){
+  const el = document.getElementById('noiseActionLevel');
+  const manual = el ? parseFloat(el.value) : NaN;
+  if(!isNaN(manual) && manual>0){ window._noiseThreshold = manual; return; }
+  window._noiseThreshold = window._sensitiveReceptor ? 65 : 0;
+}
 function setMPStyle(style){
   window.mpStyle = style;
   localStorage.setItem('atlas_aq_mp_style', style);
@@ -1914,6 +2112,254 @@ function selectMPTap(btn, mp, rid, readId){
   }
 }
 
+// ===== NOISE ACTION LEVEL =====
+function getNoiseActionLevel(){
+  // Always recompute to stay fresh
+  const el = document.getElementById('noiseActionLevel');
+  const manual = el ? parseFloat(el.value) : NaN;
+  if(!isNaN(manual) && manual>0) return manual;
+  if(window._sensitiveReceptor===true) return 65;
+  return 0;
+}
+window._sensitiveReceptor = false;
+function setSensitiveReceptor(val){
+  window._sensitiveReceptor = val;
+  updateNoiseThreshold();
+  saveData();
+  const yesBtn = document.getElementById('srYesBtn');
+  const noBtn = document.getElementById('srNoBtn');
+  const note = document.getElementById('srNote');
+  if(yesBtn && noBtn){
+    yesBtn.style.background = val ? 'var(--atlas-primary)' : 'var(--input-bg)';
+    yesBtn.style.color = val ? '#fff' : 'var(--text)';
+    yesBtn.style.borderColor = val ? 'var(--atlas-primary)' : 'var(--input-border)';
+    noBtn.style.background = !val ? 'var(--atlas-light)' : 'var(--input-bg)';
+    noBtn.style.color = !val ? 'var(--atlas-dark)' : 'var(--text)';
+    noBtn.style.borderColor = !val ? 'var(--atlas-primary)' : 'var(--input-border)';
+  }
+  if(note) note.style.display = val ? 'block' : 'none';
+}
+
+// ===== NORMALIZE / SIG FIGS =====
+function normalizeDust(val, el){
+  if(val===''||val===null||val===undefined) return val;
+  const num = parseFloat(val);
+  if(isNaN(num)) return val;
+  // Must be 3 decimal places (0.000 format)
+  const normalized = num.toFixed(3);
+  // Validate sig figs - Aeroqual reads to 0.001 mg/m³
+  if(el && num > 0 && String(num).replace('.','').replace(/^0+/,'').length > 3){
+    el.style.borderColor = '#f59e0b';
+    el.title = 'Check precision — Aeroqual reads to 0.001 mg/m³ (= 1 µg/m³, 3 decimal places)';
+  } else if(el) {
+    el.title = '';
+  }
+  return normalized;
+}
+function normalizeVOC(val, el){
+  if(val===''||val===null||val===undefined) return val;
+  const num = parseFloat(val);
+  if(isNaN(num)) return val;
+  // 1 decimal place
+  return num.toFixed(1);
+}
+
+// ===== CLEAR INSTRUMENT =====
+function clearInstrument(type){
+  const fields = type==='pid' ? ['pidModel','pidDateTime','pidReading']
+    : type==='dustI' ? ['dustModel','dustDateTime','dustReading']
+    : type==='sound' ? ['soundModel','soundDateTime','soundReading']
+    : ['extraModel','extraDateTime','extraReading'];
+  fields.forEach(function(id){
+    const el=document.getElementById(id);
+    if(el)el.value='';
+  });
+  saveData();
+  showToast('Instrument cleared');
+}
+
+// ===== PROMPT COMMENT =====
+function promptComment(btn, prefix, rid, readId){
+  const card = btn.closest('.reading-item');
+  if(!card) return;
+  setTimeout(function(){
+    const container = card.querySelector('[data-comment-container]');
+    if(!container) return;
+    // Show comment field with prefix if not already showing
+    const existing = container.querySelector('.input-comments');
+    if(existing){
+      // Already open - prepend prefix if not already there
+      if(!existing.value.startsWith(prefix)){
+        existing.value = prefix + (existing.value||'');
+        updateReading(rid, readId, 'comments', existing.value);
+      }
+      existing.focus();
+      existing.setSelectionRange(existing.value.length, existing.value.length);
+    } else {
+      container.innerHTML = '<div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" style="font-size:14px"></div>';
+      const inp = container.querySelector('input');
+      inp.value = prefix;
+      inp.onchange = function(){updateReading(rid, readId, 'comments', this.value);};
+      inp.onkeydown = function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}};
+      setTimeout(function(){
+        inp.focus();
+        inp.setSelectionRange(inp.value.length, inp.value.length);
+        container.scrollIntoView({behavior:'smooth', block:'center'});
+      }, 100);
+    }
+  }, 200);
+}
+
+// ===== MARK READING COMPLETE =====
+function markReadingComplete(rid, readId){
+  const r=rounds.find(r=>r.id===rid);
+  if(r){
+    const rd=r.readings.find(x=>x.id===readId);
+    if(rd){ rd._fresh = false; }
+    saveData();
+  }
+  // Scroll to top to show summary + Add Reading button
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ===== COMPLETE BACKGROUND ROUND =====
+function completeBackgroundRound(rid){
+  const r = rounds.find(r=>r.id===rid);
+  if(!r) return;
+  // Mark as completed/collapsed
+  r.collapsed = true;
+  r.bgCompleted = true;
+  saveData();
+  renderRounds();
+  renderBgBanner();
+}
+function renderBgBanner(){
+  const banner = document.getElementById('bgBanner');
+  const valDiv = document.getElementById('bgBannerValues');
+  if(!banner || !valDiv) return;
+  const bgRound = rounds.find(r=>r.isBackground && r.bgCompleted);
+  if(!bgRound || bgRound.readings.length===0){ banner.style.display='none'; return; }
+  // One card per reading, each showing the 3 key values
+  const cards = bgRound.readings.map(function(rd){
+    const mp = rd.monitorPoint || 'BG';
+    const voc = (rd.voc!==undefined && rd.voc!=='') ? rd.voc+' ppm' : '—';
+    const dust = (rd.dust!==undefined && rd.dust!=='') ? rd.dust+' mg/m³' : '—';
+    const noise = (rd.noise!==undefined && rd.noise!=='') ? rd.noise+' dB' : '—';
+    return '<div style="background:rgba(255,255,255,.15);border-radius:8px;padding:8px 12px;margin-bottom:6px">'
+      +'<div style="font-size:12px;font-weight:800;color:#fff;margin-bottom:6px">'+mp+'</div>'
+      +'<div style="display:flex;gap:0">'
+        +'<div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,.2);padding-right:8px">'
+          +'<div style="font-size:16px;font-weight:800;color:#fff">'+voc+'</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">VOC</div>'
+        +'</div>'
+        +'<div style="flex:1;text-align:center;border-right:1px solid rgba(255,255,255,.2);padding:0 8px">'
+          +'<div style="font-size:16px;font-weight:800;color:#fff">'+dust+'</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">Dust</div>'
+        +'</div>'
+        +'<div style="flex:1;text-align:center;padding-left:8px">'
+          +'<div style="font-size:16px;font-weight:800;color:#fff">'+noise+'</div>'
+          +'<div style="font-size:10px;color:rgba(255,255,255,.7);margin-top:2px">Noise</div>'
+        +'</div>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+  valDiv.innerHTML = cards;
+  banner.style.display = 'block';
+}
+
+// ===== TOGGLE ROUND BACKGROUND =====
+function toggleRoundBackground(rid){
+  const r=rounds.find(r=>r.id===rid);
+  if(!r)return;
+  r.isBackground=!r.isBackground;
+  saveData();renderRounds();
+  showToast(r.isBackground?'Marked as background round':'Marked as perimeter round');
+}
+
+// ===== TOGGLE ROUND COLLAPSE =====
+function toggleRoundCollapse(rid){
+  const r=rounds.find(r=>r.id===rid);
+  if(!r) return;
+  r.collapsed = !r.collapsed;
+  saveData();
+  renderRounds();
+}
+
+// ===== UPDATE DATE BAR =====
+function updateDateBar(){
+  const bar = document.getElementById('date-bar');
+  if(!bar) return;
+  const val = document.getElementById('siteDate').value;
+  if(!val){ bar.style.display='none'; return; }
+  const d = new Date(val+'T00:00:00');
+  const str = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()]+' '
+    +['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]+' '
+    +d.getDate()+', '+d.getFullYear();
+  bar.textContent = '📅 '+str;
+  bar.style.display = 'block';
+}
+
+// ===== EXCEEDANCE GUIDANCE =====
+function showExceedanceGuidance(field, val, round){
+  const isVOC = field==='voc';
+  const isNoise = field==='noise';
+  const unit = isVOC ? 'ppmv' : isNoise ? 'dB' : 'mg/m³';
+  const fieldLabel = isVOC ? 'VOC' : isNoise ? 'Noise' : 'Dust';
+  window._alertLog.push({time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),field:fieldLabel,val:val,unit:unit});
+  updateAlertBadge();
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';modal.className='exceedance-modal';
+  modal.innerHTML=`<div style="background:var(--card);border-radius:14px;width:100%;max-width:380px;overflow:hidden">
+    <div style="background:#dc2626;padding:16px 18px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px">⚠</span>
+      <div>
+        <div style="font-size:16px;font-weight:800;color:#fff">Action Level Exceeded</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.8);margin-top:2px">${fieldLabel}: ${val} ${unit}${isNoise?'':' — above background, sustained 30 sec'}</div>
+      </div>
+    </div>
+    <div style="padding:16px 18px;font-size:13px;line-height:1.8;color:var(--text)">
+      <div style="font-weight:700;margin-bottom:8px;font-size:14px">Required actions (Atlas SOP):</div>
+      ${(function(){
+        if(isNoise) return '<div style="margin-bottom:6px">Review permit requirements for site-specific noise limits.</div><div style="margin-bottom:6px">1. <b>Identify the noise source and notify the contractor.</b></div><div style="margin-bottom:6px">2. Implement noise controls — reduce equipment speeds, use barriers or mufflers, limit simultaneous operations.</div><div style="margin-bottom:6px">3. <b>Report to Atlas SHSO</b> if near sensitive receptors.</div><div style="margin-bottom:12px">4. If elevated noise will persist all day, disable noise alerts in Site Info → Noise Action Level.</div>';
+        if(isVOC) return '<div style="margin-bottom:6px">1. <b>Stop all soil disturbance activities immediately.</b></div><div style="margin-bottom:6px">2. Identify the ROC source — excavation face, stockpile, or haul truck.</div><div style="margin-bottom:6px">3. Apply vapor suppression — Simple Green, Bio-Solve, or equivalent on soil surface.</div><div style="margin-bottom:6px">4. <b>Report exceedance and suppression method to Atlas SHSO</b>, who will notify the PM.</div><div style="margin-bottom:12px">5. Do not resume excavation until ROC returns below action level.</div>';
+        return '<div style="margin-bottom:6px">1. <b>Stop all dust-generating activities immediately.</b></div><div style="margin-bottom:6px">2. Apply dust controls — water spray, cover stockpiles, reduce vehicle speeds.</div><div style="margin-bottom:6px">3. Consider Soil-Sement® or equivalent for dust suppression.</div><div style="margin-bottom:6px">4. <b>Report exceedance and mitigation to Atlas SHSO</b>, who will notify the PM.</div><div style="margin-bottom:12px">5. Do not resume until dust returns below action level.</div>';
+      })()}
+      <div style="font-size:11px;color:var(--text-dim);padding-top:10px;border-top:1px solid var(--card-border)">Document the exceedance time, activity, and mitigation taken in Comments.</div>
+    </div>
+    <div style="padding:0 18px 18px">
+      <button onclick="this.closest('.exceedance-modal').remove()" style="width:100%;height:48px;background:var(--atlas-primary);color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit">Understood — I will take action</button>
+    </div>
+  </div>`;
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
+function showBackgroundElevatedNote(field, val){
+  const isVOC = field==='voc';
+  window._alertLog.push({time:new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}),field:isVOC?'VOC':'Dust',val:val,unit:isVOC?'ppmv':'mg/m³',note:'Elevated background'});
+  updateAlertBadge();
+  const modal=document.createElement('div');
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';modal.className='exceedance-modal';
+  modal.innerHTML=`<div style="background:var(--card);border-radius:14px;width:100%;max-width:360px;overflow:hidden">
+    <div style="background:#d97706;padding:14px 18px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:20px">ℹ</span>
+      <div style="font-size:15px;font-weight:800;color:#fff">Elevated Background Reading</div>
+    </div>
+    <div style="padding:16px 18px;font-size:13px;line-height:1.8;color:var(--text)">
+      <div style="margin-bottom:8px">This is a <b>background round</b> — readings taken before work begins set the baseline. Elevated background readings are <b>not an exceedance</b>.</div>
+      <div style="margin-bottom:8px">However, a high background ${isVOC?'VOC':'dust'} reading should be:</div>
+      <div style="margin-bottom:4px">• Documented clearly in Comments</div>
+      <div style="margin-bottom:4px">• Reported to the Project Manager</div>
+      <div>• Considered when evaluating readings during the workday</div>
+    </div>
+    <div style="padding:0 18px 18px">
+      <button onclick="this.closest('.exceedance-modal').remove()" style="width:100%;height:44px;background:var(--atlas-primary);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit">Understood</button>
+    </div>
+  </div>`;
+  modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+  document.body.appendChild(modal);
+}
+
 // ===== DARK MODE =====
 function toggleDark(){
   const on=document.body.classList.toggle('dark');
@@ -1938,7 +2384,7 @@ function exportData(){
   };
   const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);
-  a.download='atlas_aq_backup_'+new Date().toISOString().slice(0,10)+'.json';
+  const fd=new Date();const fds=fd.getFullYear()+String(fd.getMonth()+1).padStart(2,'0')+String(fd.getDate()).padStart(2,'0');a.download='ATLAS_AML_'+fds+'_backup.json';
   a.click();showToast('Backup downloaded');
 }
 function importData(){document.getElementById('importFile').click();}
@@ -1963,4 +2409,4 @@ function handleImport(e){
 init();
 </script>
 </body>
-</html>
+</html>}
