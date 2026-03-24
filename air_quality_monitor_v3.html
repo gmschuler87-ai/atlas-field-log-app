@@ -955,8 +955,16 @@ function renderRounds() {
       const missingStyle = 'border-color:#f59e0b;background:#fffbeb;';
       const cardBorder = (vocAlert||dustAlert)?'border-color:var(--danger);':hasMissing?'border-left:3px solid #f59e0b;':'';
       return `<div class="reading-item ${round.isBackground?'reading-item-bg':''}" data-reading="${rd.id}" style="${cardBorder}">
-        <div class="reading-item-header">
-          <span class="reading-mp" style="${round.isBackground?'background:#eef2ff;color:#4338ca;border:1px solid #818cf8;':''}">${round.isBackground?'BG':'#'+readingNum} ${rd.monitorPoint} <span class="reading-status">${alert}${hasMissing?'<span style="color:#f59e0b;font-size:10px;margin-left:4px;">● incomplete</span>':(!alert?'<span style="color:var(--success);font-size:10px;margin-left:4px;">✓</span>':'')}</span></span>
+        <div class="reading-item-header" style="align-items:flex-start">
+          <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
+            <div style="background:var(--atlas-primary);color:#fff;border-radius:10px;min-width:44px;height:44px;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;${round.isBackground?'background:#4f46e5;':''}">
+              <span style="font-size:18px;font-weight:800;line-height:1">${round.isBackground?'BG':'#'+readingNum}</span>
+            </div>
+            <div style="min-width:0">
+              <div style="font-size:14px;font-weight:800;color:var(--text)">${rd.monitorPoint||'No MP'}</div>
+              <div class="reading-status" style="font-size:11px;margin-top:2px">${alert}${hasMissing?'<span style="color:#f59e0b;font-weight:700;">● incomplete</span>':(!alert?'<span style="color:var(--success);font-weight:700;">✓ complete</span>':'')}</div>
+            </div>
+          </div>
           <button class="reading-delete" onclick="confirmDelete(this,function(){deleteReading(${round.id},${rd.id});})" title="Delete reading">×</button>
         </div>
         <div class="form-row">
@@ -1019,8 +1027,8 @@ function renderRounds() {
             ${roundHasAlert?'<span class=\"action-badge\">⚠ ACTION</span>':''}
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
-            ${!round.isBackground ? `<button onclick="toggleRoundBackground(${round.id})" title="Mark as background round" style="padding:0 8px;height:32px;font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);border-radius:6px;cursor:pointer;font-family:inherit">BG</button>` : ''}
-            <button onclick="toggleRoundCollapse(${round.id})" style="padding:0 10px;height:32px;font-size:12px;font-weight:700;background:${round.collapsed?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)'};border:1px solid rgba(255,255,255,.25);color:${round.collapsed?'var(--atlas-dark)':'#fff'};border-radius:6px;cursor:pointer;font-family:inherit">${round.collapsed?'▶ Expand':'✓ Done'}</button>
+
+            <button onclick="toggleRoundCollapse(${round.id})" style="padding:0 12px;height:32px;font-size:12px;font-weight:800;background:${round.collapsed?'rgba(255,255,255,.9)':'rgba(255,255,255,.95)'};border:none;color:var(--atlas-dark);border-radius:6px;cursor:pointer;font-family:inherit">${round.collapsed?'✎ Edit Round':'End Round'}</button>
             <button onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:0 10px;height:32px;font-size:12px;font-weight:700;background:rgba(220,38,38,.7);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;cursor:pointer;font-family:inherit">Del</button>
           </div>
         </div>
@@ -1055,8 +1063,7 @@ function renderRounds() {
         ${readingsHtml}
         ${round.isBackground
           ? `<button onclick="completeBackgroundRound(${round.id})" style="width:100%;margin-top:12px;height:54px;background:#4f46e5;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;box-shadow:0 3px 12px rgba(79,70,229,.35)">✓ Complete Background Reading</button>`
-          : `<button onclick="addReadingToRound(${round.id})" style="width:100%;margin-top:8px;height:50px;background:var(--atlas-primary);color:#fff;border:none;border-radius:10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit;letter-spacing:.2px;box-shadow:0 2px 8px rgba(58,107,130,.25)">+ Add Reading</button>`
-        }
+          : ''}
       </div>
     </div>`;
   }).join('');
@@ -1750,9 +1757,21 @@ function buildWelcomeScreen(){
   body.appendChild(libBtn);
 
   // Guide
+  const quickRef=document.createElement('div');
+  quickRef.style.cssText='width:100%;max-width:360px;background:var(--card);border:1px solid var(--card-border);border-radius:12px;padding:14px 16px;margin-bottom:10px;text-align:left';
+  quickRef.innerHTML='<div style="font-size:11px;font-weight:800;color:var(--atlas-primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Quick Start</div>'
+    +'<div style="font-size:12px;color:var(--text);line-height:2.1">'
+    +'<span style="color:var(--atlas-primary);font-weight:800;margin-right:8px">1</span>Site Info — location, date, employees<br>'
+    +'<span style="color:var(--atlas-primary);font-weight:800;margin-right:8px">2</span>Instruments — model &amp; bump/cal<br>'
+    +'<span style="color:var(--atlas-primary);font-weight:800;margin-right:8px">3</span>Readings — background first, then rounds<br>'
+    +'<span style="color:var(--atlas-primary);font-weight:800;margin-right:8px">4</span>Checklists — dust procedures &amp; mitigation<br>'
+    +'<span style="color:var(--atlas-primary);font-weight:800;margin-right:8px">5</span>Library — generate PDF, end session'
+    +'</div>';
+  body.appendChild(quickRef);
+
   const guideBtn=document.createElement('button');
   guideBtn.textContent='📖  Full Guide';
-  guideBtn.style.cssText='height:46px;width:100%;max-width:360px;background:none;border:1.5px solid var(--card-border);color:var(--text-dim);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:16px';
+  guideBtn.style.cssText='height:46px;width:100%;max-width:360px;background:none;border:1.5px solid var(--card-border);color:var(--text-dim);border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit';
   guideBtn.onclick=function(){showFullGuide();};
   body.appendChild(guideBtn);
 
@@ -1772,14 +1791,17 @@ function buildWelcomeScreen(){
 }
 function showFullGuide(){
   const sections=[
-    {h:'Site Info',b:'Fill in Location ID, project number, phase, date, and employee names at the start of the day. Enter your monitoring point names (e.g. Upwind, Downwind, Property Line N) in the Monitoring Points field — these populate the MP dropdown in every round. Save them as a preset tied to the Location ID for quick loading next time.'},
-    {h:'Instruments',b:'Three standard instrument types are always shown: VOC/PID monitor, Dust/PM10 monitor, and Sound Level monitor. Enter the specific model name for each instrument being used today and tap Save to store it for future sessions. Record the date/time and bump/cal result for each. A 4th optional slot can be expanded for any additional instrument.'},
-    {h:'Readings',b:'Tap + New Round to start a monitoring round. Each round has its own weather section — enter a ZIP code or tap GPS to auto-fill temp, wind speed, wind direction, and conditions in one tap. All fields stay editable if the auto-fill is wrong. Add individual readings per monitoring point within each round. VOC ≥ 2 ppm and dust ≥ 0.050 mg/m³ (= 50 µg/m³) are flagged red automatically. Values are measured and stored in mg/m³ (Aeroqual output) but displayed as µg/m³ per Atlas SOP. The round header shows a ⚠ ACTION badge if any reading inside it hit an action level. Use ⛶ to go fullscreen while taking readings.'},
-    {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for items marked NO. N/A needs no comment. The first item has a quick Not Observed button for when no visible dust is present.'},
-    {h:'Library',b:'Saved reports are listed here. Tap Open to view a report as a PDF. Tap Resume to reload a saved report back into the active session for editing. Use Backup to export all data to a JSON file and Restore to reload it on a new device.'},
-    {h:'Ending a Session',b:'When you are done for the day, tap Generate PDF to save a copy to the Library and open the print dialog. Then go to the Library tab and tap End Session & Save to Library at the bottom — you will be asked to confirm, and the session data will be saved before the form clears. The next time you open the app the home screen will show a clean start.'},
-    {h:'Safety',b:'The Safety tab provides quick access to CORE Health injury reporting (tap to call 24/7), the full Stop Work Authority statement, and links to Atlas safety resources in IndustrySafe including JSA Master List, BBS Observations, Incident/Near Miss reporting, and DSR Site Audits.'},
-    {h:'Tips',b:'• Tap the Atlas logo at any time to return to the home screen.<br>• Swipe left or right to move between tabs.<br>• Each round has its own Get Weather / GPS button — weather is not shared between rounds.<br>• The summary bar at the top of Readings shows total rounds, readings, and any action level hits at a glance.<br>• 👁 Stay Awake in the Library tab keeps the screen on while monitoring.<br>• Two-tap delete on all buttons — first tap turns red and says Sure?, second tap confirms.'},
+    {h:'Start of Day',b:'1. Fill in Site Info — Location ID, project number, date, employees, and monitoring point names.<br>2. Go to Instruments and record the model, bump/cal date-time, and result for each instrument.<br>3. Go to Readings — you will be prompted to take a background reading first (required by SOP).'},
+    {h:'Background Reading',b:'Before work begins, take one reading upwind of the excavation. This sets the daily baseline — action levels are measured above these values. Select BG or your designated upwind MP. Tap ✓ Complete Background Reading when done. The baseline values appear in a purple banner at the top of Readings for reference all day.'},
+    {h:'Site Info',b:'Enter monitoring point names comma-separated (e.g. MP-1, MP-2, Upwind, Property Line N). With 8 or fewer MPs, tap buttons appear for fast entry. Save MP presets per location for quick loading on return visits. Set a Noise Action Level if required by permit, or toggle Sensitive Receptor Nearby to default to 65 dB.'},
+    {h:'Instruments',b:'Three standard instruments: PID/VOC monitor, Dust/PM10 monitor, Sound Level monitor. Enter the model name and save as a preset. Record bump/cal date-time and result. A 4th optional slot is available. Tap ✕ Clear to wipe an instrument block.'},
+    {h:'Taking Readings',b:'Tap ＋ Add Reading at the top. Flow: MP → VOC → Noise → Visible Dust → Odors → Dust (last, since it takes longest to settle). Fields auto-advance on entry. Tap buttons are amber when unanswered, teal when answered. Selecting Yes on Visible Dust or Odors opens a comment field pre-filled with "Dust:" or "Odor:".'},
+    {h:'Rounds',b:'Each round has its own weather data — enter ZIP or tap GPS. Weather fields are required. Tap End Round when all readings for that round are complete. Tap ✎ Edit Round to reopen it and add more readings or make changes. Tap ＋ New Round to start a fresh round.'},
+    {h:'Action Levels',b:'VOC: 2 ppmv above background, sustained 30 sec. Dust: 50 µg/m³ above background, sustained 30 sec. Opacity: 20%. When any reading exceeds these, a red guidance modal appears with SOP-required response steps. Tap ⚠ Guidance at any time to review the full protocol for VOC, Dust, and Noise.'},
+    {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for items marked NO.'},
+    {h:'Library & Ending a Session',b:'Go to Library at end of day. Tap 📄 Generate PDF Report to open the print dialog — this creates a file you can share or print. Tap ✓ End Session to save the session to the Library and clear the form. Your data stays viewable and editable in Saved Reports. Tap Edit on any saved report to reload it.'},
+    {h:'Safety',b:'The Safety button (header and home screen) gives quick access to CORE Health injury reporting (855-282-6331, 24/7), the Stop Work Authority statement, and IndustrySafe links for JSA, BBS Observations, Incident/Near Miss reporting, and DSR Audits.'},
+    {h:'Tips',b:'• Tap the Atlas logo to return home at any time.<br>• Swipe left/right to move between tabs.<br>• 👁 Stay On in Library keeps the screen awake while monitoring.<br>• All deletes require two taps — first tap turns red and says Sure?<br>• Backup/Restore in Library transfers sessions between devices.<br>• Dark mode is in Library → Settings.'},
   ];
   const modal=document.createElement('div');
   modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;overflow-y:auto;padding:20px';
