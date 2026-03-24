@@ -190,7 +190,7 @@ body.dark .lib-item{border-color:#1c3347;}
   <button class="tab" onclick="switchTab('checklists',this)">Checklists</button>
   <button class="tab" onclick="switchTab('library',this)">Library</button>
 </div>
-<div id="date-bar" style="display:none;background:var(--atlas-mid);padding:4px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.3px;text-align:right"></div>
+<div id="date-bar" style="display:none;background:var(--atlas-mid);padding:4px 14px;font-size:11px;font-weight:700;color:rgba(255,255,255,.8);letter-spacing:.3px;text-align:center"></div>
 
 <div class="toast" id="toast">Saved</div>
 
@@ -365,7 +365,7 @@ body.dark .lib-item{border-color:#1c3347;}
     <button class="btn btn-outline" onclick="addRound()" style="flex:1;height:40px;font-size:13px;font-weight:700">＋ New Round</button>
     <button class="btn btn-outline" onclick="addBackgroundRound()" style="height:40px;padding:0 12px;font-size:12px;font-weight:700;border-color:#6366f1;color:#4f46e5" title="Add a new background reading round">＋ New BG</button>
     <button class="btn btn-outline" onclick="showExceedanceReference()" style="height:40px;padding:0 12px;font-size:12px;font-weight:700;border-color:#dc2626;color:#dc2626" title="Exceedance guidance">⚠ Guidance</button>
-    <button class="btn btn-outline" id="readingsFullscreenBtn" onclick="toggleReadingsFullscreen()" style="height:40px;padding:0 14px;font-size:14px" title="Fullscreen">⛶</button>
+
   </div>
   <div id="roundsContainer"></div>
 </div>
@@ -1008,19 +1008,20 @@ function renderRounds() {
 
     return `<div class="round-card ${round.isBackground?'round-card-bg':''}" data-round="${round.id}">
       <div class="round-header" style="flex-direction:column;gap:10px;padding:12px 14px;background:${round.isBackground?'#4f46e5':'linear-gradient(135deg,var(--atlas-dark),var(--atlas-mid))'}">
-        <div style="display:flex;justify-content:space-between;align-items:center;width:100%">
-          <span class="round-num" style="color:#fff;font-size:15px">
-            ${round.isBackground
-              ? '<span style=\"background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 9px;font-size:12px;font-weight:800;letter-spacing:.5px;color:#fff\">BACKGROUND</span>'
-              : 'Round '+(periRounds.length - (ri - bgRounds.length))+' '}
-            <span style="font-weight:500;color:rgba(255,255,255,.6);font-size:12px">${totalInRound} reading${totalInRound!==1?'s':''}</span>
-            ${roundHasAlert?'<span class=\"action-badge\" style=\"margin-left:6px\">⚠ ACTION</span>':''}
-            ${round.collapsed?'<span style=\"font-size:10px;color:rgba(255,255,255,.5);margin-left:6px\">● collapsed</span>':''}
-          </span>
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;flex-wrap:wrap;gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:1;min-width:0">
+            <span class="round-num" style="color:#fff;font-size:15px;white-space:nowrap">
+              ${round.isBackground
+                ? '<span style=\"background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 9px;font-size:12px;font-weight:800;letter-spacing:.5px;color:#fff\">BACKGROUND</span>'
+                : 'Round '+(periRounds.length - (ri - bgRounds.length))}
+            </span>
+            <span style="font-weight:500;color:rgba(255,255,255,.65);font-size:12px;white-space:nowrap">${totalInRound} reading${totalInRound!==1?'s':''}</span>
+            ${roundHasAlert?'<span class=\"action-badge\">⚠ ACTION</span>':''}
+          </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
-            ${!round.isBackground ? `<button onclick="toggleRoundBackground(${round.id})" title="Mark as background round" style="padding:0 8px;height:34px;font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);border-radius:6px;cursor:pointer;font-family:inherit">BG</button>` : ''}
-            <button onclick="toggleRoundCollapse(${round.id})" style="padding:0 10px;height:34px;font-size:12px;font-weight:700;background:${round.collapsed?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)'};border:1px solid rgba(255,255,255,.25);color:${round.collapsed?'var(--atlas-dark)':'#fff'};border-radius:6px;cursor:pointer;font-family:inherit">${round.collapsed?'▶ Expand':'✓ Done'}</button>
-            <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:0 12px;height:34px;font-size:13px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff">Delete</button>
+            ${!round.isBackground ? `<button onclick="toggleRoundBackground(${round.id})" title="Mark as background round" style="padding:0 8px;height:32px;font-size:11px;font-weight:700;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.3);color:rgba(255,255,255,.7);border-radius:6px;cursor:pointer;font-family:inherit">BG</button>` : ''}
+            <button onclick="toggleRoundCollapse(${round.id})" style="padding:0 10px;height:32px;font-size:12px;font-weight:700;background:${round.collapsed?'rgba(255,255,255,.9)':'rgba(255,255,255,.15)'};border:1px solid rgba(255,255,255,.25);color:${round.collapsed?'var(--atlas-dark)':'#fff'};border-radius:6px;cursor:pointer;font-family:inherit">${round.collapsed?'▶ Expand':'✓ Done'}</button>
+            <button onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:0 10px;height:32px;font-size:12px;font-weight:700;background:rgba(220,38,38,.7);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;cursor:pointer;font-family:inherit">Del</button>
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;width:100%">
