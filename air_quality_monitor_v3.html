@@ -240,21 +240,27 @@ body.dark .lib-item{border-color:#1c3347;}
       <div class="form-group"><label>Date</label><input type="date" id="siteDate" onchange="saveData();updateDateBar()"></div>
       <div class="form-group"><label>Employee(s)</label>
         <div class="preset-row">
-          <select id="employeeSelect" onchange="addEmployee(this.value);this.value='';" style="flex:1;"><option value="">-- Add --</option></select>
-          <button class="btn btn-sm btn-outline" onclick="promptAddEmployee()">+ New</button>
+          <select id="employeeSelect" onchange="addEmployee(this.value);this.value='';" style="flex:1;"><option value="">-- Add saved --</option></select>
+          <input type="text" id="newEmployeeName" placeholder="New employee" style="flex:1;">
+          <button class="btn btn-sm btn-outline" onclick="saveEmployeePreset()">Save</button>
         </div>
         <input type="text" id="employees" onchange="saveData()" placeholder="Employee names" style="margin-top:6px;">
       </div>
+    </div>
+  </div>
+  <div class="section-card" style="padding-bottom:10px">
+    <div style="display:flex;justify-content:flex-end">
+      <button onclick="showManagePresets()" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;padding:0 0 10px">⚙ Manage saved presets</button>
     </div>
   </div>
   <div class="section-card">
     <div class="section-title">Action Levels</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
   <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">2.0</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">VOC ppmv</div></div>
-  <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">50</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Dust µg/m³</div></div>
-  <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">20%</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Opacity</div></div>
+  <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">0.050</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Dust mg/m³</div></div>
+  <div style="flex:1;min-width:90px;background:var(--bg);border-radius:8px;padding:10px 12px;text-align:center"><div style="font-size:18px;font-weight:800;color:var(--danger)">20%</div><div style="font-size:11px;color:var(--text-dim);margin-top:2px">Opacity (visual)</div></div>
 </div>
-<div style="font-size:11px;color:var(--text-dim);line-height:1.5">Above background. Exceedance requires <b>sustained 30 seconds</b> before action is required.</div>
+<div style="font-size:11px;color:var(--text-dim);line-height:1.5">VOC &amp; Dust: above background, sustained 30 seconds. Dust displayed in mg/m³ to match Aeroqual output. Opacity: visual — plume obscuring &gt;20% of background.</div>
     <div style="margin-top:14px;padding-top:12px;border-top:1px solid var(--atlas-light)">
       <div style="font-size:11px;font-weight:800;color:var(--atlas-mid);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Noise Thresholds</div>
       <div class="form-row">
@@ -307,7 +313,7 @@ body.dark .lib-item{border-color:#1c3347;}
       </div></div>
       <div class="form-row">
         <div class="form-group"><label>Date/Time</label><input type="datetime-local" id="dustDateTime" onchange="saveData()"></div>
-        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="dustReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="e.g. 0.001 mg/m³ (= 1 µg/m³)"></div>
+        <div class="form-group"><label>Bump/Cal Reading</label><input type="text" id="dustReading" inputmode="decimal" enterkeyhint="done" onchange="saveData()" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" placeholder="e.g. 0.001 mg/m³"></div>
       </div>
     </div>
     <div class="instrument-block">
@@ -607,10 +613,16 @@ function addEmployee(name) {
   if(cur&&!cur.includes(name)) el.value=cur+', '+name; else if(!cur) el.value=name;
   saveData();
 }
-function promptAddEmployee() {
-  const name=prompt('Enter new employee name:'); if(!name||!name.trim()) return;
-  const n=name.trim(); if(!presets.employees.includes(n)){presets.employees.push(n);savePresets();renderEmployeeSelect();}
-  addEmployee(n); showToast('Employee added');
+function saveEmployeePreset(){
+  const inp = document.getElementById('newEmployeeName');
+  if(!inp) return;
+  const n = inp.value.trim();
+  if(!n){ showToast('Enter a name first'); return; }
+  if(!presets.employees) presets.employees=[];
+  if(!presets.employees.includes(n)){ presets.employees.push(n); savePresets(); renderEmployeeSelect(); }
+  addEmployee(n);
+  inp.value='';
+  showToast('Employee saved');
 }
 
 // ===== DATA PERSISTENCE =====
@@ -997,7 +1009,7 @@ function renderRounds() {
           </div>
         </div>
         <div class="form-row full">
-          <div class="form-group"><label>PM10 Dust (µg/m³)</label><input class="input-dust" type="number" step="0.001" inputmode="decimal" enterkeyhint="done" value="${rd.dust}" onblur="if(this._processing)return;this._processing=true;setTimeout(()=>{this._processing=false;},300);this.value=normalizeDust(this.value,this);updateReading(${round.id},${rd.id},'dust',this.value);setTimeout(function(){markReadingComplete(${round.id},${rd.id});},500);" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
+          <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" inputmode="decimal" enterkeyhint="done" value="${rd.dust}" onblur="if(this._processing)return;this._processing=true;setTimeout(()=>{this._processing=false;},300);this.value=normalizeDust(this.value,this);updateReading(${round.id},${rd.id},'dust',this.value);setTimeout(function(){markReadingComplete(${round.id},${rd.id});},500);" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
         </div>
         <div style="margin-top:6px" data-comment-container>
           ${rd.comments
@@ -1251,7 +1263,7 @@ function generatePdfHtml(data) {
       +'<td style="width:20%"><b>Phase:</b> '+(si.phase||'')+'</td>'
       +'<td style="width:25%"><b>Date:</b> '+(dateStr||'')+'</td>'
       +'</tr><tr><td colspan="4"><b>Employee(s):</b> '+(si.employees||'')+'</td></tr></table>'
-      +'<div class="al"><b>Action Levels:</b> VOC = 2 ppmv (above background, 30 sec) &nbsp; Dust = 50 µg/m³ (above background, 30 sec) &nbsp; Opacity 20%</div>';
+      +'<div class="al"><b>Action Levels:</b> VOC = 2 ppmv (above background, 30 sec) &nbsp; Dust = 0.050 mg/m³ (above background, 30 sec) &nbsp; Opacity 20%</div>';
   }
 
   // Checklist rows
@@ -1287,7 +1299,7 @@ function generatePdfHtml(data) {
 
   // Readings table
   const readHdr='<tr><th style="width:7%">Time</th><th style="width:8%">MP</th>'
-    +'<th style="width:7%">VOC<br>(ppm)</th><th style="width:9%">PM10<br>(µg/m³)</th>'
+    +'<th style="width:7%">VOC<br>(ppm)</th><th style="width:9%">PM10<br>(mg/m³)</th>'
     +'<th style="width:6%">Vis<br>Dust</th><th style="width:7%">Noise<br>(dB)</th>'
     +'<th style="width:5%">Odor</th><th style="width:10%">Wind/Spd</th>'
     +'<th style="width:6%">Temp<br>(\u00b0F)</th><th>Comments</th></tr>';
@@ -1797,7 +1809,7 @@ function showFullGuide(){
     {h:'Instruments',b:'Three standard instruments: PID/VOC monitor, Dust/PM10 monitor, Sound Level monitor. Enter the model name and save as a preset. Record bump/cal date-time and result. A 4th optional slot is available. Tap ✕ Clear to wipe an instrument block.'},
     {h:'Taking Readings',b:'Tap ＋ Add Reading at the top. Flow: MP → VOC → Noise → Visible Dust → Odors → Dust (last, since it takes longest to settle). Fields auto-advance on entry. Tap buttons are amber when unanswered, teal when answered. Selecting Yes on Visible Dust or Odors opens a comment field pre-filled with "Dust:" or "Odor:".'},
     {h:'Rounds',b:'Each round has its own weather data — enter ZIP or tap GPS. Weather fields are required. Tap End Round when all readings for that round are complete. Tap ✎ Edit Round to reopen it and add more readings or make changes. Tap ＋ New Round to start a fresh round.'},
-    {h:'Action Levels',b:'VOC: 2 ppmv above background, sustained 30 sec. Dust: 50 µg/m³ above background, sustained 30 sec. Opacity: 20%. When any reading exceeds these, a red guidance modal appears with SOP-required response steps. Tap ⚠ Guidance at any time to review the full protocol for VOC, Dust, and Noise.'},
+    {h:'Action Levels',b:'VOC: 2 ppmv above background, sustained 30 sec. Dust: 0.050 mg/m³ above background, sustained 30 sec. Opacity: 20%. When any reading exceeds these, a red guidance modal appears with SOP-required response steps. Tap ⚠ Guidance at any time to review the full protocol for VOC, Dust, and Noise.'},
     {h:'Checklists',b:'Complete the Dust Monitoring Procedures and Dust Mitigation Measures checklists. Mark each item N/A, YES, or NO. A comment field appears for items marked NO.'},
     {h:'Library & Ending a Session',b:'Go to Library at end of day. Tap 📄 Generate PDF Report to open the print dialog — this creates a file you can share or print. Tap ✓ End Session to save the session to the Library and clear the form. Your data stays viewable and editable in Saved Reports. Tap Edit on any saved report to reload it.'},
     {h:'Safety',b:'The Safety button (header and home screen) gives quick access to CORE Health injury reporting (855-282-6331, 24/7), the Stop Work Authority statement, and IndustrySafe links for JSA, BBS Observations, Incident/Near Miss reporting, and DSR Audits.'},
@@ -1817,6 +1829,74 @@ function showFullGuide(){
   modal.innerHTML=html;
   modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
   document.body.appendChild(modal);
+}
+
+// ===== MANAGE PRESETS =====
+function showManagePresets(){
+  const modal = document.createElement('div');
+  modal.className = 'exceedance-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+
+  function buildContent(){
+    const categories = [
+      {label:'Location IDs', items:Object.keys(wellMap), del:function(v){delete wellMap[v];localStorage.setItem(SK_WELLS,JSON.stringify(wellMap));renderAllPresetDropdowns();}},
+      {label:'Project Numbers', items:(presets.projectNum||[]), del:function(v){presets.projectNum=presets.projectNum.filter(x=>x!==v);savePresets();renderAllPresetDropdowns();}},
+      {label:'Employees', items:(presets.employees||[]), del:function(v){presets.employees=presets.employees.filter(x=>x!==v);savePresets();renderAllPresetDropdowns();}},
+      {label:'Instruments', items:(presets.instruments||[]).map(function(p){return p.name;}), del:function(v){presets.instruments=presets.instruments.filter(p=>p.name!==v);savePresets();renderInstPresetDropdowns();}},
+    ];
+
+    let html = '<div style="background:var(--card);border-radius:14px;width:100%;max-width:380px;max-height:80vh;overflow-y:auto">'
+      +'<div style="padding:16px 18px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--card-border);position:sticky;top:0;background:var(--card);border-radius:14px 14px 0 0">'
+        +'<span style="font-size:15px;font-weight:800;color:var(--text)">Manage Saved Presets</span>'
+        +'<button onclick="closeTopModal()" style="background:none;border:none;font-size:20px;cursor:pointer;color:var(--text-dim);font-family:inherit">×</button>'
+      +'</div>'
+      +'<div style="padding:14px 18px">';
+
+    categories.forEach(function(cat){
+      html += '<div style="margin-bottom:16px">'
+        +'<div style="font-size:11px;font-weight:800;color:var(--atlas-primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">'+cat.label+'</div>';
+      if(!cat.items.length){
+        html += '<div style="font-size:12px;color:var(--text-dim);font-style:italic">None saved</div>';
+      } else {
+        cat.items.forEach(function(item){
+          html += '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--bg)">'
+            +'<span style="font-size:13px;color:var(--text)">'+item+'</span>'
+            +'<button data-cat="'+cat.label+'" data-val="'+item+'" onclick="deletePresetItem(this.dataset.cat,this.dataset.val)" style="background:#fef2f2;border:1px solid #fca5a5;color:#dc2626;border-radius:6px;padding:3px 10px;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit">Delete</button>'
+          +'</div>';
+        });
+      }
+      html += '</div>';
+    });
+
+    html += '</div></div>';
+    modal.innerHTML = html;
+  }
+
+  window._managePresetsModal = modal;
+  buildContent();
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+function deletePresetItem(category, value){
+  if(category==='Location IDs'){ delete wellMap[value]; localStorage.setItem(SK_WELLS,JSON.stringify(wellMap)); renderAllPresetDropdowns(); }
+  else if(category==='Project Numbers'){ presets.projectNum=(presets.projectNum||[]).filter(x=>x!==value); savePresets(); renderAllPresetDropdowns(); }
+  else if(category==='Employees'){ presets.employees=(presets.employees||[]).filter(x=>x!==value); savePresets(); renderAllPresetDropdowns(); }
+  else if(category==='Instruments'){ presets.instruments=(presets.instruments||[]).filter(p=>p.name!==value); savePresets(); renderInstPresetDropdowns(); }
+  showToast('Deleted');
+  // Rebuild modal content
+  const modal = window._managePresetsModal;
+  if(modal && modal.parentNode){ 
+    const categories = [
+      {label:'Location IDs', items:Object.keys(wellMap)},
+      {label:'Project Numbers', items:(presets.projectNum||[])},
+      {label:'Employees', items:(presets.employees||[])},
+      {label:'Instruments', items:(presets.instruments||[]).map(function(p){return p.name;})},
+    ];
+    // Rebuild by closing and reopening
+    modal.remove();
+    showManagePresets();
+  }
 }
 
 // ===== CONFIRM DELETE =====
@@ -2012,7 +2092,7 @@ function showExceedanceReference(){
       +'<div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">1. Stop all soil disturbance.<br>2. Identify source — excavation face, stockpile, haul truck.<br>3. Apply vapor suppression (Simple Green, Bio-Solve, or equivalent).<br>4. Report to Atlas SHSO then PM.<br>5. Do not resume until below action level.</div>'
       +'<div style="border-top:1px solid var(--card-border);padding-top:12px">'
         +'<div style="font-size:11px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Dust</div>'
-        +'<div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px"><b>50 µg/m³ above background — 30 sec sustained</b></div>'
+        +'<div style="font-size:13px;color:var(--text);line-height:1.7;margin-bottom:4px"><b>0.050 mg/m³ above background — 30 sec sustained</b></div>'
         +'<div style="font-size:12px;color:var(--text-dim);line-height:1.7;margin-bottom:14px">1. Stop dust-generating activities.<br>2. Water spray, cover stockpiles, reduce vehicle speeds.<br>3. Consider Soil-Sement® for suppression.<br>4. Report to Atlas SHSO then PM.<br>5. Do not resume until below action level.</div>'
       +'</div>'
       +'<div style="border-top:1px solid var(--card-border);padding-top:12px">'
@@ -2173,7 +2253,7 @@ function normalizeDust(val, el){
   // Validate sig figs - Aeroqual reads to 0.001 mg/m³
   if(el && num > 0 && String(num).replace('.','').replace(/^0+/,'').length > 3){
     el.style.borderColor = '#f59e0b';
-    el.title = 'Check precision — Aeroqual reads to 0.001 mg/m³ (= 1 µg/m³, 3 decimal places)';
+    el.title = 'Check precision — Aeroqual reads to 0.001 mg/m³ (3 decimal places)';
   } else if(el) {
     el.title = '';
   }
