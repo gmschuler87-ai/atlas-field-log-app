@@ -961,7 +961,7 @@ function renderRounds() {
               <span style="font-size:18px;font-weight:800;line-height:1">${round.isBackground?'BG':'#'+readingNum}</span>
             </div>
             <div style="min-width:0">
-              <div style="font-size:14px;font-weight:800;color:var(--text)">${rd.monitorPoint||'No MP'}</div>
+              <div style="font-size:14px;font-weight:800;color:var(--text)">${rd.monitorPoint||'&nbsp;'}</div>
               <div class="reading-status" style="font-size:11px;margin-top:2px">${alert}${hasMissing?'<span style="color:#f59e0b;font-weight:700;">● incomplete</span>':(!alert?'<span style="color:var(--success);font-weight:700;">✓ complete</span>':'')}</div>
             </div>
           </div>
