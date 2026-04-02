@@ -1353,7 +1353,7 @@ function generatePdfHtml(data) {
   const foot='<div class="foot"><b>Note:</b> Check in with Atlas Field Staff when temperature reaches 95\u00b0F.</div>';
 
   // ── PAGE 1: header + checklists + instruments ──
-  let html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+css+'</head><body>';
+  let html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>ATLAS_AML_'+(si.siteDate?si.siteDate.replace(/-/g,''):'undated')+(si.wellId?'_'+si.wellId.replace(/[^a-zA-Z0-9]/g,'_'):'')+'</title>'+css+'</head><body>';
   html+=hdr();
   html+='<table style="margin-bottom:3px">'+chkHeader('DUST MONITORING PROCEDURES')+chkRows(dustProcItems,'proc')+'</table>';
   html+=instSection();
@@ -1407,51 +1407,26 @@ function generatePDF(attachedMap) {
   }
 }
 
-async function mergePdfWithMap(reportHtml, mapEntry, filename){
+function mergePdfWithMap(reportHtml, mapEntry, filename){
+  // Step 1: download the map PDF immediately
   try {
-    // Open report print window first — report pages come first
-    const w = window.open('','_blank','width=800,height=900');
-    if(!w){ showToast('Allow popups to open the report'); return; }
-    w.document.open();
-    w.document.write(reportHtml);
-    w.document.close();
-
-    // Download the map PDF with the report filename (no _MAP suffix)
-    function downloadMap(){
-      const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
-      const blob = new Blob([mapBytes], {type:'application/pdf'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename+'_map.pdf';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
-      showToast('Map downloaded');
-    }
-
-    // Print report, then download map after print dialog closes
-    setTimeout(function(){
-      try {
-        w.focus();
-        w.addEventListener('afterprint', function(){ downloadMap(); }, {once:true});
-        w.print();
-        // Fallback: some mobile browsers do not fire afterprint
-        setTimeout(function(){ downloadMap(); }, 10000);
-      } catch(e){
-        showPdfPreview(reportHtml);
-        setTimeout(downloadMap, 2000);
-      }
-    }, 600);
-
-    showToast('Print report — map downloads after');
-
+    const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
+    const blob = new Blob([mapBytes], {type:'application/pdf'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename+'_map.pdf';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
   } catch(err){
-    console.error('PDF map error:', err);
-    showToast('Error — opening report only');
-    showPdfPreview(reportHtml);
+    console.error('Map download error:', err);
+    showToast('Map download failed');
   }
+  // Step 2: open report print dialog (slight delay so map download initiates first)
+  setTimeout(function(){ showPdfPreview(reportHtml); }, 400);
+  showToast('Map downloading — report opening...');
 }
 function promptEndSession(){
   const modal=document.createElement('div');
@@ -2679,7 +2654,7 @@ function promptGeneratePDF(){
 
   modal.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:20px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto">'
     +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Attach a Map?</div>'
-    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">The report will open for printing first. After you print (or close the print dialog), the map PDF downloads separately. Print or save-as-PDF both files.</p>'
+    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">The map PDF downloads first, then the report opens for printing. Save or print both — report first, map last.</p>'
     +mapOptions
     +'<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:8px;cursor:pointer;margin-bottom:14px;background:var(--input-bg)">'
       +'<input type="radio" name="mapChoice" value="none" checked style="width:18px;height:18px;accent-color:var(--atlas-primary)">'
