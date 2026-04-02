@@ -752,7 +752,7 @@ function addRound() {
   const now = new Date();
   const rh=String(now.getHours()).padStart(2,'0'),rm=String(now.getMinutes()).padStart(2,'0');
   const isFirstRound = rounds.filter(r=>!r.isBackground).length === 0;
-  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', customMPs:[], readings:[], isBackground:false });
+  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', wxFetchInfo:'', customMPs:[], readings:[], isBackground:false });
   renderRounds(); saveData();
 }
 function promptBackgroundOrSkip(){
@@ -782,7 +782,7 @@ function addBackgroundRound() {
   roundCounter++;
   const now = new Date();
   const rh=String(now.getHours()).padStart(2,'0'),rm=String(now.getMinutes()).padStart(2,'0');
-  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', customMPs:[], readings:[], isBackground:true });
+  rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', wxFetchInfo:'', customMPs:[], readings:[], isBackground:true, bgLocation:'' });
   addReadingToRound(rounds[0].id);
   renderRounds(); saveData();
   showToast('Background round added');
@@ -1047,7 +1047,7 @@ function renderRounds() {
             <span class="round-num" style="color:#fff;font-size:15px;white-space:nowrap">
               ${round.isBackground
                 ? '<span style=\"background:rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 9px;font-size:12px;font-weight:800;letter-spacing:.5px;color:#fff\">BACKGROUND</span>'
-                : 'Round '+(periRounds.length - (ri - bgRounds.length))}
+                : (function(){const periIdx=periRounds.indexOf(round);return 'Round '+(periRounds.length-periIdx);})()}
             </span>
             <span style="font-weight:500;color:rgba(255,255,255,.65);font-size:12px;white-space:nowrap">${totalInRound} reading${totalInRound!==1?'s':''}</span>
             ${roundHasAlert?'<span class=\"action-badge\">⚠ ACTION</span>':''}
@@ -1069,13 +1069,26 @@ function renderRounds() {
           round.readings.map(r=>`<span style=\"margin-right:12px\">${r.monitorPoint||'MP?'} — VOC: ${r.voc||'—'} ppm, Dust: ${r.dust||'—'} mg/m³</span>`).join('')}
       </div>` : ''}
       <div class="round-body" style="${round.collapsed?'display:none':''}">
-        ${round.isBackground?'<div style=\"background:#eef2ff;border:1.5px solid #818cf8;border-radius:8px;padding:12px 14px;margin-bottom:14px\"><div style=\"font-size:13px;font-weight:800;color:#4338ca;margin-bottom:5px\">📍 BACKGROUND READING — Before Work Begins</div><div style=\"font-size:12px;color:#4f46e5;line-height:1.6\">Record baseline concentrations upwind of the excavation area, before work begins. This sets the daily baseline — not an action level exceedance. Record this location accurately on your Daily Air Monitoring Map — it must be documented on the map submitted with your end-of-day report.</div></div>':''}
+        ${round.isBackground?`<div style="background:#eef2ff;border:1.5px solid #818cf8;border-radius:8px;padding:12px 14px;margin-bottom:14px">
+          <div style="font-size:13px;font-weight:800;color:#4338ca;margin-bottom:5px">📍 BACKGROUND READING — Before Work Begins</div>
+          <div style="font-size:12px;color:#4f46e5;line-height:1.6;margin-bottom:10px">Record baseline concentrations upwind of the excavation area, before work begins. This sets the daily baseline — not an action level exceedance. Record this location accurately on your Daily Air Monitoring Map — it must be documented on the map submitted with your end-of-day report.</div>
+          <div style="font-size:11px;font-weight:800;color:#4338ca;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px">Background Location <span style="color:#dc2626">*required</span></div>
+          <div style="display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap;margin-bottom:6px" id="bgLocPresets_${round.id}">
+            ${(presets.bgLocations||[]).map((loc,pi)=>`<button onclick="applyBgLocation(${round.id},'${loc.replace(/'/g,"\\'")}',this)" class="bg-loc-pill${round.bgLocation===loc?' bg-loc-pill-active':''}" style="padding:5px 12px;height:32px;border:1.5px solid #818cf8;border-radius:20px;background:${round.bgLocation===loc?'#4f46e5':'#fff'};color:${round.bgLocation===loc?'#fff':'#4338ca'};font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">${loc}</button>`).join('')}
+          </div>
+          <div style="display:flex;gap:6px;align-items:center">
+            <input type="text" id="bgLocInput_${round.id}" value="${round.bgLocation||''}" placeholder="e.g. Upwind NW corner, 50ft from excavation" onchange="updateBgLocation(${round.id},this.value)" style="flex:1;padding:8px 10px;border:1.5px solid ${round.bgLocation?'#818cf8':'#dc2626'};border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1a202c">
+            <button onclick="saveBgLocationPreset(${round.id})" style="padding:0 10px;height:36px;border:1.5px solid #818cf8;border-radius:6px;background:#fff;color:#4338ca;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Save</button>
+          </div>
+          ${!round.bgLocation?'<div style="font-size:11px;color:#dc2626;margin-top:4px;font-weight:600">⚠ Enter background location before completing</div>':''}
+        </div>`
+        :''}
         <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px dashed var(--card-border)">
           <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:8px">
             <input type="text" class="round-wxzip" placeholder="ZIP" inputmode="numeric" enterkeyhint="search" style="width:72px;padding:6px 8px;border:1px solid var(--input-border);border-radius:6px;font-size:13px;background:var(--input-bg);font-family:inherit" value="${round.wxZip||''}" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchWeatherForRound(${round.id});}">
             <button class="btn btn-sm btn-outline" onclick="fetchWeatherForRound(${round.id})" style="white-space:nowrap">🌤 Get Weather</button>
             <button class="btn btn-sm btn-outline" onclick="fetchWeatherGPSForRound(${round.id})" style="white-space:nowrap">📍 GPS</button>
-            <span class="round-wx-status" style="font-size:11px;color:var(--text-dim);flex:1">${round.wxStatus||''}</span>
+            <span class="round-wx-status" style="font-size:11px;color:var(--text-dim);flex:1">${round.wxStatus?(round.wxStatus+(round.wxFetchInfo?'<br><span style="font-size:10px;font-style:italic">'+round.wxFetchInfo+'</span>':'')):''}  </span>
           </div>
           <div class="round-shared" style="grid-template-columns:1fr 1fr 1fr 1fr;">
             <div class="form-group"><label>Temp (°F)</label><input class="round-temp" type="number" value="${round.temp||''}" onchange="updateRound(${round.id},'temp',this.value)" placeholder="72" style="${missingTemp?roundMissingStyle:''}"></div>
@@ -1256,13 +1269,18 @@ function generatePdfHtml(data) {
   const allReadings=[];
   [...savedRounds].reverse().forEach(function(round){
     [...round.readings].reverse().forEach(function(rd){
+      const isBg=round.isBackground||false;
+      const bgLoc=round.bgLocation||'';
+      const commentParts=[];
+      if(isBg && bgLoc) commentParts.push('Location: '+bgLoc);
+      if(rd.comments) commentParts.push(rd.comments);
       allReadings.push({
-        time:rd.time||'', mp:rd.monitorPoint||'',
+        time:rd.time||'', mp:isBg?'BG':(rd.monitorPoint||''),
         voc:rd.voc||'', dust:rd.dust||'',
         vis:rd.visibleDust||'', noise:rd.noise||'', odors:rd.odors||'',
-        background:round.isBackground||false,
+        background:isBg,
         wind:(round.windDir||round.windSpeed)?((round.windDir||'')+(round.windSpeed?' '+round.windSpeed+' mph':'')):'',
-        temp:round.temp||'', cond:round.conditions||'', comments:rd.comments||''
+        temp:round.temp||'', cond:round.conditions||'', comments:commentParts.join(' | ')
       });
     });
   });
@@ -1391,31 +1409,47 @@ function generatePDF(attachedMap) {
 
 async function mergePdfWithMap(reportHtml, mapEntry, filename){
   try {
-    const { PDFDocument } = PDFLib;
+    // Open report print window first — report pages come first
+    const w = window.open('','_blank','width=800,height=900');
+    if(!w){ showToast('Allow popups to open the report'); return; }
+    w.document.open();
+    w.document.write(reportHtml);
+    w.document.close();
 
-    // Download the map as a separate file (goes last, after the report)
-    const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
-    const blob = new Blob([mapBytes], {type:'application/pdf'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename+'_MAP.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+    // Download the map PDF with the report filename (no _MAP suffix)
+    function downloadMap(){
+      const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
+      const blob = new Blob([mapBytes], {type:'application/pdf'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename+'_map.pdf';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 2000);
+      showToast('Map downloaded');
+    }
 
-    // Open the report print dialog after a short delay
-    // (gives browser time to start the map download first)
+    // Print report, then download map after print dialog closes
     setTimeout(function(){
-      showPdfPreview(reportHtml);
+      try {
+        w.focus();
+        w.addEventListener('afterprint', function(){ downloadMap(); }, {once:true});
+        w.print();
+        // Fallback: some mobile browsers do not fire afterprint
+        setTimeout(function(){ downloadMap(); }, 10000);
+      } catch(e){
+        showPdfPreview(reportHtml);
+        setTimeout(downloadMap, 2000);
+      }
     }, 600);
 
-    showToast('Map downloading — then print the report');
+    showToast('Print report — map downloads after');
 
   } catch(err){
     console.error('PDF map error:', err);
-    showToast('Map download failed — opening report only');
+    showToast('Error — opening report only');
     showPdfPreview(reportHtml);
   }
 }
@@ -1656,22 +1690,65 @@ function applyWeatherToRound(rid,wd,location,roundEl,statusEl){
   const windSpd=Math.round(c.windspeed_10m);
   const windDir=deg2compass(c.winddirection_10m);
   const conditions=wxCode(c.weathercode);
+  const now=new Date();
+  const fetchTime=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const fetchDate=(now.getMonth()+1)+'/'+now.getDate()+'/'+now.getFullYear();
   // Update data
   r.temp=String(Math.round((hi+lo)/2));r.windDir=windDir;r.windSpeed=String(windSpd);r.conditions=conditions;
   const warn=hi>=95?' ⚠ HEAT ADVISORY':'';
   r.wxStatus='✓ '+location+' — High: '+hi+'°F'+warn;
+  r.wxFetchInfo='Open-Meteo forecast · '+location+' · '+fetchDate+' '+fetchTime;
   saveData();
   // Update DOM directly - no full re-render
   const tempEl=roundEl.querySelector('.round-temp');if(tempEl)tempEl.value=r.temp;
   const dirEl=roundEl.querySelector('.round-winddir');if(dirEl)dirEl.value=windDir;
   const spdEl=roundEl.querySelector('.round-windspeed');if(spdEl)spdEl.value=windSpd;
   const condEl=roundEl.querySelector('.round-conditions');if(condEl)condEl.value=conditions;
-  if(statusEl){statusEl.textContent=r.wxStatus;statusEl.style.color=hi>=95?'#dc2626':'var(--text-dim)';}
+  if(statusEl){
+    statusEl.innerHTML=(hi>=95?'<span style="color:#dc2626;font-weight:800">'+r.wxStatus+'</span>':'<span>'+r.wxStatus+'</span>')
+      +'<br><span style="font-size:10px;color:var(--text-dim);font-style:italic">'+r.wxFetchInfo+'</span>';
+    statusEl.style.color='var(--text-dim)';
+  }
   // Clear amber on weather fields now that they're filled
   updateRoundStatus(rid);
 }
 
-// fetchWeatherGPS and fetchWeatherZip removed - weather is now per-round
+// ===== BACKGROUND LOCATION =====
+function updateBgLocation(rid, val) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  r.bgLocation=val; saveData();
+  // Update border color on input
+  const inp=document.getElementById('bgLocInput_'+rid);
+  if(inp) inp.style.borderColor=val?'#818cf8':'#dc2626';
+  // Update warning text
+  renderRounds();
+}
+function applyBgLocation(rid, val, btn) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  r.bgLocation=val; saveData();
+  const inp=document.getElementById('bgLocInput_'+rid);
+  if(inp){inp.value=val;inp.style.borderColor='#818cf8';}
+  // Update pill styles
+  const container=document.getElementById('bgLocPresets_'+rid);
+  if(container) container.querySelectorAll('.bg-loc-pill').forEach(function(b){
+    const active=b.textContent===val;
+    b.style.background=active?'#4f46e5':'#fff';
+    b.style.color=active?'#fff':'#4338ca';
+  });
+  renderRounds();
+}
+function saveBgLocationPreset(rid) {
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const val=(r.bgLocation||'').trim();
+  if(!val){showToast('Enter a location first');return;}
+  if(!presets.bgLocations) presets.bgLocations=[];
+  if(presets.bgLocations.includes(val)){showToast('Already saved');return;}
+  presets.bgLocations.push(val); savePresets();
+  renderRounds();
+  showToast('Location saved');
+}
+
+
 
 // ===== SAFETY PANEL =====
 function buildSafetyPanel(){
@@ -1894,6 +1971,7 @@ function showManagePresets(){
       {label:'Project Numbers', items:(presets.projectNum||[]), del:function(v){presets.projectNum=presets.projectNum.filter(x=>x!==v);savePresets();renderAllPresetDropdowns();}},
       {label:'Employees', items:(presets.employees||[]), del:function(v){presets.employees=presets.employees.filter(x=>x!==v);savePresets();renderAllPresetDropdowns();}},
       {label:'Instruments', items:(presets.instruments||[]).map(function(p){return p.name;}), del:function(v){presets.instruments=presets.instruments.filter(p=>p.name!==v);savePresets();renderInstPresetDropdowns();}},
+      {label:'Background Locations', items:(presets.bgLocations||[]), del:function(v){presets.bgLocations=presets.bgLocations.filter(x=>x!==v);savePresets();}},
     ];
 
     let html = '<div style="background:var(--card);border-radius:14px;width:100%;max-width:380px;max-height:80vh;overflow-y:auto">'
@@ -2016,19 +2094,20 @@ function saveMPPresetFromSite(){
 // ===== READINGS SUMMARY =====
 function updateReadingsSummary(){
   const el=document.getElementById('readingsSummary');if(!el)return;
-  const totalRounds=rounds.length;
+  const totalRounds=rounds.filter(r=>!r.isBackground).length;
   let totalReadings=0,actionHits=0,incomplete=0;
   rounds.forEach(function(r){
-    totalReadings+=r.readings.length;
+    if(!r.isBackground) totalReadings+=r.readings.length;
     r.readings.forEach(function(rd){
+      if(r.isBackground) return; // exclude bg from counts
       const v=parseFloat(rd.voc),d=parseFloat(rd.dust);
       if(v>=2||d>=0.050)actionHits++;
       if(!rd.voc&&rd.voc!=='0'||!rd.dust&&rd.dust!=='0'||!rd.visibleDust||!rd.noise&&rd.noise!=='0'||!rd.odors)incomplete++;
     });
   });
   const items=[];
-  items.push({val:totalRounds,label:'total round'+(totalRounds!==1?'s':''),color:'var(--atlas-primary)'});
-  items.push({val:totalReadings,label:'total reading'+(totalReadings!==1?'s':''),color:'var(--atlas-primary)'});
+  items.push({val:totalRounds,label:'round'+(totalRounds!==1?'s':''),color:'var(--atlas-primary)'});
+  items.push({val:totalReadings,label:'reading'+(totalReadings!==1?'s':''),color:'var(--atlas-primary)'});
   if(actionHits>0)items.push({val:'⚠',label:actionHits+' action level'+(actionHits!==1?' hits':'hit'),color:'#dc2626'});
   else if(totalReadings>0)items.push({val:'✓',label:'no action levels',color:'var(--success)'});
   if(incomplete>0)items.push({val:incomplete,label:'reading'+(incomplete!==1?'s':'')+' incomplete',color:'#d97706'});
@@ -2600,7 +2679,7 @@ function promptGeneratePDF(){
 
   modal.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:20px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto">'
     +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Attach a Map?</div>'
-    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">Select a map to attach. The map PDF will download automatically, then the report opens for printing. Print both — report first, map last.</p>'
+    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">The report will open for printing first. After you print (or close the print dialog), the map PDF downloads separately. Print or save-as-PDF both files.</p>'
     +mapOptions
     +'<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:8px;cursor:pointer;margin-bottom:14px;background:var(--input-bg)">'
       +'<input type="radio" name="mapChoice" value="none" checked style="width:18px;height:18px;accent-color:var(--atlas-primary)">'
@@ -2675,4 +2754,4 @@ function handleImport(e){
 init();
 </script>
 </body>
-</html>}
+</html>
