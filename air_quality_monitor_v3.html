@@ -1415,11 +1415,10 @@ function generatePDF(attachedMap) {
 }
 
 async function mergePdfWithMap(reportHtml, mapEntry, filename){
-  // Set PDF.js worker source
+  // Disable PDF.js worker — runs on main thread, avoids cross-origin worker issues on mobile
   try {
     if(typeof pdfjsLib !== 'undefined'){
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
-        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '';
     }
   } catch(e){}
 
@@ -1427,8 +1426,8 @@ async function mergePdfWithMap(reportHtml, mapEntry, filename){
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px';
   overlay.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:24px 28px;width:100%;max-width:320px;text-align:center">'
-    + '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Building report + map…</div>'
-    + '<div id="mergeProgress" style="font-size:13px;color:var(--text-dim);line-height:1.6">Loading map…</div>'
+    + '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Building report + map\u2026</div>'
+    + '<div id="mergeProgress" style="font-size:13px;color:var(--text-dim);line-height:1.6">Loading map\u2026</div>'
     + '<div style="margin-top:14px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden">'
       + '<div id="mergeBar" style="height:100%;width:0%;background:var(--atlas-primary);border-radius:3px;transition:width .3s"></div>'
     + '</div>'
@@ -1449,17 +1448,22 @@ async function mergePdfWithMap(reportHtml, mapEntry, filename){
 
     // Decode map PDF bytes
     const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
-    setProgress('Reading map pages…', 10);
+    setProgress('Reading map pages\u2026', 10);
 
-    const pdfDoc = await pdfjsLib.getDocument({data: mapBytes}).promise;
+    const loadingTask = pdfjsLib.getDocument({
+      data: mapBytes,
+      disableWorker: true,        // run on main thread — avoids mobile worker CSP issues
+      isEvalSupported: false,      // safer on restricted mobile browsers
+    });
+    const pdfDoc = await loadingTask.promise;
     const numPages = pdfDoc.numPages;
     const pageImgs = [];
 
-    // Render each map page to a canvas at 150 DPI scale (1 CSS pt = 1/72 in, 150 DPI = ~2.08x)
-    const SCALE = 150 / 72;
+    // 120 DPI on mobile is plenty for a map and avoids canvas memory limits
+    const SCALE = 120 / 72;
 
     for(let i = 1; i <= numPages; i++){
-      setProgress('Rendering map page ' + i + ' of ' + numPages + '…', 10 + Math.round((i / numPages) * 70));
+      setProgress('Rendering map page ' + i + ' of ' + numPages + '\u2026', 10 + Math.round((i / numPages) * 70));
       const page = await pdfDoc.getPage(i);
       const viewport = page.getViewport({scale: SCALE});
       const canvas = document.createElement('canvas');
@@ -1467,19 +1471,18 @@ async function mergePdfWithMap(reportHtml, mapEntry, filename){
       canvas.height = Math.round(viewport.height);
       const ctx = canvas.getContext('2d');
       await page.render({canvasContext: ctx, viewport: viewport}).promise;
-      // Convert to JPEG at 92% quality (smaller than PNG, fine for maps)
       pageImgs.push({
-        dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+        dataUrl: canvas.toDataURL('image/jpeg', 0.90),
         w: canvas.width,
         h: canvas.height
       });
-      // Release canvas memory
+      // Release canvas memory immediately
       canvas.width = 0; canvas.height = 0;
     }
 
-    setProgress('Assembling document…', 85);
+    setProgress('Assembling document\u2026', 85);
 
-    // Build map page HTML — each image on its own print page, no margins, landscape if wider than tall
+    // Each map page gets its own print page
     const mapPagesHtml = pageImgs.map(function(img){
       const landscape = img.w > img.h;
       return '<div style="page-break-before:always;margin:0;padding:0;'
@@ -1489,19 +1492,9 @@ async function mergePdfWithMap(reportHtml, mapEntry, filename){
         + '</div>';
     }).join('');
 
-    // Inject map pages into report HTML — insert before </body>
-    // Also add @page landscape rule for map pages via a scoped style block
-    const mapStyle = '<style>.map-page{page-break-before:always;}@media print{'
-      + pageImgs.map(function(img, i){
-          return img.w > img.h
-            ? '' // handled inline, landscape pages need a separate @page but browser support is inconsistent
-            : '';
-        }).join('')
-      + '}</style>';
+    const combinedHtml = reportHtml.replace('</body>', mapPagesHtml + '</body>');
 
-    const combinedHtml = reportHtml.replace('</body>', mapStyle + mapPagesHtml + '</body>');
-
-    setProgress('Opening print dialog…', 100);
+    setProgress('Opening print dialog\u2026', 100);
     overlay.remove();
 
     showPdfPreview(combinedHtml);
@@ -1509,10 +1502,9 @@ async function mergePdfWithMap(reportHtml, mapEntry, filename){
   } catch(err){
     console.error('Map merge error:', err);
     overlay.remove();
-    // Graceful fallback: open report alone, download map separately
-    showToast('Map merge failed — opening report only');
+    // Fallback: open report alone, download map separately
+    showToast('Map merge failed \u2014 opening report only');
     showPdfPreview(reportHtml);
-    // Also download the raw map so nothing is lost
     try {
       const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
       const blob = new Blob([mapBytes], {type:'application/pdf'});
