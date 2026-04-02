@@ -9,6 +9,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Atlas Field Log">
 <meta name="theme-color" content="#1a3a5c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
 <style>
 /* ── Atlas Brand CSS ── */
 :root{
@@ -30,7 +32,7 @@ body{font-family:'Segoe UI',Arial,sans-serif;font-size:15px;color:var(--atlas-te
 .app-header-title{color:#fff;font-size:16px;font-weight:700;letter-spacing:0.01em;white-space:nowrap}
 .app-header-date{color:rgba(255,255,255,0.7);font-size:11px;margin-top:1px}
 .logo{width:88px;min-width:88px;display:flex;align-items:center;flex-shrink:0}
-.top-nav-fixed{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.top-nav-fixed{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px}
 .top-nav-logs{display:flex;gap:6px;margin-bottom:1rem;align-items:center;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch}
 .top-nav-logs::-webkit-scrollbar{display:none}
 .log-tab{padding:7px 14px;border:1px solid var(--atlas-border-strong);border-radius:6px;background:#fff;cursor:pointer;font-size:13px;color:var(--atlas-text-secondary);display:flex;align-items:center;gap:4px;white-space:nowrap;user-select:none;font-weight:500}
@@ -197,6 +199,141 @@ textarea{resize:vertical;line-height:1.5}
 .entry-summary{font-size:12px;color:var(--atlas-text-secondary);padding:6px 2px;display:flex;align-items:center;justify-content:space-between;min-height:24px}
 .entry-summary-count{font-weight:600;color:var(--atlas-primary)}
 .entry-summary-last{font-style:italic}
+
+/* ── Form tabs ── */
+.top-nav-fixed{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.form-tab{padding:8px 6px;border:1px solid var(--atlas-border-strong);border-radius:6px;background:#fff;cursor:pointer;font-size:12px;font-weight:600;color:var(--atlas-text-secondary);text-align:center;user-select:none}
+.form-tab.active{background:var(--atlas-primary);color:#fff;border-color:var(--atlas-primary)}
+#safety-tab.active{background:#c0392b!important;color:#fff!important;border-color:#c0392b!important}
+
+/* ── Yes/No toggle ── */
+.yn-row{display:flex;align-items:flex-start;gap:8px;padding:9px 0;border-bottom:1px solid var(--atlas-border);gap:8px}
+.yn-row:last-child{border-bottom:none}
+.yn-label{flex:1;font-size:13px;line-height:1.45;color:var(--atlas-text)}
+.yn-btns{display:flex;gap:4px;flex-shrink:0}
+.yn-btn{padding:6px 12px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;background:#fff;color:var(--atlas-text-secondary);font-family:inherit;min-width:44px;text-align:center;transition:all 0.1s}
+.yn-btn.yes.active{background:#2e7d50;border-color:#2e7d50;color:#fff}
+.yn-btn.no.active{background:#c0392b;border-color:#c0392b;color:#fff}
+
+/* ── Check row (training items) ── */
+.chk-row{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--atlas-border)}
+.chk-row:last-child{border-bottom:none}
+.chk-box{width:28px;height:28px;border:2px solid var(--atlas-border-strong);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;background:#fff;transition:all 0.1s;margin-top:1px}
+.chk-box.checked{background:var(--atlas-primary);border-color:var(--atlas-primary);color:#fff}
+.chk-label{flex:1;font-size:13px;line-height:1.45;color:var(--atlas-text)}
+
+/* ── Hazard table ── */
+.haz-row{display:flex;gap:0;border-bottom:1px solid var(--atlas-border);align-items:stretch}
+.haz-row:last-child{border-bottom:none}
+.haz-check{width:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--atlas-border);cursor:pointer;font-size:18px;color:var(--atlas-text-secondary);padding:8px 0}
+.haz-check.checked{color:#2e7d50}
+.haz-content{flex:1;padding:8px;display:flex;flex-direction:column;gap:4px}
+.haz-title{font-size:13px;font-weight:600;color:var(--atlas-text)}
+.haz-sub{font-size:11px;color:var(--atlas-text-secondary)}
+.haz-ctrl{width:100%;padding:6px 8px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--atlas-text);resize:none}
+
+/* ── Signature pad ── */
+.sig-wrap{border:1px solid var(--atlas-border-strong);border-radius:8px;overflow:hidden;margin-top:6px}
+.sig-tabs{display:flex;border-bottom:1px solid var(--atlas-border)}
+.sig-tab{flex:1;padding:8px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;color:var(--atlas-text-secondary);background:#fff;border:none;font-family:inherit}
+.sig-tab.active{background:var(--atlas-primary);color:#fff}
+.sig-canvas{display:block;width:100%;height:90px;background:#fafafa;touch-action:none;cursor:crosshair}
+.sig-type-inp{width:100%;padding:12px;font-size:28px;font-family:'Dancing Script',cursive;border:none;background:#fafafa;text-align:center;color:#1a2e35;outline:none}
+.sig-actions{display:flex;gap:6px;padding:6px 8px;background:var(--atlas-bg-subtle);border-top:1px solid var(--atlas-border)}
+.sig-preview{width:100%;height:60px;object-fit:contain;background:#fafafa;display:block;border-top:1px solid var(--atlas-border)}
+
+/* ── Form section header ── */
+.form-section-hdr{font-size:12px;font-weight:700;color:var(--atlas-primary);text-transform:uppercase;letter-spacing:0.08em;padding:10px 0 6px;border-bottom:2px solid var(--atlas-bg-subtle);margin-bottom:4px}
+.form-section-num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;background:var(--atlas-primary);color:#fff;border-radius:50%;font-size:11px;font-weight:700;margin-right:6px;flex-shrink:0}
+
+/* ── Headcount table ── */
+.hc-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--atlas-border)}
+.hc-row:last-child{border-bottom:none}
+.hc-name{font-size:14px;font-weight:500;color:var(--atlas-text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hc-company{font-size:11px;color:var(--atlas-text-secondary)}
+.hc-signed{font-size:11px;color:#2e7d50;font-weight:600}
+.hc-sign-btn{padding:6px 12px;border:1px solid var(--atlas-primary);border-radius:6px;background:#fff;color:var(--atlas-primary);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0}
+.hc-sign-btn.signed{background:#2e7d50;border-color:#2e7d50;color:#fff}
+
+/* ── Print styles for forms ── */
+@media print{
+  .form-no-print{display:none!important}
+  .form-print-page{page-break-after:always}
+  .form-print-page:last-child{page-break-after:auto}
+}
+
+/* ── Form sections ── */
+.form-section{background:var(--atlas-bg-card);border:1px solid var(--atlas-border);border-radius:8px;padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:0 1px 3px rgba(61,110,126,0.08)}
+.form-section-title{font-size:11px;font-weight:700;color:var(--atlas-primary);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:14px;padding-bottom:8px;border-bottom:2px solid var(--atlas-bg-subtle);display:flex;justify-content:space-between;align-items:center}
+
+/* ── Form nav bar ── */
+.form-nav-bar{position:sticky;bottom:0;z-index:90;background:var(--atlas-bg-card);border-top:2px solid var(--atlas-primary);padding:10px 1rem;display:flex;gap:8px;justify-content:flex-end;margin-top:1rem;box-shadow:0 -2px 12px rgba(61,110,126,0.15)}
+.form-nav-bar .btn{padding:12px 16px;font-size:14px;min-height:48px}
+
+/* ── YN active states (JS uses yes-on / no-on) ── */
+.yn-btn.yes-on{background:#2e7d50;border-color:#2e7d50;color:#fff}
+.yn-btn.no-on{background:#c0392b;border-color:#c0392b;color:#fff}
+
+/* ── Check row (training items, JS uses check-row / check-box / check-label) ── */
+.check-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--atlas-border)}
+.check-row:last-child{border-bottom:none}
+.check-box{width:32px;height:32px;border:2px solid var(--atlas-border-strong);border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;background:#fff;transition:all 0.1s;margin-top:1px}
+.check-box.checked{background:var(--atlas-primary);border-color:var(--atlas-primary);color:#fff}
+.check-label{flex:1;font-size:13px;line-height:1.5;color:var(--atlas-text)}
+
+/* ── Hazard rows (tailgate form) ── */
+.hazard-row{display:flex;gap:0;border-bottom:1px solid var(--atlas-border);align-items:stretch}
+.hazard-row:last-child{border-bottom:none}
+.hazard-check{width:44px;flex-shrink:0;display:flex;align-items:center;justify-content:center;border-right:1px solid var(--atlas-border);cursor:pointer;font-size:20px;color:var(--atlas-border-strong);padding:10px 0;background:#fff;transition:all 0.1s}
+.hazard-check.on{color:#2e7d50;background:#f0faf4}
+.hazard-info{flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:5px}
+.hazard-title{font-size:14px;font-weight:600;color:var(--atlas-text)}
+.hazard-sub{font-size:11px;color:var(--atlas-text-secondary)}
+.hazard-control{width:100%;padding:6px 8px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--atlas-text)}
+
+/* ── Hazard preset chips ── */
+.hazard-presets{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 2px}
+.hazard-preset-chip{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--atlas-bg-subtle);border:1px solid var(--atlas-border-strong);cursor:pointer;color:var(--atlas-text);transition:all 0.1s;display:inline-flex;align-items:center;gap:4px}
+.hazard-preset-chip:active{background:var(--atlas-primary);border-color:var(--atlas-primary);color:#fff}
+.hazard-preset-chip.saved{background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker)}
+.hazard-preset-del{font-size:13px;opacity:0.5;line-height:1}
+.hazard-preset-del:hover{opacity:1;color:#c0392b}
+.dark .hazard-preset-chip{background:var(--atlas-bg-subtle);border-color:var(--atlas-border-strong);color:var(--atlas-text)}
+.dark .hazard-preset-chip.saved{background:#1a2e3a;border-color:var(--atlas-primary);color:var(--atlas-primary)}
+/* ── Hazard control tags ── */
+.ctrl-tags{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0 2px;min-height:4px}
+.ctrl-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:var(--atlas-primary);color:#fff}
+.ctrl-tag-del{cursor:pointer;opacity:0.7;font-size:14px;line-height:1}
+.ctrl-tag-del:hover{opacity:1}
+.ctrl-add-row{display:flex;gap:6px;margin-top:4px}
+.ctrl-add-inp{flex:1;padding:6px 8px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--atlas-text)}
+.dark .ctrl-add-inp{background:var(--atlas-bg-card);color:var(--atlas-text);border-color:var(--atlas-border-strong)}
+.dark .ctrl-tag{background:var(--atlas-primary-dark)}
+
+/* ── HECA rows ── */
+.heca-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px}
+.heca-row input{padding:7px 8px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--atlas-text)}
+
+/* ── Signature cell (sig-cell / sig-area / sig-name / sig-company / sig-btn / sig-preview) ── */
+.sig-cell{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--atlas-border)}
+.sig-cell:last-child{border-bottom:none}
+.sig-name{font-size:14px;font-weight:600;color:var(--atlas-text);min-width:0}
+.sig-company{font-size:11px;color:var(--atlas-text-secondary);margin-top:1px}
+.sig-area{flex:1;display:flex;align-items:center;gap:8px;justify-content:flex-end;cursor:pointer}
+.sig-area .sig-preview{flex:1;min-width:0;min-height:36px;display:flex;align-items:center;padding:4px 8px;border:1px dashed var(--atlas-border-strong);border-radius:6px;background:#fafafa;font-size:13px;color:var(--atlas-text-secondary);font-family:'Dancing Script',cursive;font-size:20px}
+.sig-area.signed .sig-preview{border-style:solid;border-color:#4a9060;background:#f2faf5}
+.sig-btn{padding:7px 14px;border:1px solid var(--atlas-primary);border-radius:6px;background:#fff;color:var(--atlas-primary);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap}
+.sig-btn:active{background:var(--atlas-primary);color:#fff}
+
+/* ── Dark mode for form elements ── */
+.dark .form-section{background:var(--atlas-bg-card);border-color:var(--atlas-border)}
+.dark .check-box{background:var(--atlas-bg-card);border-color:var(--atlas-border-strong);color:var(--atlas-text)}
+.dark .hazard-check{background:var(--atlas-bg-card);color:var(--atlas-border-strong)}
+.dark .hazard-check.on{background:#1a2e22;color:#4a9060}
+.dark .hazard-control,.dark .heca-row input{background:var(--atlas-bg-card);color:var(--atlas-text);border-color:var(--atlas-border-strong)}
+.dark .sig-area .sig-preview{background:var(--atlas-bg-subtle);border-color:var(--atlas-border-strong);color:var(--atlas-text-secondary)}
+.dark .sig-area.signed .sig-preview{background:#1a2e22;border-color:#4a9060}
+.dark .sig-btn{background:var(--atlas-bg-card);border-color:var(--atlas-primary);color:var(--atlas-primary)}
 </style>
 </head>
 <body>
@@ -214,6 +351,8 @@ textarea{resize:vertical;line-height:1.5}
   <div class="top-nav-fixed">
     <div class="lib-tab" id="lib-tab" style="text-align:center;padding:10px 14px;font-size:14px;font-weight:600">📋 Library</div>
     <div class="lib-tab" id="safety-tab" style="border-color:#c0392b;color:#c0392b;text-align:center;padding:10px 14px;font-size:14px;font-weight:600">🦺 Safety</div>
+    <div class="lib-tab" id="heat-tab" style="border-color:#e67e22;color:#e67e22;text-align:center;padding:10px 14px;font-size:14px;font-weight:600">🌡 Heat</div>
+    <div class="lib-tab" id="tailgate-tab" style="border-color:#2980b9;color:#2980b9;text-align:center;padding:10px 14px;font-size:14px;font-weight:600">📋 Tailgate</div>
     <span id="offline-indicator" style="display:none;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5e6c8;color:#7a4f00;border:0.5px solid #c9860a;flex-shrink:0;margin-left:auto">📵 Offline</span>
   </div>
   <div class="top-nav-logs" id="top-nav-logs">
@@ -226,6 +365,8 @@ textarea{resize:vertical;line-height:1.5}
   <div class="card"><div class="card-title">Report library</div><div id="library-list"></div></div>
 </div>
 <div id="safety-view" class="hidden"></div>
+<div id="heat-view" class="hidden" style="padding-bottom:2rem"></div>
+<div id="tailgate-view" class="hidden" style="padding-bottom:2rem"></div>
 <div style="margin-top:2rem;padding:0.75rem 1rem;display:flex;gap:8px;justify-content:flex-end;align-items:center;border-top:0.5px solid var(--color-border-tertiary,rgba(0,0,0,0.15));flex-wrap:wrap">
   <span id="storage-warn" style="display:none;font-size:11px;color:#A32D2D;font-weight:600;cursor:default" title="">⚠ Storage nearly full</span>
   <div style="flex:1"></div>
@@ -236,6 +377,38 @@ textarea{resize:vertical;line-height:1.5}
 </div>
 </div>
 <div id="sheet-backdrop" class="sheet-backdrop"></div>
+
+<!-- Signature Modal -->
+<div id="sig-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:400;align-items:flex-end;justify-content:center">
+  <div style="background:var(--atlas-bg-card);border-radius:16px 16px 0 0;width:100%;max-width:600px;padding:1.25rem;box-shadow:0 -4px 24px rgba(0,0,0,0.2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+      <div id="sig-modal-title" style="font-size:16px;font-weight:700;color:var(--atlas-primary-darker)">Sign</div>
+      <button onclick="sigCancel()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--atlas-text-secondary);padding:0 4px;font-family:inherit">×</button>
+    </div>
+    <!-- Type / Draw tabs -->
+    <div style="display:flex;border:1px solid var(--atlas-border-strong);border-radius:8px;overflow:hidden;margin-bottom:1rem">
+      <button id="sig-type-btn" class="sig-tab active" onclick="sigSetMode('type')">✏️ Type name</button>
+      <button id="sig-draw-btn" class="sig-tab" onclick="sigSetMode('draw')">🖊 Draw signature</button>
+    </div>
+    <!-- Type area -->
+    <div id="sig-type-area">
+      <input id="sig-type-inp" class="sig-type-inp" type="text" placeholder="Type your full name" autocomplete="name" style="width:100%;padding:14px;font-size:30px;font-family:'Dancing Script',cursive;border:1px solid var(--atlas-border-strong);border-radius:8px;background:#fafafa;text-align:center;color:#1a3650;outline:none;box-sizing:border-box">
+      <div id="sig-typed-preview" style="font-family:'Dancing Script',cursive;font-size:24px;color:var(--atlas-text-secondary);text-align:center;padding:8px 0;min-height:40px"></div>
+    </div>
+    <!-- Draw area -->
+    <div id="sig-draw-area" style="display:none">
+      <div style="font-size:12px;color:var(--atlas-text-secondary);margin-bottom:4px;text-align:center">Draw your signature below</div>
+      <div style="border:1px solid var(--atlas-border-strong);border-radius:8px;overflow:hidden;background:#fafafa">
+        <canvas id="sig-canvas" class="sig-canvas" style="height:120px"></canvas>
+      </div>
+      <button onclick="sigClearCanvas()" style="margin-top:6px;padding:6px 14px;border:1px solid var(--atlas-border-strong);border-radius:6px;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;color:var(--atlas-text-secondary)">Clear</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:1rem;justify-content:flex-end">
+      <button onclick="sigCancel()" class="btn" style="padding:12px 20px;font-size:14px">Cancel</button>
+      <button onclick="sigConfirm()" class="btn btn-primary" style="padding:12px 24px;font-size:14px;font-weight:700">Done</button>
+    </div>
+  </div>
+</div>
 <div id="notes-bottom-sheet" class="bottom-sheet">
   <div class="sheet-handle"></div>
   <div class="sheet-title">Navigate</div>
@@ -262,12 +435,25 @@ textarea{resize:vertical;line-height:1.5}
 </div>
 <script>
 var activeLid=null,logOrder=[],logs={},library=[];
+var heatForms={},tailgateForms={};
 var store={
   names:{atlas:[],sub:[],visitor:[],client:[]},
   visitorOrgs:{},affiliations:{},projects:[],
   fieldOptions:{proj:[],phase:[],loc:[],well:[],miles:[],atlasscope:[],contractorscope:[],office:[],pm:[]},
   equip:{items:['Atlas Vehicle','MultiRae Lite','RKI GX-3R 4-gas meter'],checked:['Atlas Vehicle','MultiRae Lite','RKI GX-3R 4-gas meter']},
-  quickPhrases:['H&S tailgate conducted','Work suspended - weather','Scope change:']
+  quickPhrases:['H&S tailgate conducted','Work suspended - weather','Scope change:'],
+  heatDefaults:{},tailgateDefaults:{},
+  hazardPresets:{
+    0:['Spotters assigned','Exclusion zone established','Pre-task brief completed','Flag person designated'],
+    1:['Traffic control plan in place','Cones/barriers set','High-vis vests worn','Spotter assigned'],
+    2:['SDS reviewed','PPE: gloves/goggles/respirator','Spill kit on site','Ventilation confirmed'],
+    3:['Exclusion zone below load','Rigging inspected','Tag lines used','No one under load'],
+    4:['Fall protection inspected','100% tie-off enforced','Ladder secured','3-point contact'],
+    5:['Snake/pest awareness briefed','Long pants/sleeves worn','First aid kit accessible','Area surveyed'],
+    6:['LOTO verified','Bond and ground confirmed','Qualified person present','Energized work permit'],
+    7:[],
+    8:[]
+  }
 };
 
 /* ── Field name constants ── */
@@ -446,12 +632,15 @@ async function storageSet(key,val){
   }
 }
 async function loadStore(){
-  try{var raw=await storageGet('atlas-store-v2');if(raw){var p=JSON.parse(raw);if(p.names)store.names=p.names;if(p.visitorOrgs)store.visitorOrgs=p.visitorOrgs;if(p.affiliations)store.affiliations=p.affiliations;if(p.projects)store.projects=p.projects;if(p.fieldOptions)store.fieldOptions=p.fieldOptions;if(p.equip)store.equip=p.equip;if(p.quickPhrases)store.quickPhrases=p.quickPhrases;}}catch(e){}
+  try{var raw=await storageGet('atlas-store-v2');if(raw){var p=JSON.parse(raw);if(p.names)store.names=p.names;if(p.visitorOrgs)store.visitorOrgs=p.visitorOrgs;if(p.affiliations)store.affiliations=p.affiliations;if(p.projects)store.projects=p.projects;if(p.fieldOptions)store.fieldOptions=p.fieldOptions;if(p.equip)store.equip=p.equip;if(p.quickPhrases)store.quickPhrases=p.quickPhrases;if(p.heatDefaults)store.heatDefaults=p.heatDefaults;if(p.tailgateDefaults)store.tailgateDefaults=p.tailgateDefaults;if(p.hazardPresets)store.hazardPresets=p.hazardPresets;}}catch(e){}
   if(!store.names.atlas)store.names.atlas=[];if(!store.names.sub)store.names.sub=[];if(!store.names.visitor)store.names.visitor=[];if(!store.names.client)store.names.client=[];
   if(!store.visitorOrgs)store.visitorOrgs={};if(!store.affiliations)store.affiliations={};if(!store.fieldOptions)store.fieldOptions={};
   ['proj','phase','loc','well','miles','atlasscope','contractorscope','office','pm'].forEach(function(k){if(!store.fieldOptions[k])store.fieldOptions[k]=[];});
   if(!store.quickPhrases)store.quickPhrases=['H&S tailgate conducted','Work suspended - weather','Scope change:'];
   if(!store.equip.items)store.equip.items=[];if(!store.equip.checked)store.equip.checked=[];
+  if(!store.heatDefaults)store.heatDefaults={};
+  if(!store.tailgateDefaults)store.tailgateDefaults={};
+  if(!store.hazardPresets)store.hazardPresets={0:[],1:[],2:[],3:[],4:[],5:[],6:[],7:[],8:[]};
 }
 async function persist(){try{await storageSet('atlas-store-v2',JSON.stringify(store));}catch(e){}}
 async function loadLogs(){try{var raw=await storageGet('atlas-logs-v2');if(raw){var d=JSON.parse(raw);logs=d.logs||{};logOrder=d.logOrder||[];}}catch(e){}}
@@ -535,8 +724,8 @@ function renderFieldPills(lid,key,fillId){
 function renderAllFieldPills(lid){
   ['proj','loc','well','office','pm'].forEach(function(k){renderFieldPills(lid,k,'l'+lid+'-'+k+'-pills');});
 }
-function mkClientField(lid){
-  var clientInp=inp('','e.g. Client name','w');clientInp.id='l'+lid+'-client';
+function mkClientField(lid,defaultVal){
+  var clientInp=inp(defaultVal||'','e.g. Client name','w');clientInp.id='l'+lid+'-client';
   function saveClient(){var v=capWords(clientInp.value.trim());if(!v)return;if(!store.names.client.includes(v)){store.names.client.push(v);persist();renderClientPills(lid);showSavedFlash(clientInp);}}
   clientInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();saveClient();}});
   clientInp._savePill=saveClient;
@@ -556,11 +745,42 @@ function renderClientPills(lid){
   });
 }
 function renderPills(lid){
-  var pairs=[['atlas','atlas-crew'],['sub','sub-crew']];
-  pairs.forEach(function(pair){
-    var arr=store.names[pair[0]]||[];
-    var cid='l'+lid+'-'+(pair[0]==='atlas'?'atlas-crew':'sub-crew');
-    arr.forEach(function(n){if(!getCrew(cid).includes(n))document.getElementById(cid).appendChild(makeCrewRow(n));});
+  // Render saved names as tap-to-add chips below each crew section
+  ['atlas','sub'].forEach(function(type){
+    var chipContId='l'+lid+'-'+type+'-saved-chips';
+    var chipCont=document.getElementById(chipContId);
+    if(!chipCont)return;
+    chipCont.innerHTML='';
+    var arr=store.names[type]||[];
+    if(!arr.length){chipCont.style.display='none';return;}
+    chipCont.style.display='flex';
+    var label=el('span');label.style.cssText='font-size:11px;color:var(--atlas-text-secondary);flex-shrink:0;align-self:center';
+    label.textContent='Saved:';
+    chipCont.appendChild(label);
+    arr.forEach(function(name,idx){
+      var chip=div('pill');
+      chip.style.cssText='font-size:12px;padding:4px 8px;cursor:pointer;background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker)';
+      var chipLabel=el('span');chipLabel.textContent=name;
+      var delBtn=el('span');delBtn.textContent='×';delBtn.style.cssText='margin-left:4px;opacity:0.5;font-size:14px';
+      delBtn.addEventListener('click',function(e){
+        e.stopPropagation();
+        showConfirm('Remove "'+name+'" from saved names?',function(){
+          store.names[type].splice(idx,1);
+          persist();
+          renderPills(lid);
+        });
+      });
+      chip.appendChild(chipLabel);chip.appendChild(delBtn);
+      chip.addEventListener('click',function(){
+        var cid='l'+lid+'-'+type+'-crew';
+        // Don't add if already in crew
+        if(getCrew(cid).includes(name))return;
+        var container=document.getElementById(cid);
+        if(container)container.appendChild(makeCrewRow(name));
+        saveLogs();
+      });
+      chipCont.appendChild(chip);
+    });
   });
 }
 async function saveNames(lid,type){
@@ -572,7 +792,17 @@ async function saveNames(lid,type){
 function setVal(el,val){if(!el)return;el.value=val;el.classList.toggle('has-value',String(val).trim().length>0);}
 
 /* ── tabs & nav ── */
-function getDisplayLabel(lid){var proj=fv(lid,'proj')||'';var idx=logOrder.indexOf(lid)+1;if(proj)return proj+' – Log '+idx;var base=logs[lid]?logs[lid].label:'';return base||('Log '+idx);}
+function getDisplayLabel(lid){
+  var proj=fv(lid,'proj')||'';
+  var dateVal=fv(lid,'date')||'';
+  var shortDate='';
+  if(dateVal){var dp=dateVal.split('-');if(dp.length===3)shortDate=parseInt(dp[1])+'/'+parseInt(dp[2]);}
+  if(proj&&shortDate)return shortDate+' · '+proj;
+  if(proj)return proj;
+  if(shortDate)return shortDate;
+  var base=logs[lid]?logs[lid].label:'';
+  return base||('Log '+(logOrder.indexOf(lid)+1));
+}
 function renderTabs(){
   var logsRow=document.getElementById('top-nav-logs');
   logsRow.querySelectorAll('.log-tab').forEach(function(t){t.remove();});
@@ -609,15 +839,17 @@ function renameLog(lid){
   ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
   document.body.appendChild(ov);setTimeout(function(){i.focus();i.select();},100);
 }
-function switchToLog(lid){document.getElementById('safety-view').classList.add('hidden');document.getElementById('safety-tab').classList.remove('active');
+function switchToLog(lid){
+  document.getElementById('safety-view').classList.add('hidden');document.getElementById('safety-tab').classList.remove('active');
+  document.getElementById('heat-view').classList.add('hidden');document.getElementById('heat-tab').classList.remove('active');
+  document.getElementById('tailgate-view').classList.add('hidden');document.getElementById('tailgate-tab').classList.remove('active');
   activeLid=lid;
   document.getElementById('library-view').classList.add('hidden');
   document.getElementById('lib-tab').classList.remove('active');
   logOrder.forEach(function(id){var p=document.getElementById('l'+id+'-pane');if(p)p.classList.toggle('hidden',id!==lid);});
-  renderTabs();updateBanner(lid);
-
+  renderTabs();updateBanner(lid);updateFormTabIndicators();
 }
-function switchToLibrary(){activeLid=null;document.getElementById('safety-view').classList.add('hidden');document.getElementById('safety-tab').classList.remove('active');document.getElementById('library-view').classList.remove('hidden');document.getElementById('lib-tab').classList.add('active');logOrder.forEach(function(id){var p=document.getElementById('l'+id+'-pane');if(p)p.classList.add('hidden');});renderTabs();renderLibrary();var n=document.getElementById('hdr-log-name');var s=document.getElementById('hdr-log-sub');if(n)n.textContent='Atlas Daily Field Log';if(s)s.textContent='';}
+function switchToLibrary(){activeLid=null;document.getElementById('safety-view').classList.add('hidden');document.getElementById('safety-tab').classList.remove('active');document.getElementById('heat-view').classList.add('hidden');document.getElementById('heat-tab').classList.remove('active');document.getElementById('tailgate-view').classList.add('hidden');document.getElementById('tailgate-tab').classList.remove('active');document.getElementById('library-view').classList.remove('hidden');document.getElementById('lib-tab').classList.add('active');logOrder.forEach(function(id){var p=document.getElementById('l'+id+'-pane');if(p)p.classList.add('hidden');});renderTabs();renderLibrary();var n=document.getElementById('hdr-log-name');var s=document.getElementById('hdr-log-sub');if(n)n.textContent='Atlas Daily Field Log';if(s)s.textContent='';}
 function closeLog(lid){showCloseOptions(lid);}
 function buildSafetyView(){
   var sv=document.getElementById('safety-view');
@@ -699,6 +931,1102 @@ function switchToSafety(){
   document.getElementById('safety-tab').classList.add('active');
   renderTabs();
 }
+
+/* ── hide all secondary views ── */
+function hideAllSecondary(){
+  ['library-view','safety-view','heat-view','tailgate-view'].forEach(function(id){
+    document.getElementById(id).classList.add('hidden');
+  });
+  ['lib-tab','safety-tab','heat-tab','tailgate-tab'].forEach(function(id){
+    document.getElementById(id).classList.remove('active');
+  });
+  logOrder.forEach(function(id){var p=document.getElementById('l'+id+'-pane');if(p)p.classList.add('hidden');});
+}
+
+/* ══════════════════════════════════════
+   SIGNATURE PAD
+══════════════════════════════════════ */
+var _sigCallback=null,_sigMode='type',_sigDrawing=false,_sigCtx=null,_sigLastX=0,_sigLastY=0;
+
+function openSigModal(title,callback){
+  _sigCallback=callback;
+  document.getElementById('sig-modal-title').textContent=title;
+  var typeInp=document.getElementById('sig-type-inp');
+  var preview=document.getElementById('sig-typed-preview');
+  typeInp.value='';
+  preview.textContent='';
+  typeInp.oninput=function(){preview.textContent=this.value;};
+  sigSetMode('type');
+  document.getElementById('sig-modal').style.display='flex';
+  setTimeout(function(){typeInp.focus();},100);
+}
+function sigSetMode(mode){
+  _sigMode=mode;
+  document.getElementById('sig-type-area').style.display=mode==='type'?'':'none';
+  document.getElementById('sig-draw-area').style.display=mode==='draw'?'':'none';
+  document.getElementById('sig-type-btn').classList.toggle('active',mode==='type');
+  document.getElementById('sig-draw-btn').classList.toggle('active',mode==='draw');
+  if(mode==='draw'){
+    var canvas=document.getElementById('sig-canvas');
+    canvas.width=canvas.offsetWidth||window.innerWidth-64;
+    _sigCtx=canvas.getContext('2d');
+    _sigCtx.clearRect(0,0,canvas.width,canvas.height);
+    _sigCtx.strokeStyle='#1a3650';_sigCtx.lineWidth=2.5;_sigCtx.lineCap='round';_sigCtx.lineJoin='round';
+    initSigCanvas(canvas);
+  }
+}
+function initSigCanvas(canvas){
+  function getPos(e){
+    var r=canvas.getBoundingClientRect();
+    var src=e.touches?e.touches[0]:e;
+    return{x:(src.clientX-r.left)*(canvas.width/r.width),y:(src.clientY-r.top)*(canvas.height/r.height)};
+  }
+  canvas.addEventListener('mousedown',function(e){_sigDrawing=true;var p=getPos(e);_sigLastX=p.x;_sigLastY=p.y;},{passive:true});
+  canvas.addEventListener('touchstart',function(e){_sigDrawing=true;var p=getPos(e);_sigLastX=p.x;_sigLastY=p.y;},{passive:true});
+  canvas.addEventListener('mousemove',function(e){if(!_sigDrawing)return;var p=getPos(e);_sigCtx.beginPath();_sigCtx.moveTo(_sigLastX,_sigLastY);_sigCtx.lineTo(p.x,p.y);_sigCtx.stroke();_sigLastX=p.x;_sigLastY=p.y;});
+  canvas.addEventListener('touchmove',function(e){e.preventDefault();if(!_sigDrawing)return;var p=getPos(e);_sigCtx.beginPath();_sigCtx.moveTo(_sigLastX,_sigLastY);_sigCtx.lineTo(p.x,p.y);_sigCtx.stroke();_sigLastX=p.x;_sigLastY=p.y;},{passive:false});
+  canvas.addEventListener('mouseup',function(){_sigDrawing=false;});
+  canvas.addEventListener('touchend',function(){_sigDrawing=false;},{passive:true});
+}
+function sigClearCanvas(){var c=document.getElementById('sig-canvas');_sigCtx.clearRect(0,0,c.width,c.height);}
+function sigCancel(){document.getElementById('sig-modal').style.display='none';_sigCallback=null;}
+function sigConfirm(){
+  var result=null;
+  if(_sigMode==='type'){
+    var name=document.getElementById('sig-type-inp').value.trim();
+    if(!name){showAlert('Please type your name.');return;}
+    result={type:'typed',name:name};
+  } else {
+    var canvas=document.getElementById('sig-canvas');
+    var data=_sigCtx.getImageData(0,0,canvas.width,canvas.height).data;
+    var hasContent=false;for(var i=3;i<data.length;i+=4){if(data[i]>0){hasContent=true;break;}}
+    if(!hasContent){showAlert('Please draw your signature.');return;}
+    result={type:'drawn',dataUrl:canvas.toDataURL('image/png')};
+  }
+  document.getElementById('sig-modal').style.display='none';
+  if(_sigCallback)_sigCallback(result);
+  _sigCallback=null;
+}
+function renderSigPreview(sig){
+  if(!sig)return'';
+  if(sig.type==='typed')return sig.name;
+  return'[drawn]';
+}
+function sigToHTML(sig){
+  if(!sig)return'';
+  if(sig.type==='typed'){
+    return'<span style="font-family:\'Dancing Script\',cursive;font-size:18px;color:#1a3650">'+esc(sig.name)+'</span>';
+  }
+  return'<img src="'+sig.dataUrl+'" style="height:32px;max-width:180px;object-fit:contain;display:inline-block;vertical-align:middle">';
+}
+
+/* ══════════════════════════════════════
+   HEAT ILLNESS PREVENTION FORM
+══════════════════════════════════════ */
+var HEAT_SEC2=[
+  '≥2 Gal or 16 cool water bottles per employee per day is available to start each day?',
+  'Water supplies verified adequate before work begins?',
+  'Water supplies verified adequate at the lunch period?',
+  'Water consumption is encouraged before work begins and throughout the day?'
+];
+var HEAT_SEC3=[
+  'Enough shade is present when temperatures exceed 80°F, or anytime upon request?',
+  'Shade shall be as close as practical, and large enough to accommodate all?',
+  'Employees are encouraged to take shaded cool down / rest breaks as needed?',
+  'Alternatives to shade are not implemented without approval from the SSHO or PM?'
+];
+var HEAT_SEC4=[
+  'Work was stopped to review High Heat expectations. Increased water, shade, rest, observation?',
+  'Effective communication by observation, voice, or electronic means is in place for all site workers?',
+  'Supervisor/designee will actively observe for alertness/adverse effects of heat illness?',
+  'Responsible employee(s) have been designated to contact emergency services if needed?',
+  'Site workers are reminded/encouraged to drink plenty of water and take rest breaks?'
+];
+var HEAT_SEC5=[
+  'Environmental and personal risk factors for heat illness discussed?',
+  'Employer responsibility to provide water, shade, cool-down rests, and access to first aid reviewed?',
+  'Importance of frequent consumption of small quantities of water (up to 4 cups/hour) reviewed?',
+  'Concept, importance, and methods of acclimatization reviewed?',
+  'Types of heat illness, signs, symptoms, and emergency responses reviewed?',
+  'Importance of immediately reporting symptoms of heat illness reviewed?',
+  'Employer procedures for responding to signs/symptoms of possible heat illness reviewed?',
+  'Procedures for contacting emergency medical services reviewed?',
+  'Procedures for ensuring clear directions to work site for emergency responders reviewed?',
+  'Additional High Heat Procedures go into effect at 95°F or higher acknowledged?'
+];
+
+function getHeatData(lid){
+  if(!heatForms[lid])heatForms[lid]={};
+  var d=heatForms[lid];
+  if(!d.sec2)d.sec2=HEAT_SEC2.map(function(){return null;});
+  if(!d.sec3)d.sec3=HEAT_SEC3.map(function(){return null;});
+  if(!d.sec4)d.sec4=HEAT_SEC4.map(function(){return null;});
+  if(!d.sec5)d.sec5=HEAT_SEC5.map(function(){return false;});
+  if(!d.sigs)d.sigs={};
+  return d;
+}
+
+function switchToHeat(){
+  hideAllSecondary();
+  activeLid=null;
+  var lid=logOrder.length?logOrder[0]:null;
+  buildHeatView(lid);
+  document.getElementById('heat-view').classList.remove('hidden');
+  document.getElementById('heat-tab').classList.add('active');
+  renderTabs();
+}
+
+function buildHeatView(lid){
+  var view=document.getElementById('heat-view');
+  view.innerHTML='';
+
+  var D=lid?getLogData(lid):{};
+  var hd=lid?getHeatData(lid):{sec2:[],sec3:[],sec4:[],sec5:[],sigs:{}};
+
+  // Header bar with log selector and copy-from-last
+  var hdrRow=div();hdrRow.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:1rem;flex-wrap:wrap';
+  var logSel=document.createElement('select');logSel.style.cssText='flex:1;padding:8px 10px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:14px;font-family:inherit;background:var(--atlas-bg-card);color:var(--atlas-text)';
+  var noOpt=document.createElement('option');noOpt.value='';noOpt.textContent='— select a log —';logSel.appendChild(noOpt);
+  logOrder.forEach(function(id){var o=document.createElement('option');o.value=id;o.textContent=getDisplayLabel(id)+(fv(id,'loc')?' — '+fv(id,'loc'):'');if(id===lid)o.selected=true;logSel.appendChild(o);});
+  logSel.addEventListener('change',function(){buildHeatView(this.value||null);});
+  var copyBtn=btn('↩ Load last','btn-sm');
+  copyBtn.addEventListener('click',function(){copyLastHeatForm(lid);});
+  hdrRow.appendChild(logSel);hdrRow.appendChild(copyBtn);
+  view.appendChild(hdrRow);
+
+  if(!lid){var msg=div();msg.style.cssText='padding:2rem;text-align:center;color:var(--atlas-text-secondary);font-size:14px';msg.textContent='Start a log first to fill out this form.';view.appendChild(msg);return;}
+
+  // Section 1 — Header
+  var s1=div('form-section');
+  s1.innerHTML='<div class="form-section-title">1 · Daily Site Monitoring Requirements</div>';
+  var g1=div('fr2');
+  var locFg2=div('fg');locFg2.appendChild(lbl('Location'));
+  var locDisp=el('input');locDisp.type='text';locDisp.value=D.LOC||'';locDisp.id='heat-loc-'+lid;locDisp.readOnly=true;locDisp.style.background='var(--atlas-bg-subtle)';
+  locFg2.appendChild(locDisp);
+  var dateFg2=div('fg');dateFg2.appendChild(lbl('Date'));
+  var dateDisp=el('input');dateDisp.type='text';dateDisp.value=D.DATE||'';dateDisp.readOnly=true;dateDisp.style.background='var(--atlas-bg-subtle)';
+  dateFg2.appendChild(dateDisp);
+  g1.appendChild(locFg2);g1.appendChild(dateFg2);s1.appendChild(g1);
+
+  var g2=div('fr2');
+  var respFg=div('fg');respFg.appendChild(lbl('Designated Responsible Person'));
+  var respInp=inp(hd.respName||store.heatDefaults.respName||'','Name','w');respInp.id='heat-resp-'+lid;
+  respInp.addEventListener('input',function(){hd.respName=this.value;store.heatDefaults.respName=this.value;});
+  respInp.addEventListener('blur',function(){persist();saveFormData();});
+  // Saved person chip
+  function renderSafetyPersonChip(){
+    var existing=respFg.querySelector('.safety-person-chip-row');
+    if(existing)existing.remove();
+    if(store.heatDefaults.savedPerson){
+      var row=div();row.className='safety-person-chip-row';
+      row.style.cssText='display:flex;gap:6px;align-items:center;margin-top:4px;flex-wrap:wrap';
+      var chip=div('pill');chip.style.cssText='font-size:12px;padding:4px 10px;background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker);cursor:pointer';
+      chip.textContent=store.heatDefaults.savedPerson+(store.heatDefaults.savedPhone?' · '+store.heatDefaults.savedPhone:'');
+      chip.title='Tap to fill';
+      chip.addEventListener('click',function(){
+        respInp.value=store.heatDefaults.savedPerson;
+        hd.respName=store.heatDefaults.savedPerson;
+        store.heatDefaults.respName=store.heatDefaults.savedPerson;
+        phoneInp.value=store.heatDefaults.savedPhone||'';
+        hd.respPhone=store.heatDefaults.savedPhone||'';
+        store.heatDefaults.respPhone=store.heatDefaults.savedPhone||'';
+        [respInp,phoneInp].forEach(function(f){f.classList.toggle('has-value',f.value.trim().length>0);});
+        persist();saveFormData();
+      });
+      var clearChip=el('span');clearChip.textContent='×';clearChip.style.cssText='font-size:13px;opacity:0.5;cursor:pointer;margin-left:2px';
+      clearChip.addEventListener('click',function(e){
+        e.stopPropagation();
+        showConfirm('Remove saved safety person?',function(){
+          delete store.heatDefaults.savedPerson;delete store.heatDefaults.savedPhone;
+          persist();renderSafetyPersonChip();
+        });
+      });
+      chip.appendChild(clearChip);row.appendChild(chip);respFg.appendChild(row);
+    }
+  }
+  respFg.appendChild(respInp);
+  var phoneFg=div('fg');phoneFg.appendChild(lbl('Phone #'));
+  var phoneInp=inp(hd.respPhone||store.heatDefaults.respPhone||'','Phone','w');phoneInp.id='heat-phone-'+lid;phoneInp.type='tel';
+  phoneInp.addEventListener('input',function(){hd.respPhone=this.value;store.heatDefaults.respPhone=this.value;});
+  phoneInp.addEventListener('blur',function(){persist();saveFormData();});
+  phoneFg.appendChild(phoneInp);
+  g2.appendChild(respFg);g2.appendChild(phoneFg);s1.appendChild(g2);
+  // Save person button row
+  var savePersonRow=div();savePersonRow.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:8px;flex-wrap:wrap';
+  var savePersonBtn=btn('💾 Save as default safety person','btn-sm');
+  savePersonBtn.addEventListener('click',function(){
+    var n=respInp.value.trim(),p=phoneInp.value.trim();
+    if(!n){showAlert('Enter a name first.');return;}
+    store.heatDefaults.savedPerson=n;store.heatDefaults.savedPhone=p;
+    persist();renderSafetyPersonChip();
+    showSavedFlash(respInp);
+  });
+  savePersonRow.appendChild(savePersonBtn);s1.appendChild(savePersonRow);
+  renderSafetyPersonChip();
+
+  // Atlas workers (auto from crew)
+  var workersFg=div('fg');workersFg.appendChild(lbl('Atlas Site Workers'));
+  var workersDisp=el('input');workersDisp.type='text';workersDisp.value=D.ATLAS_CREW?D.ATLAS_CREW.join(', '):'';workersDisp.readOnly=true;workersDisp.style.background='var(--atlas-bg-subtle)';
+  workersFg.appendChild(workersDisp);s1.appendChild(workersFg);
+
+  // Contractor verified
+  var cvRow=div('yn-row');
+  var cvLbl=div('yn-label');cvLbl.textContent='Contractor Heat Illness Prevention procedures verified as adequate?';
+  var cvBtns=makeYNBtns('heat-cv-'+lid, hd.contractorVerified!==undefined?hd.contractorVerified:null, function(v){hd.contractorVerified=v;});
+  cvRow.appendChild(cvLbl);cvRow.appendChild(cvBtns);s1.appendChild(cvRow);
+
+  // Temp fields
+  var g3=div('fr2');
+  var tempFg=div('fg');tempFg.appendChild(lbl('Forecasted High Temp (Lo–Hi)'));
+  var tempDisp=el('input');tempDisp.type='text';
+  // Show full range e.g. "62 to 96°F"
+  var tempRange=D.TEMP?(D.TEMP.indexOf('to')>-1?D.TEMP+'°F':D.TEMP+'°F'):'';
+  tempDisp.value=tempRange;tempDisp.readOnly=true;tempDisp.style.background='var(--atlas-bg-subtle)';
+  // Highlight red if high exceeds 95
+  var hiMatch=D.TEMP&&D.TEMP.match(/to\s*(\d+)/);
+  var hiVal=hiMatch?parseInt(hiMatch[1]):0;
+  if(hiVal>=95)tempDisp.style.cssText='background:#FCEBEB;border-color:#A32D2D;color:#A32D2D;font-weight:600;width:100%;padding:8px 10px;border-radius:6px;font-size:14px;font-family:inherit';
+  tempFg.appendChild(tempDisp);
+  var time95Fg=div('fg');time95Fg.appendChild(lbl('Time expected to surpass 95°F'));
+  var autoTime95=getHeatTime95(lid)||'';
+  var time95Inp=inp(hd.time95||autoTime95,'e.g. 1:00 PM');time95Inp.id='heat-time95-'+lid;
+  if(!hd.time95&&autoTime95){hd.time95=autoTime95;}
+  if(hiVal<95&&!autoTime95){
+    time95Inp.placeholder='High temp below 95°F today';
+    time95Inp.style.background='var(--atlas-bg-subtle)';
+  }
+  time95Inp.addEventListener('input',function(){hd.time95=this.value;});
+  time95Fg.appendChild(time95Inp);
+  g3.appendChild(tempFg);g3.appendChild(time95Fg);s1.appendChild(g3);
+  view.appendChild(s1);
+
+  // Sections 2-4 Yes/No
+  var secDefs=[
+    {num:2,title:'Water Requirements — Any Temperature',items:HEAT_SEC2,key:'sec2'},
+    {num:3,title:'Rest/Shade Requirements — 80°F or above',items:HEAT_SEC3,key:'sec3'},
+    {num:4,title:'High Heat Procedures — 95°F or above',items:HEAT_SEC4,key:'sec4'}
+  ];
+  secDefs.forEach(function(sec){
+    var s=div('form-section');
+    s.innerHTML='<div class="form-section-title">'+sec.num+' · '+sec.title+'<span style="font-size:11px;font-weight:500;color:var(--atlas-text-secondary)">Yes / No</span></div>';
+    sec.items.forEach(function(item,i){
+      var row=div('yn-row');
+      var lbl2=div('yn-label');lbl2.textContent=item;
+      var btns=makeYNBtns('heat-'+sec.key+'-'+i+'-'+lid, hd[sec.key][i], function(v){hd[sec.key][i]=v;});
+      row.appendChild(lbl2);row.appendChild(btns);s.appendChild(row);
+    });
+    view.appendChild(s);
+  });
+
+  // Section 5 — Training checkboxes
+  var s5=div('form-section');
+  s5.innerHTML='<div class="form-section-title">5 · Training Requirements — Reviewed with those new to site</div>';
+  HEAT_SEC5.forEach(function(item,i){
+    var row=div('check-row');
+    var box=div('check-box'+(hd.sec5[i]?' checked':''));
+    box.textContent=hd.sec5[i]?'✓':'';
+    box.addEventListener('click',function(){
+      hd.sec5[i]=!hd.sec5[i];
+      box.classList.toggle('checked',hd.sec5[i]);
+      box.textContent=hd.sec5[i]?'✓':'';
+    });
+    var lbl3=div('check-label');lbl3.textContent=String.fromCharCode(96+i+1).toUpperCase()+'. '+item;
+    row.appendChild(box);row.appendChild(lbl3);s5.appendChild(row);
+  });
+  view.appendChild(s5);
+
+  // Signatures
+  var sigSec=div('form-section');
+  sigSec.innerHTML='<div class="form-section-title">Signatures — Atlas Site Workers</div>';
+  var atlasCrew=D.ATLAS_CREW&&D.ATLAS_CREW.length?D.ATLAS_CREW:['(no crew added yet)'];
+  atlasCrew.forEach(function(name){
+    buildSigRow(sigSec,name,'',lid,'heat',hd.sigs);
+  });
+  view.appendChild(sigSec);
+
+  // Nav bar
+  var navBar=div('form-nav-bar');
+  var printBtn2=btn('🖨 Print Heat Form','btn-primary');
+  printBtn2.addEventListener('click',function(){printHeatForm(lid);});
+  var printAllBtn=btn('🖨 Print All Forms');
+  printAllBtn.addEventListener('click',function(){printAllForms(lid);});
+  // Skip button
+  var skipHeatBtn=btn(isHeatSkipped(lid)?'↩ Unskip':'⊘ Skip today','btn-sm');
+  skipHeatBtn.style.cssText='font-size:12px;color:var(--atlas-text-secondary);border-color:var(--atlas-border)';
+  skipHeatBtn.title='Mark this form as not needed today';
+  skipHeatBtn.addEventListener('click',function(){
+    if(!logs[lid])return;
+    logs[lid]._skipHeat=!logs[lid]._skipHeat;
+    saveLogs();updateFormTabIndicators();
+    skipHeatBtn.textContent=logs[lid]._skipHeat?'↩ Unskip':'⊘ Skip today';
+  });
+  // Offline indicator
+  var heatOffline=div('form-offline-ind');
+  heatOffline.style.cssText='display:none;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5e6c8;color:#7a4f00;border:0.5px solid #c9860a;margin-bottom:6px';
+  heatOffline.innerHTML='📵 Offline — weather/GPS unavailable';
+  view.insertBefore(heatOffline,view.firstChild);
+  navBar.appendChild(skipHeatBtn);navBar.appendChild(printAllBtn);navBar.appendChild(printBtn2);
+  view.appendChild(navBar);
+  updateFormOfflineIndicator();
+  updateFormTabIndicators();
+}
+function makeYNBtns(id,currentVal,onChange){
+  var wrap=div('yn-btns');
+  var yBtn=el('button','yn-btn'+(currentVal===true?' yes-on':''));yBtn.type='button';yBtn.textContent='Yes';
+  var nBtn=el('button','yn-btn'+(currentVal===false?' no-on':''));nBtn.type='button';nBtn.textContent='No';
+  yBtn.addEventListener('click',function(){
+    yBtn.classList.add('yes-on');nBtn.classList.remove('no-on');
+    onChange(true);
+  });
+  nBtn.addEventListener('click',function(){
+    nBtn.classList.add('no-on');yBtn.classList.remove('yes-on');
+    onChange(false);
+  });
+  wrap.appendChild(yBtn);wrap.appendChild(nBtn);
+  return wrap;
+}
+
+function buildSigRow(container,name,company,lid,formType,sigsObj){
+  var key=name.replace(/\s+/g,'_');
+  var cell=div('sig-cell');
+  var nameEl=div('sig-name');nameEl.textContent=name;
+  if(company){var compEl=div('sig-company');compEl.textContent=company;cell.appendChild(nameEl);cell.appendChild(compEl);}
+  else{cell.appendChild(nameEl);}
+  var sigArea=div('sig-area'+(sigsObj[key]?' signed':''));
+  var preview=div('sig-preview');
+  if(sigsObj[key]){
+    if(sigsObj[key].type==='typed'){
+      preview.textContent=sigsObj[key].name;
+    } else {
+      var img=document.createElement('img');img.src=sigsObj[key].dataUrl;img.style.cssText='height:36px;max-width:200px;object-fit:contain;display:block';
+      preview.appendChild(img);
+    }
+  } else {
+    preview.style.cssText='font-size:13px;color:var(--atlas-text-secondary);font-family:inherit';
+    preview.textContent='Tap to sign';
+  }
+  var sigBtn=el('button','sig-btn');
+  sigBtn.textContent=sigsObj[key]?'Re-sign':'Sign';
+  sigArea.appendChild(preview);sigArea.appendChild(sigBtn);
+  cell.appendChild(sigArea);
+  function openSig(){
+    openSigModal('Sign — '+name,function(result){
+      sigsObj[key]=result;
+      preview.innerHTML='';
+      if(result.type==='typed'){
+        preview.style.cssText='';
+        preview.textContent=result.name;
+      } else {
+        preview.style.cssText='';
+        var img2=document.createElement('img');img2.src=result.dataUrl;img2.style.cssText='height:36px;max-width:200px;object-fit:contain;display:block';
+        preview.appendChild(img2);
+      }
+      sigArea.classList.add('signed');
+      sigBtn.textContent='Re-sign';
+      saveFormData();
+    });
+  }
+  sigArea.addEventListener('click',openSig);
+  sigBtn.addEventListener('click',function(e){e.stopPropagation();openSig();});
+  container.appendChild(cell);
+}
+
+function getHeatTime95(lid){
+  if(!lid)return'';
+  // First try the stored value set by weather fetch
+  if(logs[lid]&&logs[lid]._heatTime95)return logs[lid]._heatTime95;
+  // Fallback: parse from weather conditions text
+  var wx=fv(lid,'wx');
+  var m=wx.match(/by\s+(\d+:\d+\s*[AP]M)/i);
+  return m?m[1]:'';
+}
+
+function copyLastHeatForm(lid){
+  if(!store.heatDefaults||!Object.keys(store.heatDefaults).length){showAlert('No previous heat form found to copy from.');return;}
+  var d=getHeatData(lid);
+  if(store.heatDefaults.sec2)d.sec2=store.heatDefaults.sec2.slice();
+  if(store.heatDefaults.sec3)d.sec3=store.heatDefaults.sec3.slice();
+  if(store.heatDefaults.sec4)d.sec4=store.heatDefaults.sec4.slice();
+  if(store.heatDefaults.sec5)d.sec5=store.heatDefaults.sec5.slice();
+  if(store.heatDefaults.respName)d.respName=store.heatDefaults.respName;
+  if(store.heatDefaults.respPhone)d.respPhone=store.heatDefaults.respPhone;
+  if(store.heatDefaults.contractorVerified!==undefined)d.contractorVerified=store.heatDefaults.contractorVerified;
+  buildHeatView(lid);
+}
+
+function saveFormData(){
+  // Persist heat/tailgate forms into logs object
+  logOrder.forEach(function(lid){
+    if(heatForms[lid])logs[lid]._heatForm=heatForms[lid];
+    if(tailgateForms[lid])logs[lid]._tailgateForm=tailgateForms[lid];
+    // Save defaults for copy-from-last
+    if(heatForms[lid]){
+      store.heatDefaults={
+        sec2:heatForms[lid].sec2,sec3:heatForms[lid].sec3,
+        sec4:heatForms[lid].sec4,sec5:heatForms[lid].sec5,
+        respName:heatForms[lid].respName,respPhone:heatForms[lid].respPhone,
+        contractorVerified:heatForms[lid].contractorVerified
+      };
+    }
+    if(tailgateForms[lid]){
+      store.tailgateDefaults={
+        checkInPerson:tailgateForms[lid].checkInPerson,
+        waterPlan:tailgateForms[lid].waterPlan,
+        hazards:tailgateForms[lid].hazards.map(function(h){
+          return{present:h.present,controls:h.controls?h.controls.slice():[]};
+        }),
+        hecaAssessor:tailgateForms[lid].hecaAssessor
+      };
+    }
+  });
+  persist();saveLogs();updateFormTabIndicators();
+}
+
+/* ── Heat form HTML print output ── */
+function buildHeatFormHTML(lid){
+  var D=getLogData(lid);
+  var hd=getHeatData(lid);
+  var fmtDate=function(d){if(!d)return'';var p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0];};
+  var B64ATLAS='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTQxLjE2IDEyMS44OCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM0MTc0OGQ7fTwvc3R5bGU+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQxNS4wMSw0Mi40MWM5LjAzLS41MywxOC4xLTEuMDEsMjcuMjEtMS40NHYtMTUuMjRoMzcuNjRWMS42OWgtMTAyLjQ5djI0LjA0aDM3LjY0djE2LjY4WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTU0OS41MywxLjY5aC0yNy4yMXYzNi43NWM5LjA1LS4xNSwxOC4xMi0uMjUsMjcuMjEtLjMxVjEuNjlaIi8+PC9zdmc+';
+  var td='border:1px solid #333;padding:3px 6px;font-size:9px;vertical-align:top';
+
+  function ynCell(val){
+    return'<td style="'+td+';text-align:center;width:40px">'+(val===true?'✓':(val===false?'✗':''))+'</td>';
+  }
+  function checkCell(val){
+    return'<td style="'+td+';text-align:center;width:24px">'+(val?'✓':'')+'</td>';
+  }
+
+  var sec2Rows=HEAT_SEC2.map(function(item,i){return'<tr><td style="'+td+'">'+esc(item)+'</td>'+ynCell(hd.sec2[i])+ynCell(hd.sec2[i]===null?null:!hd.sec2[i])+'</tr>';}).join('');
+  var sec3Rows=HEAT_SEC3.map(function(item,i){return'<tr><td style="'+td+'">'+esc(item)+'</td>'+ynCell(hd.sec3[i])+ynCell(hd.sec3[i]===null?null:!hd.sec3[i])+'</tr>';}).join('');
+  var sec4Rows=HEAT_SEC4.map(function(item,i){return'<tr><td style="'+td+'">'+esc(item)+'</td>'+ynCell(hd.sec4[i])+ynCell(hd.sec4[i]===null?null:!hd.sec4[i])+'</tr>';}).join('');
+  var sec5Rows=HEAT_SEC5.map(function(item,i){return'<tr>'+checkCell(hd.sec5[i])+'<td style="'+td+'"><b>'+String.fromCharCode(96+i+1)+'.</b> '+esc(item)+'</td></tr>';}).join('');
+
+  var atlasCrew=D.ATLAS_CREW&&D.ATLAS_CREW.length?D.ATLAS_CREW:[];
+  var sigRows=atlasCrew.map(function(name){
+    var key=name.replace(/\s+/g,'_');
+    var sig=hd.sigs&&hd.sigs[key];
+    return'<tr><td style="'+td+';width:40%">'+esc(name)+'</td><td style="'+td+';width:60%;height:32px">'+(sig?sigToHTML(sig):'')+'</td></tr>';
+  }).join('');
+
+  return'<div style="font-family:Arial,sans-serif;font-size:9px;color:#000;max-width:720px;margin:0 auto">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'
+    +'<img src="'+B64ATLAS+'" style="height:18px;width:auto"><span style="font-size:12px;font-weight:700">ATLAS Technical Consultants LLC — CalGEM — CA Heat Illness Prevention Program — Checklist</span></div>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:6px">'
+    +'<tr><td style="'+td+';width:50%"><b>1 · Daily Site Monitoring Requirements</b>&nbsp;&nbsp;Location: <b>'+esc(D.LOC||'')+'</b></td><td style="'+td+'">Date: <b>'+fmtDate(D.DATE)+'</b></td></tr>'
+    +'<tr><td style="'+td+'" colspan="2">Designated responsible person: <b>'+esc(hd.respName||'')+'</b>&nbsp;&nbsp;&nbsp;Ph: <b>'+esc(hd.respPhone||'')+'</b></td></tr>'
+    +'<tr><td style="'+td+'" colspan="2">Atlas Site Workers: <b>'+esc(D.ATLAS_CREW?D.ATLAS_CREW.join(', '):'')+'</b></td></tr>'
+    +'<tr><td style="'+td+'">Contractor Heat Illness Prevention procedures verified as adequate? <b>'+(hd.contractorVerified===true?'YES':hd.contractorVerified===false?'NO':'—')+'</b></td><td style="'+td+'">Forecasted High Temp: <b>'+esc(D.TEMP?D.TEMP+'°F':'')+'</b>&nbsp;&nbsp;Time to surpass 95°F: <b>'+esc(hd.time95||'')+'</b></td></tr>'
+    +'<tr><td style="'+td+';background:#fff3cd;font-weight:700" colspan="2">At 95°F, institute High Heat Procedures. Stop. Review. Encourage water intake, rest, shade, breaks. Observe workers.</td></tr>'
+    +'<tr><td style="'+td+';background:#fde8e8;font-weight:700" colspan="2">Call for Emergency Services if needed: COREHealth Networks 855-282-6331 or 911</td></tr>'
+    +'</table>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:6px"><tr><th style="'+td+';background:#d0e8f0;text-align:left">2 · Water Requirements — Any Temperature</th><th style="'+td+';background:#d0e8f0;width:40px">Yes</th><th style="'+td+';background:#d0e8f0;width:40px">No</th></tr>'+sec2Rows+'</table>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:6px"><tr><th style="'+td+';background:#d0e8f0;text-align:left">3 · Rest/Shade Requirements — 80°F or above</th><th style="'+td+';background:#d0e8f0;width:40px">Yes</th><th style="'+td+';background:#d0e8f0;width:40px">No</th></tr>'+sec3Rows+'</table>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:6px"><tr><th style="'+td+';background:#d0e8f0;text-align:left">4 · High Heat Procedures — 95°F or above</th><th style="'+td+';background:#d0e8f0;width:40px">Yes</th><th style="'+td+';background:#d0e8f0;width:40px">No</th></tr>'+sec4Rows+'</table>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:6px"><tr><th style="'+td+';background:#d0e8f0;text-align:left" colspan="2">5 · Training Requirements — Reviewed with those new to site</th></tr>'+sec5Rows+'</table>'
+    +(sigRows?'<table style="width:100%;border-collapse:collapse;margin-bottom:6px"><tr><th style="'+td+';background:#d0e8f0">Print Name</th><th style="'+td+';background:#d0e8f0">Signature</th></tr>'+sigRows+'</table>':'')
+    +'</div>';
+}
+
+function printHeatForm(lid){
+  var html=buildHeatFormHTML(lid);
+  openPrintWindow(html);
+}
+
+/* ══════════════════════════════════════
+   TAILGATE FORM
+══════════════════════════════════════ */
+var TAILGATE_HAZARDS=[
+  {label:'Heavy/Mobile Equipment',example:'Rotating, pushing/pulling, moving',controlLabel:'Describe controls:'},
+  {label:'Traffic (over 25 MPH)',example:'On or off-road vehicles',controlLabel:'Physical barriers?'},
+  {label:'Harmful Chemicals',example:'Liquids, gases, dusts, etc.',controlLabel:'Hazard specific PPE:'},
+  {label:'Overhead Objects',example:'Lifted or suspended loads',controlLabel:'Controls:'},
+  {label:'Working at Heights',example:'Climbing equip. or elevated work',controlLabel:'Controls:'},
+  {label:'Biological Hazards',example:'Animals, reptiles, insects, plants',controlLabel:'Controls:'},
+  {label:'Electrical Hazards',example:'Energized equip or static charge',controlLabel:'Verified LOTO or bond & ground:'},
+  {label:'Other High-Risk Hazard',example:'Describe risk:',controlLabel:'Describe controls:'},
+  {label:'Other High-Risk Hazard',example:'Describe risk:',controlLabel:'Describe controls:'}
+];
+
+var HAZARD_BUILTIN_PRESETS=[
+  ['Spotters assigned','Exclusion zone established','Pre-task brief completed','Flag person designated'],
+  ['Traffic control plan in place','Cones/barriers set','High-vis vests worn','Spotter assigned'],
+  ['SDS reviewed','Appropriate PPE worn','Spill kit on site','Ventilation confirmed'],
+  ['Exclusion zone below load','Rigging inspected','Tag lines used','No one under load'],
+  ['Fall protection inspected','100% tie-off enforced','Ladder secured','3-point contact'],
+  ['Snake/pest awareness briefed','Long pants/sleeves worn','First aid kit accessible','Area surveyed'],
+  ['LOTO verified','Bond & ground confirmed','Qualified person present','Energized work permit'],
+  [],
+  []
+];
+function getBuiltInPresets(hazardIdx){
+  return HAZARD_BUILTIN_PRESETS[hazardIdx]||[];
+}
+
+function getTailgateData(lid){
+  if(!tailgateForms[lid])tailgateForms[lid]={};
+  var d=tailgateForms[lid];
+  if(!d.hazards)d.hazards=TAILGATE_HAZARDS.map(function(){return{present:false,riskDesc:'',controls:[]};});
+  // Migrate old string control to array
+  d.hazards.forEach(function(h){
+    if(typeof h.control==='string'&&h.control){h.controls=[h.control];delete h.control;}
+    if(!h.controls)h.controls=[];
+  });
+  if(!d.hecaRows)d.hecaRows=[{type:'',risk:'',control:''},{type:'',risk:'',control:''},{type:'',risk:'',control:''}];
+  if(!d.sigs)d.sigs={};
+  return d;
+}
+
+function switchToTailgate(){
+  hideAllSecondary();
+  activeLid=null;
+  var lid=logOrder.length?logOrder[0]:null;
+  buildTailgateView(lid);
+  document.getElementById('tailgate-view').classList.remove('hidden');
+  document.getElementById('tailgate-tab').classList.add('active');
+  renderTabs();
+}
+
+function buildTailgateView(lid){
+  var view=document.getElementById('tailgate-view');
+  view.innerHTML='';
+  var D=lid?getLogData(lid):{};
+  var td2=lid?getTailgateData(lid):{hazards:[],hecaRows:[],sigs:{}};
+
+  // Log selector + copy last
+  var hdrRow=div();hdrRow.style.cssText='display:flex;gap:8px;align-items:center;margin-bottom:1rem;flex-wrap:wrap';
+  var logSel=document.createElement('select');logSel.style.cssText='flex:1;padding:8px 10px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:14px;font-family:inherit;background:var(--atlas-bg-card);color:var(--atlas-text)';
+  var noOpt=document.createElement('option');noOpt.value='';noOpt.textContent='— select a log —';logSel.appendChild(noOpt);
+  logOrder.forEach(function(id){var o=document.createElement('option');o.value=id;o.textContent=getDisplayLabel(id)+(fv(id,'loc')?' — '+fv(id,'loc'):'');if(id===lid)o.selected=true;logSel.appendChild(o);});
+  logSel.addEventListener('change',function(){buildTailgateView(this.value||null);});
+  var copyBtn=btn('↩ Load last','btn-sm');
+  copyBtn.addEventListener('click',function(){copyLastTailgateForm(lid);});
+  hdrRow.appendChild(logSel);hdrRow.appendChild(copyBtn);
+  view.appendChild(hdrRow);
+
+  if(!lid){var msg=div();msg.style.cssText='padding:2rem;text-align:center;color:var(--atlas-text-secondary);font-size:14px';msg.textContent='Start a log first to fill out this form.';view.appendChild(msg);return;}
+
+  // Section 1 — Header
+  var s1=div('form-section');
+  s1.innerHTML='<div class="form-section-title">Site Info</div>';
+  var g1=div();g1.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px';
+  var siteFg=div('fg');siteFg.appendChild(lbl('Site Name'));
+  var siteDisp=el('input');siteDisp.type='text';siteDisp.value=D.LOC||'';siteDisp.readOnly=true;siteDisp.style.background='var(--atlas-bg-subtle)';
+  siteFg.appendChild(siteDisp);
+  var projFg2=div('fg');projFg2.appendChild(lbl('Project #'));
+  var projDisp=el('input');projDisp.type='text';projDisp.value=D.PROJ||'';projDisp.readOnly=true;projDisp.style.background='var(--atlas-bg-subtle)';
+  projFg2.appendChild(projDisp);
+  var wellFg2=div('fg');wellFg2.appendChild(lbl('Well ID(s)'));
+  var wellDisp=el('input');wellDisp.type='text';wellDisp.value=D.WELL||'';wellDisp.readOnly=true;wellDisp.style.background='var(--atlas-bg-subtle)';
+  wellFg2.appendChild(wellDisp);
+  g1.appendChild(siteFg);g1.appendChild(projFg2);g1.appendChild(wellFg2);s1.appendChild(g1);
+
+  var dateFg3=div('fg');dateFg3.appendChild(lbl('Date'));
+  var dateDisp2=el('input');dateDisp2.type='text';dateDisp2.value=D.DATE||'';dateDisp2.readOnly=true;dateDisp2.style.background='var(--atlas-bg-subtle)';
+  dateFg3.appendChild(dateDisp2);s1.appendChild(dateFg3);
+
+  // Work plans (auto-fill from scope)
+  var atlasPlanFg=div('fg');atlasPlanFg.appendChild(lbl('Atlas Daily Work Plan'));
+  var atlasPlanInp=ta(td2.atlasPlan!==undefined?td2.atlasPlan:(D.ATLASSCOPE||''),2,'Describe Atlas work plan...');
+  atlasPlanInp.addEventListener('input',function(){td2.atlasPlan=this.value;saveFormData();});
+  atlasPlanFg.appendChild(atlasPlanInp);s1.appendChild(atlasPlanFg);
+
+  var conPlanFg=div('fg');conPlanFg.appendChild(lbl('Contractor(s) Daily Plan'));
+  var conPlanInp=ta(td2.contractorPlan!==undefined?td2.contractorPlan:(D.CLEANUP||''),2,'Describe contractor work plan...');
+  conPlanInp.addEventListener('input',function(){td2.contractorPlan=this.value;saveFormData();});
+  conPlanFg.appendChild(conPlanInp);s1.appendChild(conPlanFg);
+  view.appendChild(s1);
+
+  // Heat illness section — auto-fill weather from log
+  var heatSec=div('form-section');
+  heatSec.innerHTML='<div class="form-section-title">🌡️ Heat Illness</div>';
+  var hg=div('fr2');
+  var ci95Fg=div('fg');ci95Fg.appendChild(lbl('Time it will reach 95°F'));
+  // Auto-fill from log weather data
+  var autoTime95=getHeatTime95(lid)||'';
+  var ci95Inp=inp(td2.time95||autoTime95,'e.g. 1:00 PM');
+  if(!td2.time95&&autoTime95){td2.time95=autoTime95;}
+  ci95Inp.addEventListener('input',function(){td2.time95=this.value;saveFormData();});
+  ci95Fg.appendChild(ci95Inp);
+  var checkInFg=div('fg');checkInFg.appendChild(lbl('Who to check in with @ 95°F'));
+  // Auto-fill from heat form responsible person
+  var autoCheckIn=td2.checkInPerson||store.tailgateDefaults.checkInPerson
+    ||store.heatDefaults.savedPerson||store.heatDefaults.respName||'';
+  var checkInInp=inp(autoCheckIn,'Name','w');
+  if(!td2.checkInPerson&&autoCheckIn)td2.checkInPerson=autoCheckIn;
+  checkInInp.addEventListener('input',function(){td2.checkInPerson=this.value;store.tailgateDefaults.checkInPerson=this.value;saveFormData();});
+  checkInFg.appendChild(checkInInp);
+  hg.appendChild(ci95Fg);hg.appendChild(checkInFg);heatSec.appendChild(hg);
+  // Auto-fill temp/wind from log weather
+  var autoWxNote='';
+  if(lid){var D2=getLogData(lid);if(D2.TEMP||D2.WX){autoWxNote=D2.WX+(D2.TEMP?' · '+D2.TEMP+'°F':'')+(D2.WSPD?' · '+D2.WSPD+'mph '+D2.WDIR:'');}}
+  if(autoWxNote){var wxNote=div();wxNote.style.cssText='font-size:12px;color:var(--atlas-text-secondary);padding:4px 0 6px';wxNote.textContent='📍 Weather from log: '+autoWxNote;heatSec.appendChild(wxNote);}
+  var waterFg=div('fg');waterFg.appendChild(lbl('Is adequate water onsite? How will more be obtained?'));
+  // Quick answer chips
+  var waterChips=div();waterChips.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px';
+  var waterPresets=[
+    'Water cooler onsite. Resupply from Atlas vehicle as needed.',
+    'Cases of water in Atlas vehicle. Resupply from nearest store.',
+    'Water jug onsite. Resupply from site office.',
+    'Adequate bottled water onsite. Contractor responsible for own supply.'
+  ];
+  // Include any saved custom water answers
+  if(!store.tailgateDefaults.waterPresets)store.tailgateDefaults.waterPresets=[];
+  function renderWaterChips(){
+    waterChips.innerHTML='';
+    var all=waterPresets.concat(store.tailgateDefaults.waterPresets||[]);
+    all.forEach(function(preset,pi){
+      var chip=div('pill');
+      chip.style.cssText='font-size:12px;padding:4px 10px;cursor:pointer;background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker);max-width:100%';
+      var chipLabel=el('span');chipLabel.textContent=preset;chipLabel.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:240px;display:block';
+      chip.appendChild(chipLabel);
+      if(pi>=waterPresets.length){// saved custom — show delete
+        var delX=el('span');delX.textContent='×';delX.style.cssText='margin-left:4px;opacity:0.5;font-size:14px;flex-shrink:0';
+        delX.addEventListener('click',function(e){e.stopPropagation();store.tailgateDefaults.waterPresets.splice(pi-waterPresets.length,1);persist();renderWaterChips();});
+        chip.appendChild(delX);
+      }
+      chip.addEventListener('click',function(){waterInp.value=preset;td2.waterPlan=preset;store.tailgateDefaults.waterPlan=preset;saveFormData();waterInp.classList.add('has-value');});
+      waterChips.appendChild(chip);
+    });
+    // + Save current as quick answer
+    var saveChip=div('pill');saveChip.style.cssText='font-size:12px;padding:4px 10px;cursor:pointer;border-style:dashed;opacity:0.7';
+    saveChip.textContent='+ Save current';
+    saveChip.addEventListener('click',function(){
+      var val=waterInp.value.trim();if(!val){showAlert('Enter a water plan first.');return;}
+      if(!store.tailgateDefaults.waterPresets)store.tailgateDefaults.waterPresets=[];
+      if(!store.tailgateDefaults.waterPresets.includes(val)&&!waterPresets.includes(val)){
+        store.tailgateDefaults.waterPresets.push(val);persist();renderWaterChips();showSavedFlash(waterInp);
+      }
+    });
+    waterChips.appendChild(saveChip);
+  }
+  renderWaterChips();
+  waterFg.appendChild(waterChips);
+  var waterInp=ta(td2.waterPlan||store.tailgateDefaults.waterPlan||'',2,'Describe water plan...');
+  waterInp.addEventListener('input',function(){td2.waterPlan=this.value;store.tailgateDefaults.waterPlan=this.value;saveFormData();});
+  waterFg.appendChild(waterInp);heatSec.appendChild(waterFg);
+  view.appendChild(heatSec);
+
+  // High Risk Hazards
+  var hazSec=div('form-section');
+  hazSec.innerHTML='<div class="form-section-title">High Risk Hazards — Check if Present/Discussed</div>';
+
+  function buildHazardRow(haz,i){
+    var row=div('hazard-row');
+    var check=div('hazard-check'+(td2.hazards[i].present?' on':''));
+    check.textContent=td2.hazards[i].present?'✓':'';
+    check.addEventListener('click',function(){
+      td2.hazards[i].present=!td2.hazards[i].present;
+      check.classList.toggle('on',td2.hazards[i].present);
+      check.textContent=td2.hazards[i].present?'✓':'';
+      saveFormData();
+    });
+
+    var info=div('hazard-info');
+    var titleEl=div('hazard-title');titleEl.textContent=haz.label;
+    info.appendChild(titleEl);
+
+    if(i>=7){// "Other" rows — editable risk label
+      var riskInp=el('input');riskInp.className='hazard-control';riskInp.placeholder='Describe risk:';
+      riskInp.value=td2.hazards[i].riskDesc||'';
+      riskInp.style.marginBottom='4px';
+      riskInp.addEventListener('input',function(){td2.hazards[i].riskDesc=this.value;saveFormData();});
+      info.appendChild(riskInp);
+    } else {
+      var subEl=div('hazard-sub');subEl.textContent=haz.example;
+      info.appendChild(subEl);
+    }
+
+    // Control tags (multiple)
+    var ctrlTags=div('ctrl-tags');
+    function renderCtrlTags(){
+      ctrlTags.innerHTML='';
+      (td2.hazards[i].controls||[]).forEach(function(ctrl,ci){
+        var tag=div('ctrl-tag');
+        var tagLabel=el('span');tagLabel.textContent=ctrl;
+        var tagDel=el('span','ctrl-tag-del');tagDel.textContent='×';
+        (function(cidx){tagDel.addEventListener('click',function(){
+          td2.hazards[i].controls.splice(cidx,1);
+          renderCtrlTags();saveFormData();
+        });})(ci);
+        tag.appendChild(tagLabel);tag.appendChild(tagDel);
+        ctrlTags.appendChild(tag);
+      });
+    }
+    renderCtrlTags();
+    info.appendChild(ctrlTags);
+
+    var ctrlAddRow=div('ctrl-add-row');
+    var controlInp=el('input');controlInp.className='ctrl-add-inp';controlInp.placeholder=haz.controlLabel||'Add control...';
+    var ctrlAddBtn=btn('+','btn-sm btn-primary');ctrlAddBtn.style.cssText='padding:6px 12px;flex-shrink:0';
+    function addControl(){
+      var val=controlInp.value.trim();if(!val)return;
+      if(!td2.hazards[i].controls)td2.hazards[i].controls=[];
+      if(!td2.hazards[i].controls.includes(val)){
+        td2.hazards[i].controls.push(val);
+        renderCtrlTags();saveFormData();
+      }
+      controlInp.value='';controlInp.focus();
+    }
+    ctrlAddBtn.addEventListener('click',addControl);
+    controlInp.addEventListener('keydown',function(e){if(e.key==='Enter'){e.preventDefault();addControl();}});
+    ctrlAddRow.appendChild(controlInp);ctrlAddRow.appendChild(ctrlAddBtn);
+    info.appendChild(ctrlAddRow);
+
+    // Preset chips row
+    var presetWrap=div('hazard-presets');
+
+    function renderPresets(){
+      presetWrap.innerHTML='';
+      // Built-in defaults first (from TAILGATE_HAZARDS default presets)
+      var builtIn=(store.hazardPresets[i]&&store.hazardPresets[i].length)
+        ?[]
+        :getBuiltInPresets(i);
+      var allPresets=builtIn.concat(store.hazardPresets[i]||[]);
+
+      allPresets.forEach(function(preset,pi){
+        var chip=div('hazard-preset-chip'+(pi>=builtIn.length?' saved':''));
+        var chipLabel=el('span');chipLabel.textContent=preset;
+        chip.appendChild(chipLabel);
+        // Delete button for saved presets only
+        if(pi>=builtIn.length){
+          var delBtn=el('span','hazard-preset-del');delBtn.textContent='×';
+          delBtn.addEventListener('click',function(e){
+            e.stopPropagation();
+            var savedIdx=pi-builtIn.length;
+            store.hazardPresets[i].splice(savedIdx,1);
+            persist();renderPresets();
+          });
+          chip.appendChild(delBtn);
+        }
+        chip.addEventListener('click',function(){
+          if(!td2.hazards[i].controls)td2.hazards[i].controls=[];
+          if(!td2.hazards[i].controls.includes(preset)){
+            td2.hazards[i].controls.push(preset);
+            renderCtrlTags();saveFormData();
+          }
+        });
+        presetWrap.appendChild(chip);
+      });
+
+      // Save current control as preset
+      var saveChip=div('hazard-preset-chip');
+      saveChip.style.cssText+='border-style:dashed;opacity:0.7';
+      saveChip.textContent='+ Save as preset';
+      saveChip.addEventListener('click',function(){
+        var val=controlInp.value.trim();
+        if(!val){showAlert('Type a control description in the field first, then tap Save as preset.');return;}
+        if(!store.hazardPresets[i])store.hazardPresets[i]=[];
+        if(!store.hazardPresets[i].includes(val)){
+          store.hazardPresets[i].push(val);
+          persist();renderPresets();
+          showSavedFlash(controlInp);
+        }
+      });
+      presetWrap.appendChild(saveChip);
+    }
+
+    renderPresets();
+    info.appendChild(presetWrap);
+    row.appendChild(check);row.appendChild(info);
+    return row;
+  }
+
+  TAILGATE_HAZARDS.forEach(function(haz,i){
+    hazSec.appendChild(buildHazardRow(haz,i));
+  });
+  view.appendChild(hazSec);
+
+  // Daily HECA
+  var hecaSec=div('form-section');
+  hecaSec.innerHTML='<div class="form-section-title">Daily High Energy Control Assessment (HECA)</div>';
+  var obsWrap=div('fg');obsWrap.appendChild(lbl('Work observed today'));
+  var obsInp=ta(td2.hecaObserved||'',2,'What work was observed?');
+  obsInp.addEventListener('input',function(){td2.hecaObserved=this.value;saveFormData();});
+  obsWrap.appendChild(obsInp);hecaSec.appendChild(obsWrap);
+
+  // HECA table rows
+  var hecaHeader=div();hecaHeader.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:4px';
+  ['High Energy Type','Describe Risk','Describe Control'].forEach(function(h){var c=div();c.style.cssText='font-size:11px;font-weight:700;color:var(--atlas-text-secondary);text-transform:uppercase;letter-spacing:0.04em';c.textContent=h;hecaHeader.appendChild(c);});
+  hecaSec.appendChild(hecaHeader);
+
+  // HECA energy type options
+  var HECA_TYPES=['Mechanical','Electrical','Gravity','Hydraulic','Pneumatic','Chemical','Thermal','Pressure','Biological','Radiation','Noise/Vibration'];
+  var HECA_RISKS={
+    'Mechanical':['Rotating equipment contact','Caught in/between moving parts','Struck by moving equipment','Pinch points'],
+    'Electrical':['Energized equipment contact','Arc flash','Static discharge','Overhead power lines'],
+    'Gravity':['Lifted/suspended load drop','Working at heights fall','Unstable ground/trench','Equipment tip-over'],
+    'Hydraulic':['High pressure fluid injection','Hose/fitting failure','Stored energy release'],
+    'Pneumatic':['Pressurized line failure','Flying debris from pressure release'],
+    'Chemical':['Skin/eye exposure','Inhalation of vapors/dusts','Spill/release'],
+    'Thermal':['Burns from hot surfaces/fluids','Heat stress','Cold stress'],
+    'Pressure':['High pressure system failure','Pressure vessel rupture'],
+    'Biological':['Snake/pest contact','Plant exposure','Contaminated soil/water'],
+    'Radiation':['UV exposure','Radioactive material'],
+    'Noise/Vibration':['Hearing damage','Hand-arm vibration syndrome']
+  };
+  var HECA_CONTROLS={
+    'Mechanical':['Exclusion zone established','Guards/barriers in place','Spotter assigned','Pre-task brief completed','Lockout/tagout verified'],
+    'Electrical':['LOTO verified','Bond and ground confirmed','Qualified person present','Energized work permit','PPE: rubber gloves/face shield'],
+    'Gravity':['Exclusion zone below load','Rigging inspected and rated','Tag lines used','No one under suspended load','Fall protection worn'],
+    'Hydraulic':['System depressurized before work','Lines inspected','Relief valve tested'],
+    'Pneumatic':['System depressurized','Lines secured','PPE: safety glasses'],
+    'Chemical':['SDS reviewed','Appropriate PPE worn','Spill kit on site','Ventilation confirmed'],
+    'Thermal':['Insulation/barriers in place','Heat illness prevention plan active','Cool water available'],
+    'Pressure':['System pressure released','Pressure rated PPE','Qualified person present'],
+    'Biological':['Area surveyed for hazards','Long sleeves/pants worn','First aid kit accessible'],
+    'Radiation':['Dosimeter worn','Exposure time limited','Shielding in place'],
+    'Noise/Vibration':['Hearing protection worn','Vibration-rated gloves','Exposure time limited']
+  };
+
+  // Remove any stale datalists from previous renders
+  ['heca-type-list-'+lid].forEach(function(id){var e=document.getElementById(id);if(e)e.remove();});
+
+  var inpStyle='padding:7px 8px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:var(--atlas-text);width:100%';
+
+  td2.hecaRows.forEach(function(row,i){
+    (function(rowData,rowIdx){
+      // Clean up stale datalists from previous renders
+      ['heca-risk-list-'+lid+'-'+rowIdx,'heca-ctrl-list-'+lid+'-'+rowIdx].forEach(function(id){var e=document.getElementById(id);if(e)e.remove();});
+
+      // Outer wrapper for the whole row including suggestion rows
+      var rowGroup=div();rowGroup.style.cssText='margin-bottom:8px;border:1px solid var(--atlas-border);border-radius:8px;overflow:hidden';
+
+      var rowWrap=div('heca-row');rowWrap.style.cssText='display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;border-bottom:none';
+
+      // Each cell has input + suggest button
+      function makeHecaCell(placeholder,savedValue,suggestItems,onInput){
+        var cell=div();cell.style.cssText='display:flex;flex-direction:column;border-right:1px solid var(--atlas-border)';
+        cell.style.borderRight='1px solid var(--atlas-border)';
+
+        var inp2=el('input');inp2.placeholder=placeholder;inp2.value=savedValue||'';
+        inp2.style.cssText=inpStyle+';border:none;border-radius:0;border-bottom:none';
+        inp2.addEventListener('input',function(){onInput(this.value);});
+
+        var suggestBar=div();suggestBar.style.cssText='display:none;flex-wrap:wrap;gap:3px;padding:4px 6px;background:var(--atlas-bg-subtle);border-top:1px solid var(--atlas-border)';
+
+        var suggestBtn=el('button');suggestBtn.type='button';
+        suggestBtn.textContent='▾ Suggest';
+        suggestBtn.style.cssText='font-size:10px;padding:2px 6px;border:none;background:none;cursor:pointer;color:var(--atlas-primary);font-family:inherit;font-weight:600;align-self:flex-end;margin:2px 4px 2px auto;display:block';
+        var _suggestOpen=false;
+        suggestBtn.addEventListener('click',function(){
+          _suggestOpen=!_suggestOpen;
+          suggestBar.style.display=_suggestOpen?'flex':'none';
+          suggestBtn.textContent=_suggestOpen?'▴ Hide':'▾ Suggest';
+          // Re-populate based on current type
+          if(_suggestOpen){
+            var currentType=rowWrap._typeInp?rowWrap._typeInp.value:'';
+            var items=suggestItems(currentType);
+            suggestBar.innerHTML='';
+            items.forEach(function(item){
+              var chip=div();chip.style.cssText='padding:3px 8px;border-radius:12px;font-size:11px;background:var(--atlas-primary);color:#fff;cursor:pointer;white-space:nowrap';
+              chip.textContent=item;
+              chip.addEventListener('click',function(){
+                inp2.value=item;onInput(item);
+                inp2.classList.add('has-value');
+              });
+              suggestBar.appendChild(chip);
+            });
+            if(!items.length){var none=div();none.style.cssText='font-size:11px;color:var(--atlas-text-secondary);padding:2px';none.textContent='Select energy type first';suggestBar.appendChild(none);}
+          }
+        });
+
+        cell.appendChild(inp2);cell.appendChild(suggestBtn);cell.appendChild(suggestBar);
+        return{cell:cell,inp:inp2};
+      }
+
+      var typeCell=makeHecaCell('Energy type',rowData.type||[],
+        function(){return HECA_TYPES;},
+        function(v){td2.hecaRows[rowIdx].type=v;saveFormData();}
+      );
+      var riskCell=makeHecaCell('Risk (type or pick)',rowData.risk||'',
+        function(type){return HECA_RISKS[type||typeCell.inp.value]||[];},
+        function(v){td2.hecaRows[rowIdx].risk=v;saveFormData();}
+      );
+      var ctrlCell=makeHecaCell('Control (type or pick)',rowData.control||'',
+        function(type){return HECA_CONTROLS[type||typeCell.inp.value]||[];},
+        function(v){td2.hecaRows[rowIdx].control=v;saveFormData();}
+      );
+
+      // Store type input ref so risk/ctrl suggest can read current type
+      rowWrap._typeInp=typeCell.inp;
+
+      // Remove right border from last cell
+      ctrlCell.cell.style.borderRight='none';
+
+      rowWrap.appendChild(typeCell.cell);rowWrap.appendChild(riskCell.cell);rowWrap.appendChild(ctrlCell.cell);
+      rowGroup.appendChild(rowWrap);
+      hecaSec.appendChild(rowGroup);
+    })(row,i);
+  });
+  var addHecaBtn=btn('+ Add row','btn-sm');addHecaBtn.style.marginTop='6px';
+  addHecaBtn.addEventListener('click',function(){td2.hecaRows.push({type:'',risk:'',control:''});buildTailgateView(lid);});
+  hecaSec.appendChild(addHecaBtn);
+
+  var assessorFg=div('fg');assessorFg.style.marginTop='10px';assessorFg.appendChild(lbl('HECA Assessor'));
+  var assessorInp=inp(td2.hecaAssessor||store.tailgateDefaults.hecaAssessor||'','Name','w');
+  assessorInp.addEventListener('input',function(){td2.hecaAssessor=this.value;saveFormData();});
+  assessorInp.addEventListener('blur',function(){store.tailgateDefaults.hecaAssessor=this.value;persist();saveFormData();});
+
+  // Saved assessor chip
+  function renderAssessorChips(){
+    var existing=assessorFg.querySelector('.assessor-chips');if(existing)existing.remove();
+    if(!store.tailgateDefaults.savedAssessors||!store.tailgateDefaults.savedAssessors.length)return;
+    var chipsRow=div('assessor-chips');chipsRow.style.cssText='display:flex;flex-wrap:wrap;gap:4px;margin-top:4px';
+    store.tailgateDefaults.savedAssessors.forEach(function(name,idx){
+      var chip=div('pill');chip.style.cssText='font-size:12px;padding:4px 10px;cursor:pointer;background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker)';
+      var chipLabel=el('span');chipLabel.textContent=name;
+      var delX=el('span');delX.textContent='×';delX.style.cssText='margin-left:4px;opacity:0.5;font-size:14px';
+      delX.addEventListener('click',function(e){e.stopPropagation();store.tailgateDefaults.savedAssessors.splice(idx,1);persist();renderAssessorChips();});
+      chip.appendChild(chipLabel);chip.appendChild(delX);
+      chip.addEventListener('click',function(){assessorInp.value=name;td2.hecaAssessor=name;assessorInp.classList.add('has-value');saveFormData();});
+      chipsRow.appendChild(chip);
+    });
+    assessorFg.appendChild(chipsRow);
+  }
+
+  var assessorSaveRow=div();assessorSaveRow.style.cssText='display:flex;gap:8px;margin-top:4px';
+  var saveAssessorBtn=btn('💾 Save','btn-sm');
+  saveAssessorBtn.addEventListener('click',function(){
+    var v=assessorInp.value.trim();if(!v){showAlert('Enter a name first.');return;}
+    if(!store.tailgateDefaults.savedAssessors)store.tailgateDefaults.savedAssessors=[];
+    if(!store.tailgateDefaults.savedAssessors.includes(v)){
+      store.tailgateDefaults.savedAssessors.push(v);persist();renderAssessorChips();showSavedFlash(assessorInp);
+    }
+  });
+  assessorSaveRow.appendChild(assessorInp);assessorSaveRow.appendChild(saveAssessorBtn);
+  assessorFg.appendChild(assessorSaveRow);
+  renderAssessorChips();
+  hecaSec.appendChild(assessorFg);
+  view.appendChild(hecaSec);
+
+  // Site Worker Headcount + Signatures (Atlas only)
+  var sigSec2=div('form-section');
+  sigSec2.innerHTML='<div class="form-section-title">Site Worker Headcount — Signatures</div>';
+  var atlasCrew2=D.ATLAS_CREW&&D.ATLAS_CREW.length?D.ATLAS_CREW:['(no crew added yet)'];
+  atlasCrew2.forEach(function(name){
+    buildSigRow(sigSec2,name,'Atlas',lid,'tailgate',td2.sigs);
+  });
+  view.appendChild(sigSec2);
+
+  // Nav bar
+  var navBar=div('form-nav-bar');
+  var printTgBtn=btn('🖨 Print Tailgate','btn-primary');
+  printTgBtn.addEventListener('click',function(){printTailgateForm(lid);});
+  var printAllBtn=btn('🖨 Print All Forms');
+  printAllBtn.addEventListener('click',function(){printAllForms(lid);});
+  var skipTgBtn=btn(isTailgateSkipped(lid)?'↩ Unskip':'⊘ Skip today','btn-sm');
+  skipTgBtn.style.cssText='font-size:12px;color:var(--atlas-text-secondary);border-color:var(--atlas-border)';
+  skipTgBtn.title='Mark this form as not needed today';
+  skipTgBtn.addEventListener('click',function(){
+    if(!logs[lid])return;
+    logs[lid]._skipTailgate=!logs[lid]._skipTailgate;
+    saveLogs();updateFormTabIndicators();
+    skipTgBtn.textContent=logs[lid]._skipTailgate?'↩ Unskip':'⊘ Skip today';
+  });
+  // Offline indicator
+  var tgOffline=div('form-offline-ind');
+  tgOffline.style.cssText='display:none;align-items:center;gap:6px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;background:#f5e6c8;color:#7a4f00;border:0.5px solid #c9860a;margin-bottom:6px';
+  tgOffline.innerHTML='📵 Offline — some features unavailable';
+  view.insertBefore(tgOffline,view.firstChild);
+  navBar.appendChild(skipTgBtn);navBar.appendChild(printAllBtn);navBar.appendChild(printTgBtn);
+  view.appendChild(navBar);
+  updateFormOfflineIndicator();
+  updateFormTabIndicators();
+}
+function copyLastTailgateForm(lid){
+  if(!store.tailgateDefaults||!Object.keys(store.tailgateDefaults).length){showAlert('No previous tailgate form found to copy from.');return;}
+  var d=getTailgateData(lid);
+  if(store.tailgateDefaults.checkInPerson)d.checkInPerson=store.tailgateDefaults.checkInPerson;
+  if(store.tailgateDefaults.waterPlan)d.waterPlan=store.tailgateDefaults.waterPlan;
+  if(store.tailgateDefaults.hazards){
+    store.tailgateDefaults.hazards.forEach(function(h,i){
+      if(d.hazards[i]){
+        d.hazards[i].present=h.present;
+        // Copy controls array or migrate old string
+        if(h.controls)d.hazards[i].controls=h.controls.slice();
+        else if(h.control)d.hazards[i].controls=[h.control];
+      }
+    });
+  }
+  if(store.tailgateDefaults.hecaAssessor)d.hecaAssessor=store.tailgateDefaults.hecaAssessor;
+  buildTailgateView(lid);
+}
+
+/* ── Tailgate form HTML print output ── */
+function buildTailgateFormHTML(lid){
+  var D=getLogData(lid);
+  var td2=getTailgateData(lid);
+  var fmtDate=function(d){if(!d)return'';var p=d.split('-');return p[1]+'/'+p[2]+'/'+p[0];};
+  var tds='border:1px solid #333;padding:3px 6px;font-size:9px;vertical-align:top';
+  var B64ATLAS='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTQxLjE2IDEyMS44OCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiM0MTc0OGQ7fTwvc3R5bGU+PC9kZWZzPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTQxNS4wMSw0Mi40MWM5LjAzLS41MywxOC4xLTEuMDEsMjcuMjEtMS40NHYtMTUuMjRoMzcuNjRWMS42OWgtMTAyLjQ5djI0LjA0aDM3LjY0djE2LjY4WiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTU0OS41MywxLjY5aC0yNy4yMXYzNi43NWM5LjA1LS4xNSwxOC4xMi0uMjUsMjcuMjEtLjMxVjEuNjlaIi8+PC9zdmc+';
+
+  var hazRows=TAILGATE_HAZARDS.map(function(haz,i){
+    var h=td2.hazards[i];
+    var ctrlStr=(h.controls&&h.controls.length)?h.controls.join('; '):(h.control||'');
+    return'<tr><td style="'+tds+';width:24px;text-align:center">'+(h.present?'✓':'')+'</td>'
+      +'<td style="'+tds+';font-weight:600">'+esc(haz.label)+'</td>'
+      +'<td style="'+tds+'">'+esc(i>=7?h.riskDesc||'':haz.example)+'</td>'
+      +'<td style="'+tds+'">'+esc(ctrlStr)+'</td></tr>';
+  }).join('');
+
+  var hecaRows=td2.hecaRows.map(function(row){
+    return'<tr><td style="'+tds+'">'+esc(row.type||'')+'</td><td style="'+tds+'">'+esc(row.risk||'')+'</td><td style="'+tds+'">'+esc(row.control||'')+'</td></tr>';
+  }).join('');
+
+  var atlasCrew2=D.ATLAS_CREW&&D.ATLAS_CREW.length?D.ATLAS_CREW:[];
+  var sigRows2=atlasCrew2.map(function(name){
+    var key=name.replace(/\s+/g,'_');
+    var sig=td2.sigs&&td2.sigs[key];
+    return'<tr><td style="'+tds+'">'+esc(name)+'</td><td style="'+tds+';width:60%;height:32px">'+(sig?sigToHTML(sig):'')+'</td><td style="'+tds+'">Atlas</td><td style="'+tds+'">'+esc(D.DATE||'')+'</td></tr>';
+  }).join('');
+
+  return'<div style="font-family:Arial,sans-serif;font-size:9px;color:#000;max-width:720px;margin:0 auto">'
+    +'<div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><img src="'+B64ATLAS+'" style="height:18px;width:auto"><span style="font-size:13px;font-weight:700">CalGEM Projects Daily Safety Tailgate Form</span></div>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:6px">'
+    +'<tr><td style="'+tds+'" colspan="2"><b>Site Name, Project #, Well ID(s):</b> '+esc((D.LOC||'')+' / '+(D.PROJ||'')+' / '+(D.WELL||''))+'</td><td style="'+tds+'"><b>DATE:</b> '+fmtDate(D.DATE)+'</td></tr>'
+    +'<tr><td style="'+tds+'" colspan="3"><b>Atlas Daily Work Plan:</b> '+esc(td2.atlasPlan||D.ATLASSCOPE||'')+'</td></tr>'
+    +'<tr><td style="'+tds+'" colspan="3"><b>Contractor(s) Daily Plan:</b> '+esc(td2.contractorPlan||D.CLEANUP||'')+'</td></tr>'
+    +'<tr><td style="'+tds+'">Heat Illness — At what time will it reach 95°F? <b>'+esc(td2.time95||'')+'</b></td>'
+    +'<td style="'+tds+'" colspan="2">Who will I check in with @ 95°F? <b>'+esc(td2.checkInPerson||'')+'</b></td></tr>'
+    +'<tr><td style="'+tds+'" colspan="3">Is adequate water onsite and how will more be obtained? '+esc(td2.waterPlan||'')+'</td></tr>'
+    +'</table>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:6px">'
+    +'<tr><th style="'+tds+';background:#d0e8f0;width:24px">✓</th><th style="'+tds+';background:#d0e8f0">Common High Risk Hazards</th><th style="'+tds+';background:#d0e8f0">Risk Examples</th><th style="'+tds+';background:#d0e8f0">How will Risks be Controlled</th></tr>'
+    +hazRows+'</table>'
+    +'<table style="width:100%;border-collapse:collapse;margin-bottom:4px"><tr><td style="'+tds+';font-weight:700" colspan="3">Daily High Energy Control Assessment — Work observed: '+esc(td2.hecaObserved||'')+'</td></tr>'
+    +'<tr><th style="'+tds+';background:#d0e8f0">High Energy Type</th><th style="'+tds+';background:#d0e8f0">Describe Risk</th><th style="'+tds+';background:#d0e8f0">Describe Control</th></tr>'
+    +hecaRows
+    +'<tr><td style="'+tds+'" colspan="3">HECA Assessor: <b>'+esc(td2.hecaAssessor||'')+'</b></td></tr></table>'
+    +(sigRows2?'<table style="width:100%;border-collapse:collapse"><tr><th style="'+tds+';background:#d0e8f0">Print Name</th><th style="'+tds+';background:#d0e8f0">Signature</th><th style="'+tds+';background:#d0e8f0">Company</th><th style="'+tds+';background:#d0e8f0">Date</th></tr>'+sigRows2+'</table>':'')
+    +'</div>';
+}
+
+function printTailgateForm(lid){
+  var html=buildTailgateFormHTML(lid);
+  openPrintWindow(html);
+}
+
+/* ── Print all three forms together ── */
+function printAllForms(lid){
+  var rptEl=document.getElementById('l'+lid+'-rpt-out');
+  var dailyHtml=rptEl?rptEl.innerHTML:'';
+  var heatHtml=buildHeatFormHTML(lid);
+  var tgHtml=buildTailgateFormHTML(lid);
+  var combined='<div style="page-break-after:always">'+dailyHtml+'</div>'
+    +'<div style="page-break-after:always">'+heatHtml+'</div>'
+    +'<div>'+tgHtml+'</div>';
+  openPrintWindow(combined);
+}
+
+function openPrintWindow(bodyHtml){
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&display=swap">'
+    +'<style>body{margin:0.4in;font-family:Arial,sans-serif;font-size:9px}@media print{body{margin:0.4in}@page{margin:0.4in}}</style>'
+    +'</head><body>'+bodyHtml+'<script>window.onload=function(){window.print();}<\/script></body></html>';
+  try{var w=window.open('','_blank');if(w){w.document.write(html);w.document.close();return;}}catch(e){}
+  try{var blob=new Blob([html],{type:'text/html'});var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.target='_blank';document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(url);},3000);}catch(e){showAlert('Print unavailable.');}
+}
 function showWelcome(){
   activeLid=null;
   document.getElementById('log-container').style.display='none';
@@ -713,16 +2041,18 @@ function showWelcome(){
     var img=document.createElement('img');img.src='data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4KPHN2ZyBpZD0iTGF5ZXJfMSIgZGF0YS1uYW1lPSJMYXllciAxIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMTQxLjE2IDEyMS44OCI+CiAgPGRlZnM+CiAgICA8c3R5bGU+CiAgICAgIC5jbHMtMSB7CiAgICAgICAgZmlsbDogIzQxNzQ4ZDsKICAgICAgfQogICAgPC9zdHlsZT4KICA8L2RlZnM+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNDE1LjAxLDQyLjQxYzkuMDMtLjUzLDE4LjEtMS4wMSwyNy4yMS0xLjQ0di0xNS4yNGgzNy42NFYxLjY5aC0xMDIuNDl2MjQuMDRoMzcuNjR2MTYuNjhaIi8+CiAgPHBhdGggY2xhc3M9ImNscy0xIiBkPSJNNTQ5LjUzLDEuNjloLTI3LjIxdjM2Ljc1YzkuMDUtLjE1LDE4LjEyLS4yNSwyNy4yMS0uMzFWMS42OVoiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik0yOTcuMjUsNjAuNjFjLTIuMDQuMjMtNC4wNy40Ni02LjA5LjY5LTEuNjQuMTktMy4yNi4zOC00Ljg4LjU3LTEuNjMuMTktMy4yNy4zOC00Ljg4LjU3LTkuNjUsMS4xNi0xOS4wMywyLjM2LTI4LjIsMy41OS0xLjY2LjIyLTMuMzIuNDQtNC45Ni42Ny0xLjY3LjIzLTMuMzIuNDYtNC45Ny42OUM4Mi45MSw4OS43NCwwLDEyMS44OCwwLDEyMS44OGMwLDAsODcuMzMtMjEuMjEsMjM1LjU5LTM3LjE4LDEuNjMtLjE4LDMuMjYtLjM1LDQuODktLjUyLDEuNjMtLjE4LDMuMjYtLjM1LDQuODktLjUyaC4wNnMtMTYuMjksMzYuNTMtMTYuMjksMzYuNTNoMjcuNzVsMTctMzkuMzVjMTAuMTQtLjk2LDIwLjUyLTEuODgsMzEuMTMtMi43N2wtNy40My0xNy41Yy0uMTIuMDItLjIzLjAzLS4zNS4wNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTkxOC41OSw3MS40OGMtMS42LS4yNC0zLjIxLS40OC00LjgyLS43Mi0xLjctLjI1LTMuMzktLjUxLTUuMS0uNzYtMjQuNTgtMy41OS01MS4wMy02Ljk4LTc5LjI5LTEwLjAyLTIuMjYtLjI0LTQuNTItLjQ5LTYuODItLjczLTEuOTEtLjItMy44NS0uMzktNS43Ny0uNTktMTguMzQtMS44Ny0zNy40Mi0zLjU4LTU3LjIyLTUuMS0xLjYxLS4xMy0zLjItLjI1LTQuODItLjM3LTEuNTktLjEyLTMuMjEtLjIzLTQuODItLjM1LTkuMTYtLjY2LTE4LjQ4LTEuMjgtMjcuOTUtMS44Ni0xLjU4LS4xLTMuMTYtLjE5LTQuNzUtLjI5LS43Mi0uMDQtMS40NS0uMDktMi4xNy0uMTNsLTguMjksMjAuMDFoMy4zM2M2LjgyLjMxLDEzLjU2LjY0LDIwLjI2Ljk4bDIxLjA0LDQ4LjYyaDI4LjQ1bC0yMS00Ny4wM3MuMDgsMCwuMTIsMGMxLjYuMSwzLjE5LjIsNC43OS4zLDEuNi4xLDMuMi4yLDQuNzkuMywxOS40MSwxLjIzLDM4LjIzLDIuNiw1Ni40MSw0LjA5LDMuOTcuMzIsNy45LjY1LDExLjgxLjk4LDguMjguNzEsMTYuNDIsMS40MywyNC40MiwyLjE4LDUuNy41MywxMS4zMywxLjA3LDE2Ljg4LDEuNjIsMi4xMS4yMSw0LjIuNDIsNi4yOC42My41MywxLjIuOCwyLjU2LjgsNC4wOHYuMzRjMCwxLjQyLS4yNywyLjcxLS43OCwzLjg4LS43NiwxLjcxLTIuMDUsMy4xNi0zLjksNC4zMy0zLjEyLDEuOTgtNy41MSwyLjk2LTEzLjE3LDIuOTYtNy4wNywwLTEzLjU4LTEuMjktMTkuNTMtMy44OS00LjgyLTIuMS05LjU0LTQuODEtMTQuMTctOC4xLTEuMDgtLjc3LTIuMTYtMS41Ni0zLjI0LTIuNGwtMS43MywxLjk4LTE0LjM1LDE2LjQ3YzcuNDIsNi40NCwxNS42NiwxMS4yLDI0Ljc0LDE0LjMsOS4wNywzLjEsMTguMzIsNC42NSwyNy43NCw0LjY1LDYuNzIsMCwxMi44My0uODIsMTguMzUtMi40NSw1LjUyLTEuNjQsMTAuMjctNC4wMSwxNC4yNC03LjExLDMuOTgtMy4xLDcuMDgtNi45NCw5LjMtMTEuNTEuOTgtMi4wMiwxLjc0LTQuMTcsMi4yOS02LjQ1LjMyLTEuMzEuNTYtMi42Ni43My00LjA2LjE3LTEuMzMuMjYtMi43MS4yOS00LjEyLDEuNDMuMTYsMi44Ni4zMiw0LjI4LjQ3LDEuNDMuMTYsMi44Ni4zMiw0LjI4LjQ4LDEzOC4wNSwxNS42MSwyMjAuNjIsMzQuNzQsMjIwLjYyLDM0Ljc0LDAsMC03Ny4zNi0yOC40MS0yMjIuNTYtNTAuNCIvPgogIDxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTgyMi4xMSw1MS4wMWMxNC4zOCwxLjQ5LDI4LjIzLDMuMDcsNDEuNTUsNC43LDEyLjY4LDEuNTUsMjQuODgsMy4xNywzNi41OCw0LjgxLTMuMDYtMi4yNi02LjY1LTQuMjUtMTAuODMtNS45My00LjkxLTEuOTgtMTAuNDgtMy43NS0xNi43NC01LjM0LTUuMzItMS4zNS05LjcyLTIuNTQtMTMuMi0zLjU2LTMuNDktMS4wMS02LjIzLTIuMDktOC4yNC0zLjIxLTIuMDEtMS4xMi0zLjQtMi4zOS00LjE2LTMuODEtLjUzLS45OC0uODctMi4wOS0xLjAzLTMuMzEtLjA0LS4yNi0uMDYtLjUyLS4wOC0uNzktLjAxLS4xMy0uMDItLjI2LS4wMi0uMzktLjAyLS4yOS0uMDMtLjU3LS4wMy0uODQsMC0yLjkzLDEuMzItNS4zOSwzLjk3LTcuMzYsMi42NS0xLjk4LDYuNjMtMi45NiwxMS45My0yLjk2czEwLjYsMS4wNCwxNS45LDMuMTNjNS4zLDIuMDksMTAuNzIsNC45NCwxNi4yNiw4LjU1bDE0LjEzLTE5LjY0Yy02LjM2LTQuODUtMTMuMzQtOC41OC0yMC45NC0xMS4xNy03LjYtMi41OS0xNS45My0zLjg5LTI1LTMuODktNi4zNiwwLTEyLjE4Ljg1LTE3LjQ2LDIuNTQtNS4yOCwxLjctOS44Myw0LjEyLTEzLjYzLDcuMjgtMy44MSwzLjE2LTYuNzYsNi45Mi04Ljg3LDExLjI2cy0zLjE1LDkuMjItMy4xNSwxNC42NHYuMzRjMCw1Ljg3Ljk3LDEwLjc4LDIuOTIsMTQuNzMuMDQuMDguMDkuMTUuMTMuMjMiLz4KICA8cGF0aCBjbGFzcz0iY2xzLTEiIGQ9Ik03MTMuOTQsMzIuMTZsMy43LDguNjUuNzUsMS43NnYuMDJjOS40My41NiwxOC42OSwxLjE2LDI3LjgsMS44MUw3MjYuODQuODRoLTI1LjA5bC0yMC44Myw0Ny45OGMtLjE2LDAtLjMxLS4wMi0uNDctLjAyLTEuNTEtLjA3LTMuMDYtLjEzLTQuNTgtLjE5LTEuNTItLjA3LTMuMDUtLjEzLTQuNTgtLjE5LTMzLjctMS4zNi02OS4wNi0yLjEzLTEwNi4xLTIuMTMtMi4zOCwwLTQuNzEuMDItNy4wOC4wMi0xLjQzLDAtMi44Ni4wMS00LjI5LjAyLTEuNDMsMC0yLjg3LDAtNC4yOS4wMi05LjE5LjA2LTE4LjI1LjE2LTI3LjIxLjMxLTEuNDMuMDItMi44Ni4wNC00LjI5LjA3LTEuNDIuMDMtMi44Ny4wNS00LjI5LjA4LTIxLjY0LjQyLTQyLjYzLDEuMDktNjIuOTUsMS45OS0xLjQzLjA3LTIuODUuMTMtNC4yOS4yLTEuNDMuMDctMi44Ni4xNC00LjI5LjIxLTkuMjEuNDQtMTguMjguOTItMjcuMjEsMS40NC0xLjQzLjA5LTIuODYuMTctNC4yOS4yNi0xLjQyLjA5LTIuODYuMTctNC4yOS4yNi0yMi42OSwxLjQxLTQ0LjQ0LDMuMTEtNjUuMjgsNS4wMS0xLjQ5LjE0LTIuOTkuMjctNC40OC40MS0xLjQ5LjE0LTIuOTkuMjgtNC40Ny40Mi0uMDMsMC0uMDcsMC0uMS4wMUwzMDcuMjUuODRoLTI1LjA5bC0yNS4wMyw1Ni4zN2M5LjI2LTEuMjIsMTguNi0yLjM5LDI4LjAxLTMuNDlsOS4yMi0yMS41NiwxMy4xOSwzMC45Nyw2LjA0LDE0LjIzcy4wMiwwLC4wMywwbDE4LjIsNDIuODNoMjguNDVsLTE5LjcyLTQ0Ljg4YzEuNDMtLjEsMi44Ny0uMjEsNC4zMS0uMzEsMS41LS4xMSwzLjAxLS4yMSw0LjUyLS4zMSwxOC40Mi0xLjI3LDM3LjQ1LTIuNDEsNTcuMDUtMy40LDEuNDMtLjA3LDIuODYtLjE0LDQuMjktLjIxLDEuNDMtLjA3LDIuODYtLjE0LDQuMjktLjIxdjQ5LjMyaDI3LjIxdi01MC41YzEuNDItLjA2LDIuODYtLjExLDQuMjktLjE2LDEuNDMtLjA2LDIuODUtLjExLDQuMjktLjE2LDIwLjQ0LS43NCw0MS40My0xLjI5LDYyLjk1LTEuNjQsMS40My0uMDIsMi44NS0uMDUsNC4yOS0uMDcsMS40Mi0uMDIsMi44Ni0uMDQsNC4yOS0uMDZ2NTIuNTloODguODh2LTIzLjUzaC02MS42N3YtMjkuMzFjMS40MiwwLDIuODYtLjAxLDQuMjktLjAyLDEuNDMsMCwyLjg1LS4wMSw0LjI5LS4wMiwyLjM1LDAsNC43MSwwLDcuMDgsMCwzMy40LDAsNjUuOC41Myw5Ny4wNiwxLjQ4LDEuNTMuMDUsMy4wNy4wOSw0LjYuMTQsMS41My4wNSwzLjA2LjEsNC41OS4xNS4wOCwwLC4xNi4wMS4yMy4wMWwtMjIuOTQsNTEuMWgyNy43NGwxOS4yNi00NC4yOCw2Ljc1LTE2LjI3LDExLjQ2LTI3LjQ4WiIvPgo8L3N2Zz4=';img.alt='Atlas';
     var h1=document.createElement('h1');h1.textContent='Atlas Daily Field Log';
     var sub=document.createElement('p');sub.textContent='Environmental Field Reporting';sub.style.cssText='font-size:13px;color:var(--color-text-secondary,#666);margin:0';
-    // Brief 5-step summary
+    // Brief summary
     var instructions=document.createElement('div');
-    instructions.style.cssText='text-align:left;background:var(--color-background-secondary,#f0f0ee);border-radius:10px;padding:1rem 1.2rem;max-width:320px;width:100%;font-size:13px;line-height:1.7;color:var(--color-text-primary,#1a1a1a)';
+    instructions.style.cssText='text-align:left;background:var(--atlas-bg-subtle);border-radius:10px;padding:1rem 1.2rem;max-width:320px;width:100%;font-size:13px;line-height:1.7;color:var(--atlas-text)';
     instructions.innerHTML='<div style="font-weight:600;margin-bottom:8px;font-size:14px">How to use</div>'
       +'<div><b>1 · Project Info</b> — Date, project, location, weather.</div>'
-      +'<div><b>2 · Notes</b> — Your main working page. Swipe left/right to change pages.</div>'
-      +'<div><b>3 · Field Details</b> — Crew, scope, equipment, samples.</div>'
+      +'<div><b>2 · Notes</b> — Main working page. Use time stamp button to log entries. Swipe or use ≡ menu to navigate.</div>'
+      +'<div><b>3 · Field Details</b> — Crew, scope, equipment, waste, samples.</div>'
       +'<div><b>4 · Review</b> — Entries auto-sort by time. Edit, reorder, add photos.</div>'
       +'<div><b>5 · Report</b> — Build, print or email the PDF.</div>'
-      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(61,110,126,0.2);font-size:12px;color:var(--atlas-text-secondary)">🏠 <b>Tap the Atlas logo</b> in the top-left at any time to return to this screen.</div>';
+      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--atlas-border)"><b>🌡 Heat</b> — CA Heat Illness Prevention checklist.</div>'
+      +'<div><b>📋 Tailgate</b> — CalGEM Daily Safety Tailgate form.</div>'
+      +'<div style="margin-top:8px;padding-top:8px;border-top:1px solid var(--atlas-border);font-size:12px;color:var(--atlas-text-secondary)">🏠 <b>Tap the Atlas logo</b> to return here from any screen.<br>📖 Tap Full Guide below for detailed instructions.</div>';
 
     // Full guide chip
     var guideChip=document.createElement('button');
@@ -846,11 +2176,15 @@ async function fetchWeatherByGPS(lid){
         var hours=wd.hourly.temperature_2m;var heatHour=-1;
         for(var h=0;h<hours.length&&h<24;h++){if(Math.round(hours[h])>=95){heatHour=h;break;}}
         var heatTimeStr=heatHour>=0?formatHour(heatHour):'during the day';
+        // Store on log for Heat/Tailgate forms
+        if(lid&&logs[lid]){logs[lid]._heatTime95=heatTimeStr;saveLogs();}
         if(we)we.value=wxCode(c.weathercode)+' — HEAT ADVISORY: Expected to reach '+hi+'°F by '+heatTimeStr;
         if(te){te.style.cssText='border-color:#A32D2D;background:#FCEBEB;color:#A32D2D;font-weight:500;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;font-family:inherit';}
         if(st){st.innerHTML='<span style="color:#A32D2D;font-weight:500">&#9888; HEAT ADVISORY — '+hi+'°F expected by '+heatTimeStr+'. Ensure heat illness prevention protocols are in place.</span><br><span style="font-size:11px;color:var(--atlas-text-secondary)">'+statusTxt+'</span>';}
         showHeatWarning(lid,hi,heatTimeStr);
       }else{
+        // Store null so forms know no 95°F threshold today
+        if(lid&&logs[lid]){logs[lid]._heatTime95='';saveLogs();}
         if(te)te.style.cssText='';removeHeatWarning(lid);
         if(st){st.className='wx-status-ok';st.textContent='✓ '+statusTxt;}
       }
@@ -878,11 +2212,14 @@ async function fetchWeather(lid){
       var hours=wd.hourly.temperature_2m;var heatHour=-1;
       for(var h=0;h<hours.length&&h<24;h++){if(Math.round(hours[h])>=95){heatHour=h;break;}}
       var heatTimeStr=heatHour>=0?formatHour(heatHour):'during the day';
+      // Store on log for Heat/Tailgate forms
+      if(lid&&logs[lid]){logs[lid]._heatTime95=heatTimeStr;saveLogs();}
       if(we)we.value=wxCode(c.weathercode)+' — HEAT ADVISORY: Expected to reach '+hi+'°F by '+heatTimeStr;
       if(te){te.style.cssText='border-color:#A32D2D;background:#FCEBEB;color:#A32D2D;font-weight:500;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;font-family:inherit';}
-      if(st){st.innerHTML='<span style="color:#A32D2D;font-weight:500">&#9888; HEAT ADVISORY — '+hi+'°F expected by '+heatTimeStr+'. Ensure heat illness prevention protocols are in place.</span>';}
+      if(st){st.innerHTML='<span style="color:#A32D2D;font-weight:500">&#9888; HEAT ADVISORY — '+hi+'°F expected by '+heatTimeStr+'. Ensure heat illness prevention protocols are in place.</span><br><span style="font-size:11px;color:var(--atlas-text-secondary)">'+statusTxt+'</span>';}
       showHeatWarning(lid,hi,heatTimeStr);
     }else{
+      if(lid&&logs[lid]){logs[lid]._heatTime95='';saveLogs();}
       if(te)te.style.cssText='';removeHeatWarning(lid);
       if(st){st.className='wx-status-ok';st.textContent='✓ '+statusTxt;}
     }
@@ -1122,7 +2459,17 @@ function buildReport(lid){
 }
 
 /* ── library ── */
-async function saveToLibrary(lid,html,isDraft){var D=getLogData(lid);var entry={id:uid(),lid:lid,date:D.DATE,proj:D.PROJ,loc:D.LOC,well:D.WELL,office:D.OFFICE,pm:D.PM,isDraft:isDraft,label:logs[lid]?logs[lid].label:'',scratchpad:isDraft?D.SCRATCHPAD:'',savedAt:new Date().toISOString(),html:html};library.push(entry);await saveLibrary();renderLibrary();}
+async function saveToLibrary(lid,html,isDraft){
+  var D=getLogData(lid);
+  var entry={
+    id:uid(),lid:lid,date:D.DATE,proj:D.PROJ,loc:D.LOC,well:D.WELL,
+    office:D.OFFICE,pm:D.PM,isDraft:isDraft,label:logs[lid]?logs[lid].label:'',
+    scratchpad:isDraft?D.SCRATCHPAD:'',savedAt:new Date().toISOString(),html:html,
+    hasHeat:isHeatComplete(lid),hasTailgate:isTailgateComplete(lid),
+    heatSkipped:isHeatSkipped(lid),tailgateSkipped:isTailgateSkipped(lid)
+  };
+  library.push(entry);await saveLibrary();renderLibrary();
+}
 async function saveDraft(lid,callback){var D=getLogData(lid);library=library.filter(function(e){return!(e.isDraft&&e.lid===lid);});var draftHtml='<div style="padding:1rem;font-size:13px;color:var(--color-text-secondary,#666)"><strong>Draft</strong><br><br><pre style="font-size:12px;white-space:pre-wrap;font-family:inherit">'+esc(D.SCRATCHPAD)+'</pre></div>';await saveToLibrary(lid,draftHtml,true);if(callback)callback();}
 function resumeDraft(entry){
   library=library.filter(function(e){return e.id!==entry.id;});saveLibrary();renderLibrary();
@@ -1153,7 +2500,20 @@ function renderLibrary(){
       if(entry.isArchived){var badge=div('draft-badge');badge.style.cssText='font-size:11px;padding:2px 7px;border-radius:10px;background:#EAF3DE;border:0.5px solid #5a9e3a;color:#3B6D11;font-weight:500';badge.textContent='Archived';topLine.appendChild(badge);}
       else if(entry.isDraft){var badge=div('draft-badge');badge.textContent='Draft';topLine.appendChild(badge);}
       var meta=div();meta.style.cssText='font-size:12px;color:var(--color-text-secondary,#666);margin-top:2px';meta.textContent=(entry.loc||'')+(entry.well?' - '+entry.well:'');
-      info.appendChild(topLine);info.appendChild(meta);
+      // Form status badges
+      var formBadges=div();formBadges.style.cssText='display:flex;gap:4px;margin-top:4px;flex-wrap:wrap';
+      if(!entry.isDraft&&!entry.isArchived){
+        function formBadge(label,done,skipped){
+          var b=div();b.style.cssText='font-size:10px;padding:2px 6px;border-radius:10px;font-weight:600;';
+          if(skipped){b.textContent=label+' —';b.style.cssText+='background:#f0f0f0;color:#999';}
+          else if(done){b.textContent=label+' ✓';b.style.cssText+='background:#EAF3DE;border:0.5px solid #5a9e3a;color:#3B6D11';}
+          else{b.textContent=label+' ✗';b.style.cssText+='background:#fef0f0;border:0.5px solid #c0392b;color:#c0392b';}
+          return b;
+        }
+        formBadges.appendChild(formBadge('Heat',entry.hasHeat,entry.heatSkipped));
+        formBadges.appendChild(formBadge('Tailgate',entry.hasTailgate,entry.tailgateSkipped));
+      }
+      info.appendChild(topLine);info.appendChild(meta);info.appendChild(formBadges);
       var vb=btn((entry.isDraft||entry.isArchived)?'Resume':'View','btn-sm');vb.addEventListener('click',function(){if(entry.isDraft||entry.isArchived)resumeDraft(entry);else showLibraryReport(entry);});
       var db=btn('Delete','btn-sm btn-danger');db.addEventListener('click',function(){showConfirm('Delete this entry?',function(){library=library.filter(function(e2){return e2.id!==entry.id;});saveLibrary();renderLibrary();});});
       row.appendChild(info);row.appendChild(vb);row.appendChild(db);body.appendChild(row);
@@ -1186,17 +2546,45 @@ function showLibraryReport(entry){
 function showNewLogModal(){
   var ov=div('modal-bg'),box=div('modal-box');
   var title=div('modal-title');title.textContent='Start a new log';box.appendChild(title);
+  var cloneSel=null;
+
+  // Clone from existing log option
+  if(logOrder.length>0){
+    var cloneDiv=div();cloneDiv.style.cssText='margin-bottom:1rem;padding:10px 12px;background:var(--atlas-bg-subtle);border-radius:8px;border:1px solid var(--atlas-border)';
+    var cloneLbl=div();cloneLbl.style.cssText='font-size:12px;font-weight:700;color:var(--atlas-text-secondary);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px';
+    cloneLbl.textContent='Clone from existing log';
+    cloneSel=document.createElement('select');
+    cloneSel.style.cssText='width:100%;padding:8px 10px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:14px;font-family:inherit;background:var(--atlas-bg-card);color:var(--atlas-text);margin-bottom:6px';
+    var noCloneOpt=document.createElement('option');noCloneOpt.value='';noCloneOpt.textContent="— don't clone —";cloneSel.appendChild(noCloneOpt);
+    logOrder.forEach(function(id){
+      var o=document.createElement('option');o.value=id;
+      o.textContent=getDisplayLabel(id)+(fv(id,'loc')?' — '+fv(id,'loc'):'');
+      cloneSel.appendChild(o);
+    });
+    var cloneNote=div();cloneNote.style.cssText='font-size:11px;color:var(--atlas-text-secondary)';
+    cloneNote.textContent='Copies project info, scope, and crew. Clears notes. Sets date to today.';
+    cloneDiv.appendChild(cloneLbl);cloneDiv.appendChild(cloneSel);cloneDiv.appendChild(cloneNote);
+    box.appendChild(cloneDiv);
+  }
+
   var projSel=document.createElement('select');projSel.style.width='100%';fillProjDD(projSel);
   var labelInp=inp('','e.g. Kern Bluff','w');
-  projSel.addEventListener('change',function(){if(this.value){var p=store.projects.find(function(x){return x.key===projSel.value;});if(p&&p.loc)labelInp.value=capWords(p.loc);}});
+  projSel.addEventListener('change',function(){
+    if(this.value){var p=store.projects.find(function(x){return x.key===projSel.value;});if(p&&p.loc)labelInp.value=capWords(p.loc);}
+  });
   box.appendChild(fg('Load from saved project (optional)',projSel));
   box.appendChild(fg('Tab label (site name)',labelInp));
+
   var bar=div('action-bar');bar.style.marginTop='1rem';
   var cancel=btn('Cancel');cancel.addEventListener('click',function(){ov.remove();});
   var create=btn('Create log','btn-primary');
   create.addEventListener('click',function(){
+    // Clone path
+    if(cloneSel&&cloneSel.value){ov.remove();cloneFromLog(cloneSel.value);return;}
+    // Normal create path
     var label=labelInp.value.trim()||'Log '+(logOrder.length+1);
-    var isDupe=logOrder.some(function(id){return logs[id]&&logs[id].label===label;});if(isDupe){showAlert('A log named "'+label+'" already exists.');return;}
+    var isDupe=logOrder.some(function(id){return logs[id]&&logs[id].label===label;});
+    if(isDupe){showAlert('A log named "'+label+'" already exists.');return;}
     var proj=projSel.value?store.projects.find(function(x){return x.key===projSel.value;}):null;
     ov.remove();createLog(label,proj);
   });
@@ -1205,6 +2593,7 @@ function showNewLogModal(){
   ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
   document.body.appendChild(ov);setTimeout(function(){labelInp.focus();},100);
 }
+
 
 /* ── create log ── */
 function createLog(label,projData){
@@ -1301,7 +2690,154 @@ function syncQuickNames(lid,type){
   saveLogs();
 }
 
-/* ── build log DOM — orchestrator ── */
+/* ── Form completion checks ── */
+function isHeatComplete(lid){
+  var hd=heatForms[lid];
+  if(!hd)return false;
+  // All yes/no questions answered
+  var allAnswered=hd.sec2.every(function(v){return v!==null&&v!==undefined;})
+    &&hd.sec3.every(function(v){return v!==null&&v!==undefined;})
+    &&hd.sec4.every(function(v){return v!==null&&v!==undefined;});
+  // At least one signature
+  var hasSig=hd.sigs&&Object.keys(hd.sigs).length>0;
+  return allAnswered&&hasSig;
+}
+function isTailgateComplete(lid){
+  var td2=tailgateForms[lid];
+  if(!td2)return false;
+  // At least one signature
+  var hasSig=td2.sigs&&Object.keys(td2.sigs).length>0;
+  // Atlas work plan filled
+  var hasPlan=!!(td2.atlasPlan||'').trim();
+  return hasSig&&hasPlan;
+}
+function isHeatSkipped(lid){return logs[lid]&&logs[lid]._skipHeat===true;}
+function isTailgateSkipped(lid){return logs[lid]&&logs[lid]._skipTailgate===true;}
+
+function updateFormTabIndicators(){
+  var lid=logOrder.length?logOrder[0]:null;
+  // Find most recently active log
+  if(activeLid)lid=activeLid;
+
+  var heatTab=document.getElementById('heat-tab');
+  var tailgateTab=document.getElementById('tailgate-tab');
+  if(!heatTab||!tailgateTab)return;
+
+  function setTabState(tab,complete,skipped,baseText){
+    tab.innerHTML='';
+    var icon=el('span');icon.style.cssText='font-size:14px;display:block';
+    icon.textContent=baseText;
+    var badge=el('span');
+    badge.style.cssText='font-size:10px;display:block;margin-top:2px;font-weight:700;letter-spacing:0.02em';
+    if(skipped){
+      badge.textContent='skipped';badge.style.color='var(--atlas-text-secondary)';
+      tab.style.opacity='0.6';
+    } else if(complete){
+      badge.textContent='✓ done';badge.style.color='#2e7d50';
+      tab.style.opacity='1';
+    } else if(lid&&(heatForms[lid]||tailgateForms[lid])){
+      badge.textContent='in progress';badge.style.color='#c8860a';
+      tab.style.opacity='1';
+    } else {
+      badge.textContent='';tab.style.opacity='1';
+    }
+    tab.appendChild(icon);tab.appendChild(badge);
+  }
+
+  if(lid){
+    setTabState(heatTab,isHeatComplete(lid),isHeatSkipped(lid),'🌡 Heat');
+    setTabState(tailgateTab,isTailgateComplete(lid),isTailgateSkipped(lid),'📋 Tailgate');
+  }
+}
+
+/* ── Offline indicator for form tabs ── */
+function updateFormOfflineIndicator(){
+  ['heat-view','tailgate-view'].forEach(function(viewId){
+    var view=document.getElementById(viewId);
+    if(!view)return;
+    var ind=view.querySelector('.form-offline-ind');
+    if(!ind)return;
+    ind.style.display=navigator.onLine?'none':'flex';
+  });
+}
+
+/* ── Clone log from previous ── */
+function cloneFromLog(sourceLid){
+  var D=getLogData(sourceLid);
+  // Build full projData including field details
+  var projData={
+    proj:D.PROJ,phase:D.PHASE,office:D.OFFICE,pm:D.PM,
+    loc:D.LOC,well:D.WELL,client:D.CLIENT,zip:D.ZIP,
+    atlasscope:D.ATLASSCOPE,cleanup:D.CLEANUP,
+    waste:D.WASTE,samples:D.SAMPLES,miles:''
+  };
+  // Get scope checkboxes state
+  var scopes={};
+  [FIELDS.SC_SAMPLING,FIELDS.SC_MONITORING,FIELDS.SC_CLEANUP,FIELDS.SC_PA,FIELDS.SC_OVERSIGHT].forEach(function(f){
+    var e=document.getElementById('l'+sourceLid+'-'+f);
+    if(e)scopes[f]=e.checked;
+  });
+  projData._scopes=scopes;
+  projData._customScopes=(logs[sourceLid]&&logs[sourceLid].customScopes)?logs[sourceLid].customScopes.slice():[];
+  // Equipment
+  projData._equipChecked=logs[sourceLid]&&logs[sourceLid].equipChecked?logs[sourceLid].equipChecked.slice():null;
+
+  var today=new Date().toISOString().split('T')[0];
+  var label=D.LOC||(logs[sourceLid]?logs[sourceLid].label:'Clone');
+  var lid=createLog(label,projData);
+
+  // Set date to today
+  var dateEl=document.getElementById('l'+lid+'-date');
+  if(dateEl){dateEl.value=today;dateEl.classList.add('has-value');}
+
+  // Restore scope checkboxes
+  Object.keys(scopes).forEach(function(f){
+    var e=document.getElementById('l'+lid+'-'+f);
+    if(e)e.checked=scopes[f];
+  });
+
+  // Restore custom scopes
+  if(projData._customScopes.length){
+    logs[lid].customScopes=projData._customScopes.slice();
+    // Re-render custom scope pills
+    var scopeDiv=document.querySelector('#l'+lid+'-stage-1 .scopes');
+    if(scopeDiv){
+      scopeDiv.querySelectorAll('.custom-scope-pill').forEach(function(e){e.remove();});
+      logs[lid].customScopes.forEach(function(item,idx){
+        var p=div('pill custom-scope-pill');p.style.cssText='background:#e8f4f8;border-color:var(--atlas-primary);color:var(--atlas-primary-darker)';
+        var span=el('span');span.textContent=item;
+        var x=el('span','pill-del');x.textContent='×';
+        x.addEventListener('click',function(e2){e2.stopPropagation();logs[lid].customScopes.splice(idx,1);saveLogs();p.remove();});
+        p.appendChild(span);p.appendChild(x);scopeDiv.appendChild(p);
+      });
+    }
+  }
+
+  // Clone crew from source
+  var atlasCrew=getCrew('l'+sourceLid+'-atlas-crew');
+  var subCrew=getCrew('l'+sourceLid+'-sub-crew');
+  var atlasCont=document.getElementById('l'+lid+'-atlas-crew');
+  var subCont=document.getElementById('l'+lid+'-sub-crew');
+  if(atlasCont){
+    atlasCont.innerHTML='';
+    if(atlasCrew.length){atlasCrew.forEach(function(n){atlasCont.appendChild(makeCrewRow(n));});}
+    else{atlasCont.appendChild(makeCrewRow(''));}
+  }
+  if(subCont){
+    subCont.innerHTML='';
+    if(subCrew.length){subCrew.forEach(function(n){subCont.appendChild(makeCrewRow(n));});}
+    else{subCont.appendChild(makeCrewRow(''));}
+  }
+
+  // Restore equipment checked state
+  if(projData._equipChecked){
+    logs[lid].equipChecked=projData._equipChecked;
+    renderEquip(lid);
+  }
+
+  updateBanner(lid);renderTabs();saveLogs();
+  showAlert('Log cloned from '+label+'. Notes cleared — date set to today.');
+}
 function buildLogDOM(lid,projData){
   var F=projData||{};
   var pane=div('hidden');pane.id='l'+lid+'-pane';
@@ -1386,7 +2922,7 @@ function buildStage1(lid,F){
   // Header card
   var today=new Date().toISOString().split('T')[0];
   var dateInp=document.createElement('input');dateInp.type='date';dateInp.id='l'+lid+'-date';dateInp.value=today;
-  dateInp.addEventListener('change',function(){updateBanner(lid);});
+  dateInp.addEventListener('change',function(){updateBanner(lid);renderTabs();});
 
   var projInp=inp(F.proj||'','e.g. 2401','w');projInp.id='l'+lid+'-proj';
   projInp.addEventListener('input',function(){updateBanner(lid);renderTabs();});
@@ -1404,7 +2940,7 @@ function buildStage1(lid,F){
   wellInp.addEventListener('input',function(){projSel.value='';delProjBtn.style.display='none';updateBanner(lid);});
   mkFieldPills(lid,'well',wellInp,'l'+lid+'-well-pills');
 
-  var clientInp=mkClientField(lid);
+  var clientInp=mkClientField(lid,F.client||'');
 
   var scopeDiv=div('scopes');scopeDiv.style.marginTop='4px';
   [['sc-sampling','Sampling'],['sc-monitoring','Monitoring'],['sc-cleanup-scope','Facility Cleanup'],['sc-pa','P&A'],['sc-oversight','Oversight']].forEach(function(pair){
@@ -1600,26 +3136,109 @@ function buildStage2(lid){
     row.addEventListener('touchmove',function(e){if(!_rsActive)return;var t=e.touches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;if(Math.abs(dy)>Math.abs(dx)*0.8){_rsActive=false;return;}if(dx<-50){row.style.background='#fde8e8';}else{row.style.background='';}},{passive:true});
     row.addEventListener('touchend',function(e){if(!_rsActive)return;_rsActive=false;var t=e.changedTouches[0];var dx=t.clientX-_rsx;var dy=t.clientY-_rsy;row.style.background='';if(dx<-70&&Math.abs(dy)<50){if(!row.querySelector('.del-confirm'))showDeleteConfirm();}},{passive:true});
     // Mic button for voice input
-    var micBtn=el('button');micBtn.textContent='🎤';micBtn.type='button';
-    micBtn.style.cssText='flex-shrink:0;padding:8px 10px;font-size:18px;border:none;background:none;cursor:pointer;opacity:0.5';
+    var micBtn=el('button');micBtn.type='button';
+    micBtn.style.cssText='flex-shrink:0;padding:8px 10px;font-size:18px;border:none;background:none;cursor:pointer;opacity:0.5;position:relative';
     micBtn.title='Voice input';
-    if('webkitSpeechRecognition' in window||'SpeechRecognition' in window){
+
+    var _SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+    // iOS Safari reports the API present in some versions but doesn't actually work —
+    // check for a known-working implementation by also requiring MediaDevices
+    var _micSupported=!!_SR&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+
+    if(_micSupported){
+      micBtn.textContent='🎤';
+      var _recog=null;
+      var _recogActive=false;
+
+      function stopRecog(){
+        if(_recog){try{_recog.stop();}catch(e){}}
+        _recog=null;_recogActive=false;
+        micBtn.textContent='🎤';
+        micBtn.style.opacity='0.5';
+        micBtn.style.background='none';
+        micBtn.style.borderRadius='';
+      }
+
       micBtn.addEventListener('click',function(){
-        var SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-        var recog=new SR();recog.lang='en-US';recog.interimResults=false;recog.maxAlternatives=1;
-        micBtn.style.opacity='1';micBtn.textContent='🔴';
-        recog.onresult=function(e){
-          var words=e.results[0][0].transcript;
-          textInp.value=(textInp.value.trim()?textInp.value.trim()+' ':'')+words;
-          textInp.style.height='auto';textInp.style.height=textInp.scrollHeight+'px';
-          syncScratchpad();
-        };
-        recog.onerror=function(){micBtn.textContent='🎤';micBtn.style.opacity='0.5';};
-        recog.onend=function(){micBtn.textContent='🎤';micBtn.style.opacity='0.5';};
-        recog.start();
+        if(_recogActive){stopRecog();return;}
+
+        // Request mic permission explicitly first so we can show a clear error
+        navigator.mediaDevices.getUserMedia({audio:true}).then(function(stream){
+          // Stop the stream immediately — we just needed the permission grant
+          stream.getTracks().forEach(function(t){t.stop();});
+
+          _recog=new _SR();
+          _recog.lang='en-US';
+          _recog.interimResults=false;
+          _recog.maxAlternatives=1;
+          _recog.continuous=false;
+
+          _recog.onstart=function(){
+            _recogActive=true;
+            micBtn.textContent='🔴';
+            micBtn.style.opacity='1';
+            micBtn.style.background='#fde8e8';
+            micBtn.style.borderRadius='6px';
+          };
+
+          _recog.onresult=function(e){
+            var words=e.results[0][0].transcript;
+            var appended=(textInp.value.trim()?textInp.value.trim()+' ':'')+words;
+            // Capitalise first letter if field was empty
+            if(!textInp.value.trim())appended=appended.charAt(0).toUpperCase()+appended.slice(1);
+            textInp.value=appended;
+            textInp.style.height='auto';textInp.style.height=textInp.scrollHeight+'px';
+            syncScratchpad();updateEntrySummary();
+          };
+
+          _recog.onerror=function(e){
+            stopRecog();
+            var msg='Mic error';
+            if(e.error==='not-allowed')msg='Mic access denied — check browser settings';
+            else if(e.error==='no-speech')msg='No speech detected';
+            else if(e.error==='network')msg='Network error — voice requires internet';
+            else if(e.error==='aborted')return; // user stopped, no message needed
+            showMicError(msg);
+          };
+
+          _recog.onend=function(){stopRecog();};
+
+          try{_recog.start();}catch(err){stopRecog();showMicError('Could not start mic: '+err.message);}
+
+        }).catch(function(err){
+          var msg='Mic access denied';
+          if(err.name==='NotFoundError')msg='No microphone found on this device';
+          else if(err.name==='NotAllowedError')msg='Mic access denied — allow mic in browser settings';
+          showMicError(msg);
+        });
       });
+
+      function showMicError(msg){
+        // Show error inline below the entry row briefly
+        var existing=row.querySelector('.mic-err');if(existing)existing.remove();
+        var errEl=div('mic-err');
+        errEl.style.cssText='font-size:12px;color:#c0392b;padding:4px 8px 4px 0;width:100%';
+        errEl.textContent='⚠ '+msg;
+        row.appendChild(errEl);
+        setTimeout(function(){if(errEl.parentNode)errEl.remove();},4000);
+      }
+
     } else {
-      micBtn.style.display='none'; // hide if not supported
+      // Not supported — show a greyed-out button with explanation on tap
+      micBtn.textContent='🎤';
+      micBtn.style.opacity='0.25';
+      micBtn.title='Voice input not supported on this browser';
+      micBtn.addEventListener('click',function(){
+        showMicError('Voice input is not supported on this browser. Use Chrome on Android for best results.');
+      });
+      function showMicError(msg){
+        var existing=row.querySelector('.mic-err');if(existing)existing.remove();
+        var errEl=div('mic-err');
+        errEl.style.cssText='font-size:12px;color:#c0392b;padding:4px 8px 4px 0;width:100%';
+        errEl.textContent='⚠ '+msg;
+        row.appendChild(errEl);
+        setTimeout(function(){if(errEl.parentNode)errEl.remove();},4000);
+      }
     }
     row.appendChild(drag);row.appendChild(timeInp);row.appendChild(textInp);row.appendChild(micBtn);row.appendChild(delBtn);
     return row;
@@ -1813,8 +3432,9 @@ function buildStage2(lid){
     lockBtn.textContent=_notesLocked?'🔓 Unlock':'🔒 Lock';
     lockBtn.style.background=_notesLocked?'var(--atlas-primary)':'none';
     lockBtn.style.color=_notesLocked?'#fff':'var(--atlas-text-secondary)';
-    // Store on pane so swipe handler can check
-    pane._notesLocked=_notesLocked;
+    // Store on pane element — look up by ID since buildStage2 doesn't have pane in scope
+    var paneEl=document.getElementById('l'+lid+'-pane');
+    if(paneEl)paneEl._notesLocked=_notesLocked;
   });
 
   // Fullscreen toggle
@@ -1907,11 +3527,19 @@ function buildStage3(lid,F){
   var perCard=div('card');perCard.innerHTML='<div class="card-title">Field details</div>';
   makeAccSection(perCard,'Atlas Representatives',function(body){
     body.style.paddingTop='10px';
+    // Saved name chips
+    var atlasChips=div();atlasChips.id='l'+lid+'-atlas-saved-chips';
+    atlasChips.style.cssText='display:none;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--atlas-border)';
+    body.appendChild(atlasChips);
     body.appendChild(atlasCrew);body.appendChild(addAtlasLink);
     var atlasSaveRow=div('action-bar');atlasSaveRow.style.marginTop='4px';atlasSaveRow.appendChild(atlasMsg);atlasSaveRow.appendChild(saveAtlasBtn);body.appendChild(atlasSaveRow);
   },true);
   makeAccSection(perCard,'Subcontractors',function(body){
     body.style.paddingTop='10px';
+    // Saved name chips
+    var subChips=div();subChips.id='l'+lid+'-sub-saved-chips';
+    subChips.style.cssText='display:none;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--atlas-border)';
+    body.appendChild(subChips);
     body.appendChild(subCrew);body.appendChild(addSubLink);
     var subSaveRow=div('action-bar');subSaveRow.style.marginTop='4px';subSaveRow.appendChild(subMsg);subSaveRow.appendChild(saveSubBtn);body.appendChild(subSaveRow);
   },false);
@@ -1924,11 +3552,11 @@ function buildStage3(lid,F){
   var atlasScopeTa=ta(F.atlasscope||'','3','Describe Atlas scope of work...');atlasScopeTa.id='l'+lid+'-atlasscope';
   var cleanupTa=ta(F.cleanup||'','3','Describe contractor scope and names...');cleanupTa.id='l'+lid+'-cleanup';
 
-  var wasteTa=inp('','e.g. 2 drums solids, 15 gal liquid','w');wasteTa.id='l'+lid+'-waste';
+  var wasteTa=inp(F.waste||'','e.g. 2 drums solids, 15 gal liquid','w');wasteTa.id='l'+lid+'-waste';
   var noneWasteBtn=btn('None','btn-sm');noneWasteBtn.addEventListener('click',function(){wasteTa.value='None';saveLogs();});
   var wasteFooter=div('ta-footer');wasteFooter.appendChild(noneWasteBtn);
 
-  var samplesTa=inp('','e.g. 4 soil samples, lab analysis','w');samplesTa.id='l'+lid+'-samples';
+  var samplesTa=inp(F.samples||'','e.g. 4 soil samples, lab analysis','w');samplesTa.id='l'+lid+'-samples';
   var noneSamplesBtn=btn('None','btn-sm');noneSamplesBtn.addEventListener('click',function(){samplesTa.value='None';saveLogs();});
   var samplesFooter=div('ta-footer');samplesFooter.appendChild(noneSamplesBtn);
 
@@ -1971,7 +3599,11 @@ function buildStage3(lid,F){
   var p3NavWrap=div('page-nav-bar');
   var p3BackBtn=btn('← Notes');p3BackBtn.addEventListener('click',function(){goStage(lid,2);});
   var p3FwdBtn=btn('Review →','btn-primary');p3FwdBtn.addEventListener('click',function(){goReview(lid);});
-  p3NavWrap.appendChild(p3BackBtn);p3NavWrap.appendChild(p3FwdBtn);
+  var p3MenuBtn=btn('≡','btn-sm');
+  p3MenuBtn.title='More options';
+  p3MenuBtn.style.cssText='font-size:20px;padding:12px 16px;min-height:48px;flex-shrink:0;font-weight:400;background:var(--atlas-bg-subtle)';
+  p3MenuBtn.addEventListener('click',function(){openNotesSheet(lid);});
+  p3NavWrap.appendChild(p3BackBtn);p3NavWrap.appendChild(p3FwdBtn);p3NavWrap.appendChild(p3MenuBtn);
 
   s3.appendChild(perCard);s3.appendChild(siteCard);s3.appendChild(p3NavWrap);
   return s3;
@@ -2139,14 +3771,16 @@ function showFullGuide(){
   var title=div('modal-title');title.textContent='📖 Atlas Field Log — Full Guide';box.appendChild(title);
 
   var sections=[
-    {head:'Overview',body:'This app helps you document daily field work and generate a formal Atlas Daily Field Report. Everything is saved locally on your device — no login required.'},
-    {head:'1 · Project Info',body:'Fill this out at the start of each day. Enter the date (auto-fills to today), project number, phase, office, PM, location, well ID, and client.\n\n<b>Saving values for reuse:</b> Type a value into any field and tap the Save button next to it. It saves as a chip below the field. On future logs, tap the chip to auto-fill the field instantly.\n\n<b>Saved projects:</b> Use Save current at the top to save all header fields together as a named project. Load it on future logs from the dropdown.\n\n<b>Scope checkboxes:</b> Check the scopes that apply today. For a task not listed, type it in the custom scope field and tap Add.\n\n<b>Weather:</b> Enter your zip and tap Get Weather, or tap the GPS button to auto-fill from your location.'},
-    {head:'2 · Notes',body:'This is your main working page. Stay here most of the day.\n\n<b>Adding entries:</b> Tap <b>+ Timestamp Entry</b> to add a new row with the current time filled in. Tap <b>+ Entry</b> for a blank row. Each entry has a time field (4-digit military, e.g. 0730) and a text field.\n\n<b>Scroll to bottom:</b> Tap the ⬇ button floating on the right side to jump straight to the bottom where your entry buttons are — useful when you have many entries and the keyboard is open.\n\n<b>Quick phrases:</b> The green chips at the top are one-tap phrases that insert into your current entry. H&S tailgate conducted, Work suspended - weather, and Scope change: are included by default. Tap + Phrase to add your own.\n\n<b>Scope changes:</b> When scope changes mid-day, tap the Scope change: chip and finish the sentence with what changed. This timestamps the change and it goes into the report.\n\n<b>👤 + Field Details button:</b> Tap this anytime to quickly add crew, visitors, or scope items without leaving the notes page.\n\n<b>Reordering:</b> Drag the ⋮⋮ handle on any entry to reorder it.\n\n<b>Deleting:</b> Tap ✕ once — it turns red and asks Sure? Tap it again to confirm. Tap anywhere else to cancel.'},
-    {head:'3 · Field Details',body:'Track crew, scope, equipment, waste, and samples. Update this throughout the day as things change.\n\n<b>Personnel:</b> Add Atlas reps, subcontractors, and visitors as they arrive. Tap Save names to store them for future logs.\n\n<b>Scope of Work:</b> Write the formal Atlas scope and contractor scope here. These go directly into the report.\n\n<b>Equipment:</b> Tap equipment pills to check them. Add one-off items for today only, or tap Save to add to your permanent list.\n\n<b>Mileage:</b> Enter total mileage for the day.'},
-    {head:'4 · Review',body:'Tap Review entries to move your notes to this page. All entries are kept by default.\n\n<b>Auto-sort:</b> Entries are automatically sorted by their timestamp when you arrive on this page. If you typed entries out of order, they will be sorted correctly here. You can still drag to reorder manually after.\n\nTap <b>Discard</b> on any entry to remove it from the report (you can bring it back).\n\nTap any entry text to edit it directly. Drag entries to reorder.\n\n<b>📷 Photos:</b> Added here, not during note-taking. Device storage is limited to 5MB — photos would fill it fast and corrupt your text saves. Add photos here for anything that needs to be in the report.\n\n<b>⚠ Photos do not save to drafts.</b> If you archive or draft before building the report, photos are lost. Build the report first if photos matter that day.'},
-    {head:'5 · Report',body:'Tap <b>Build report</b> to generate the formatted Atlas Daily Field Report.\n\nTap <b>Print / Save PDF</b> to open the print dialog. On mobile, choose Save as PDF from your print options.\n\nTap <b>✉ Email</b> to pre-fill an email with report details — attach the PDF file manually.\n\nThe report is also saved to your Library automatically.'},
-    {head:'Library',body:'All completed reports and drafts are stored here, grouped by project number. Tap View to open a report. Tap Resume to reopen a draft. You can edit report text directly before printing.\n\n<b>🌙 Dark mode / 👁 Stay awake:</b> Both buttons are at the bottom of the Library screen. Dark mode switches the app to a dark theme. Stay awake prevents your screen from turning off while you are actively logging.\n\n<b>⬇ Backup / ⬆ Restore:</b> Backup exports everything — logs, saved projects, crew names, equipment, library — to a JSON file. Restore loads it back. Use it when switching phones, or save one periodically in case your browser clears storage.\n\n<b>Where it saves:</b> Android — Downloads folder (find it in the Files app). iPhone — a share sheet appears, tap Save to Files and choose a location.\n\nThis is the only way to move your data between devices — there is no cloud sync.'},
-    {head:'Tips',body:'• <b>Tap the Atlas logo</b> in the top-left corner from any screen to return to the home screen.\n• <b>Swipe left or right</b> anywhere on the page to move between the 5 pages — no need to tap the arrows.\n• The <b>📝 Notes</b> button at the bottom takes you straight back to your notes from any page.\n• Multiple logs can be open at once — useful if covering two sites in one day. Logs scroll horizontally in the tab bar.\n• <b>Dark mode</b> and <b>Stay awake</b> are in the Library screen at the bottom.'},
+    {head:'Overview',body:'This app helps you document daily field work and generate formal Atlas reports for CalGEM projects. Three forms are included: the Daily Field Report, the CA Heat Illness Prevention Checklist, and the CalGEM Daily Safety Tailgate Form. Everything saves locally on your device — no login required.\n\n<b>Tab bar:</b> The top row shows 📋 Library, 🦺 Safety, 🌡 Heat, and 📋 Tailgate. Your active logs appear below as tabs showing date · project number.'},
+    {head:'1 · Project Info',body:'Fill this out at the start of each day. Enter the date (auto-fills to today), project number, phase, office, PM, location, well ID, and client.\n\n<b>Saving values for reuse:</b> Type a value into any field and tap the Save button next to it. It saves as a chip below the field. On future logs, tap the chip to auto-fill the field instantly.\n\n<b>Saved projects:</b> Use Save current at the top to save all header fields together as a named project. Load it on future logs from the dropdown.\n\n<b>Scope checkboxes:</b> Check the scopes that apply today. For a task not listed, type it in the custom scope field and tap Add.\n\n<b>Weather:</b> Enter your zip and tap Get Weather, or tap 📍 Use location to auto-fill from GPS. The GPS fetch shows the location name and fetch time so you can verify accuracy. If the high temp exceeds 95°F, the time it will reach that threshold is stored and auto-fills into the Heat and Tailgate forms.'},
+    {head:'2 · Notes',body:'This is your main working page. Stay here most of the day.\n\n<b>Timestamp button:</b> The large blue button shows the current time and adds a new timestamped entry when tapped. Time is entered using the native time picker — tap the time field to change it.\n\n<b>+ Entry:</b> Adds a blank entry without a timestamp.\n\n<b>Field Details →:</b> Takes you directly to Stage 3 to update crew, scope, or equipment.\n\n<b>≡ Menu:</b> Opens a bottom sheet with: Project Info, Review entries, Build report now (skips review), Library, and Move notes to another log.\n\n<b>Quick phrases:</b> Tap ▸ Quick phrases to expand saved one-tap phrases. Tap + Phrase to add your own. Long-press a chip to delete it.\n\n<b>Voice input:</b> Tap 🎤 on any entry to dictate. Works on Android Chrome. Not supported on iOS Safari — use the keyboard dictation button instead.\n\n<b>🔒 Lock:</b> Prevents accidental page swipes while typing. Tap again to unlock.\n\n<b>⛶ Fullscreen:</b> Hides the header and nav for distraction-free entry on mobile.\n\n<b>⬇ Scroll button:</b> Jumps to the bottom of the entry list.\n\n<b>Delete:</b> Swipe left on any entry or tap the trash icon to show a Delete / Keep confirmation bar.'},
+    {head:'3 · Field Details',body:'Track crew, scope, equipment, waste, and samples. The ≡ menu is also available from this page.\n\n<b>Personnel — saved names:</b> Add crew and tap Save names. They appear as blue chips above the crew list. On future logs, tap a chip to add that person — they are not auto-populated. Tap × on a chip to remove from saved list.\n\n<b>Scope of Work:</b> Write the formal Atlas scope and contractor scope here. These go directly into the report.\n\n<b>Equipment:</b> Tap pills to check them. Add one-off items for today only, or tap Save to add to your permanent list.\n\n<b>Waste & Samples:</b> Tap None for a quick fill, or type custom values.\n\n<b>Mileage:</b> Enter total mileage for the day.'},
+    {head:'4 · Review',body:'Entries are pulled from Notes and auto-sorted by timestamp.\n\n<b>Auto-sort:</b> Entries sort by time on arrival. Drag the ⋮⋮ handle to reorder manually.\n\nTap <b>Discard</b> on any entry to remove it from the report — tap again to restore.\n\nTap any entry text to edit it directly.\n\n<b>📷 Photos:</b> Added here only — not from the Notes page. Photos do not save to drafts. Build the report first if photos matter that day.\n\n<b>⚠ Storage limit:</b> Device localStorage is limited. Photos count toward this limit. Keep photos to what matters for the report.'},
+    {head:'5 · Report',body:'Tap <b>Build report</b> to generate the formatted Atlas Daily Field Report.\n\nTap <b>Print / Save PDF</b> to open the print dialog. On mobile, choose Save as PDF.\n\nTap <b>✉ Email</b> to pre-fill an email — attach the PDF manually.\n\nThe report saves to your Library automatically.'},
+    {head:'🌡 Heat Form',body:'The CA Heat Illness Prevention Program Checklist. Pulls location, date, crew, and forecasted temp from the active log automatically.\n\n<b>Responsible person:</b> Enter name and phone, then tap 💾 Save as default safety person. A chip appears on all future Heat forms — tap to fill instantly.\n\n<b>Forecasted temp:</b> Shows the daily high/low range from weather. Turns red if the high exceeds 95°F. The 95°F threshold time auto-fills from the weather fetch.\n\n<b>Sections 2–4:</b> Yes/No toggle buttons — one tap each. All must be answered for the form to show as complete.\n\n<b>Section 5:</b> Training acknowledgment checkboxes.\n\n<b>Signatures:</b> Tap Sign next to each Atlas crew member. Type your name (renders in cursive) or switch to Draw and sign with your finger.\n\n<b>⊘ Skip today:</b> Marks the form as not needed today. Resets for the next log.\n\n<b>🖨 Print All Forms:</b> Prints the Daily Report + Heat form + Tailgate form together as one print job.'},
+    {head:'📋 Tailgate Form',body:'The CalGEM Daily Safety Tailgate Form. Pulls site name, project number, well ID, date, Atlas work plan, and contractor plan from the active log.\n\n<b>Heat Illness section:</b> Time to 95°F auto-fills from weather. "Who to check in with" auto-fills from the saved Heat form responsible person.\n\n<b>Water plan:</b> Tap a quick answer chip to fill instantly. Tap + Save current to save your own answer for future use.\n\n<b>High Risk Hazards:</b> Tap the checkbox on the left to mark present/discussed. Tap preset chips to add controls, or type your own and tap + to add as a tag. Multiple controls per hazard allowed. Tap + Save as preset to save a custom control for future use.\n\n<b>HECA:</b> Describe work observed, then fill the energy type / risk / control rows. Tap ▾ Suggest on any field to see relevant options for the selected energy type — or just type freely.\n\n<b>HECA Assessor:</b> Enter name and tap 💾 Save to store for future forms.\n\n<b>Signatures:</b> Same as Heat form — type or draw.\n\n<b>⊘ Skip today:</b> Marks the form as not needed today.'},
+    {head:'Library',body:'All completed reports and drafts are stored here, grouped by project number. Each entry shows Heat ✓/✗ and Tailgate ✓/✗ badges so you can see at a glance which forms were completed for that day.\n\nTap <b>View</b> to open a report. Tap <b>Resume</b> to reopen a draft.\n\nYou can edit report text directly before printing — tap Edit, make changes, tap Save edits.\n\n<b>🌙 Dark mode / 👁 Stay awake:</b> Both buttons are at the bottom of the screen.\n\n<b>⬇ Backup / ⬆ Restore:</b> Exports everything to a JSON file. Use when switching phones. This is the only way to move data between devices — there is no cloud sync.\n\n<b>Android:</b> Backup saves to Downloads. <b>iPhone:</b> A share sheet appears — tap Save to Files.'},
+    {head:'Tips',body:'• <b>Tap the Atlas logo</b> to return to this home screen from anywhere.\n• <b>Swipe left or right</b> to move between the 5 log stages.\n• <b>Tab labels</b> show the date and project number (e.g. 4/1 · 2401) once filled in.\n• <b>Clone from yesterday:</b> Tap + New log and select a log from the Clone dropdown. Copies project info, scope, crew, and field details. Clears notes. Sets today\'s date.\n• <b>Form completion:</b> The 🌡 Heat and 📋 Tailgate tabs show "✓ done", "in progress", or "skipped" based on what\'s been filled in for the active log.\n• <b>Multiple logs:</b> You can have more than one log open at once — useful for covering two sites in one day. Logs scroll horizontally in the tab bar.\n• <b>Print all three forms</b> together using the 🖨 Print All Forms button on the Heat or Tailgate page.'},
   ];
 
 
@@ -2188,6 +3822,13 @@ async function init(){
   document.getElementById('new-log-btn').addEventListener('click',function(){showNewLogModal();});
   document.getElementById('lib-tab').addEventListener('click',function(){switchToLibrary();});
   document.getElementById('safety-tab').addEventListener('click',function(){switchToSafety();});
+  document.getElementById('heat-tab').addEventListener('click',function(){switchToHeat();});
+  document.getElementById('tailgate-tab').addEventListener('click',function(){switchToTailgate();});
+  // Restore saved form data from logs
+  logOrder.forEach(function(lid){
+    if(logs[lid]&&logs[lid]._heatForm)heatForms[lid]=logs[lid]._heatForm;
+    if(logs[lid]&&logs[lid]._tailgateForm)tailgateForms[lid]=logs[lid]._tailgateForm;
+  });
   document.getElementById('export-btn').addEventListener('click',exportBackup);
   var darkBtn=document.getElementById('dark-btn');
   var darkIcon=document.getElementById('dark-btn-icon');
@@ -2212,7 +3853,7 @@ async function init(){
   document.getElementById('restore-btn').addEventListener('click',function(){document.getElementById('import-input').click();});
   function markFilled(e){var el=e.target;if(el.tagName==='INPUT'||el.tagName==='TEXTAREA'||el.tagName==='SELECT'){el.classList.toggle('has-value',el.value.trim().length>0);}}
   document.addEventListener('input',markFilled);document.addEventListener('change',markFilled);
-  function updateOnlineStatus(){var ind=document.getElementById('offline-indicator');if(!ind)return;ind.style.display=navigator.onLine?'none':'inline';}
+  function updateOnlineStatus(){var ind=document.getElementById('offline-indicator');if(!ind)return;ind.style.display=navigator.onLine?'none':'inline';updateFormOfflineIndicator();}
   window.addEventListener('online',updateOnlineStatus);window.addEventListener('offline',updateOnlineStatus);updateOnlineStatus();
   setTimeout(function(){document.querySelectorAll('input,textarea,select').forEach(function(el){el.classList.toggle('has-value',el.value.trim().length>0);});},200);
   var autoDraftCache={};
