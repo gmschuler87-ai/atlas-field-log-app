@@ -1569,16 +1569,16 @@ function endSession(){
   setTimeout(showHome, 50);
 }
 function showPdfPreview(html){
-  // Open in new window so only the report prints, never the app
-  const w=window.open('','_blank','width=800,height=900');
-  if(!w){showToast('Allow popups to preview the report');return;}
-  w.document.open();
-  w.document.write(html);
-  w.document.close();
-  // Give it a moment to render then prompt print
+  // Use Blob URL — no size limit, works on mobile with large embedded images
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const w = window.open(url, '_blank');
+  if(!w){ showToast('Allow popups to preview the report'); URL.revokeObjectURL(url); return; }
+  // Trigger print after page loads, then clean up blob URL
   setTimeout(function(){
-    try{w.focus();w.print();}catch(e){}
-  },600);
+    try{ w.focus(); w.print(); }catch(e){}
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 60000);
+  }, 800);
 }
 
 // ===== INSTRUMENTS =====
