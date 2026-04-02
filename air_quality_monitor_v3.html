@@ -170,7 +170,6 @@ body.dark .lib-item{border-color:#1c3347;}
 #print-output{display:none;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -405,11 +404,11 @@ body.dark .lib-item{border-color:#1c3347;}
   <!-- STEP 2b: Maps -->
   <div class="section-card">
     <div class="section-title">Monitoring Point Maps</div>
-    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Upload PDF maps to attach to your final report. The background location and all monitoring points must be marked on the map submitted with each report.</p>
+    <p style="font-size:12px;color:var(--text-dim);line-height:1.5;margin-bottom:12px">Upload a map image (JPEG or PNG) to attach to your final report. The background location and all monitoring points must be marked on the map submitted with each report.</p>
     <div id="mapList" style="margin-bottom:10px"></div>
     <label style="display:flex;align-items:center;justify-content:center;gap:8px;height:44px;background:var(--input-bg);border:1.5px dashed var(--input-border);border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;color:var(--atlas-primary);font-family:inherit">
-      <span>＋ Upload Map PDF</span>
-      <input type="file" accept=".pdf" style="display:none" onchange="uploadMap(event)">
+      <span>＋ Upload Map Image</span>
+      <input type="file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" style="display:none" onchange="uploadMap(event)">
     </label>
   </div>
 
@@ -1414,85 +1413,19 @@ function generatePDF(attachedMap) {
   }
 }
 
-async function mergePdfWithMap(reportHtml, mapEntry, filename){
-  // Disable PDF.js worker
-  try {
-    if(typeof pdfjsLib !== 'undefined'){
-      pdfjsLib.GlobalWorkerOptions.workerSrc = '';
-    }
-  } catch(e){}
-
-  // Show diagnostic overlay — stays visible until dismissed so you can read the log
-  const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px';
-  const diagLines = [];
-  overlay.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:100%;max-width:360px;max-height:80vh;overflow-y:auto">'+
-    '<div style="font-size:14px;font-weight:800;color:#1a202c;margin-bottom:10px">Map Merge Diagnostic</div>'+
-    '<div id="diagLog" style="font-size:12px;font-family:monospace;color:#1a202c;line-height:1.8;word-break:break-all"></div>'+
-    '<button id="diagClose" style="margin-top:14px;width:100%;height:44px;background:#3a6b82;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Close & Open Report</button>'+
-  '</div>';
-  document.body.appendChild(overlay);
-
-  let reportToOpen = reportHtml;
-
-  function log(msg){
-    diagLines.push(msg);
-    const el = document.getElementById('diagLog');
-    if(el) el.innerHTML = diagLines.map(function(l){ return '<div>'+l+'</div>'; }).join('');
-  }
-
-  document.getElementById('diagClose').onclick = function(){
-    overlay.remove();
-    showPdfPreview(reportToOpen);
-  };
-
-  try {
-    log('1. pdfjsLib: ' + (typeof pdfjsLib !== 'undefined' ? 'LOADED v'+pdfjsLib.version : 'NOT LOADED'));
-    if(typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded');
-
-    const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
-    log('2. Map bytes: ' + mapBytes.length);
-
-    const pdfDoc = await pdfjsLib.getDocument({data: mapBytes, disableWorker: true, isEvalSupported: false}).promise;
-    log('3. PDF loaded. Pages: ' + pdfDoc.numPages);
-
-    const SCALE = 96 / 72;
-    const pageImgs = [];
-
-    for(let i = 1; i <= pdfDoc.numPages; i++){
-      const page = await pdfDoc.getPage(i);
-      const vp = page.getViewport({scale: SCALE});
-      log('4.'+i+'. Page '+i+' viewport: '+Math.round(vp.width)+'x'+Math.round(vp.height));
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.round(vp.width);
-      canvas.height = Math.round(vp.height);
-      const ctx = canvas.getContext('2d');
-      await page.render({canvasContext: ctx, viewport: vp}).promise;
-      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-      log('5.'+i+'. Rendered. dataUrl length: '+dataUrl.length);
-      pageImgs.push({dataUrl: dataUrl, w: canvas.width, h: canvas.height});
-      canvas.width = 0; canvas.height = 0;
-    }
-
-    // Embed data URLs directly into HTML (avoid blob: URL cross-origin issues)
-    const mapPagesHtml = pageImgs.map(function(img){
-      const landscape = img.w > img.h;
-      return '<div style="page-break-before:always;margin:0;padding:0;'+
-        (landscape ? 'width:11in;height:8.5in;' : 'width:8.5in;height:11in;')+
-        'display:flex;align-items:center;justify-content:center;overflow:hidden">'+
-        '<img src="'+img.dataUrl+'" style="max-width:100%;max-height:100%;display:block" /></div>';
-    }).join('');
-
-    const combinedHtml = reportHtml.replace('</body>', mapPagesHtml + '</body>');
-    log('6. Combined HTML length: '+combinedHtml.length);
-
-    reportToOpen = combinedHtml;
-    log('7. DONE — tap Close & Open Report');
-
-  } catch(err){
-    log('ERROR: '+err.message);
-  }
+function mergePdfWithMap(reportHtml, mapEntry, filename){
+  // mapEntry.data is a full data URL (image/jpeg or image/png) — inject directly as <img>
+  const landscape = false; // will be determined by natural image dimensions via CSS
+  const mapPageHtml = '<div style="page-break-before:always;margin:0;padding:0;'
+    + 'display:flex;align-items:center;justify-content:center;width:100%;min-height:9in;overflow:hidden">'
+    + '<img src="' + mapEntry.data + '" style="max-width:100%;max-height:100%;display:block;margin:0 auto" />'
+    + '</div>';
+  const combinedHtml = reportHtml.replace('</body>', mapPageHtml + '</body>');
+  showToast('Opening report + map...');
+  showPdfPreview(combinedHtml);
 }
+
+
 function promptEndSession(){
   const modal=document.createElement('div');
   modal.className='exceedance-modal';
@@ -2634,21 +2567,20 @@ function saveMaps(){ localStorage.setItem(SK_MAPS, JSON.stringify(storedMaps)); 
 function uploadMap(event){
   const file = event.target.files[0];
   if(!file) return;
-  if(file.type !== 'application/pdf' && !file.name.endsWith('.pdf')){
-    showToast('Please upload a PDF file'); return;
+  const validTypes = ['image/jpeg','image/jpg','image/png'];
+  if(!validTypes.includes(file.type) && !file.name.match(/\.(jpg|jpeg|png)$/i)){
+    showToast('Please upload a JPEG or PNG image'); return;
   }
-  const maxSize = 4 * 1024 * 1024; // 4MB
-  if(file.size > maxSize){ showToast('Map PDF too large (max 4MB)'); return; }
-  
+  const maxSize = 8 * 1024 * 1024; // 8MB
+  if(file.size > maxSize){ showToast('Map image too large (max 8MB)'); return; }
   const reader = new FileReader();
   reader.onload = function(e){
-    const base64 = e.target.result.split(',')[1];
-    // Check localStorage space
     try {
       const entry = {
-        name: file.name.replace('.pdf',''),
+        name: file.name.replace(/\.(jpg|jpeg|png)$/i,''),
         size: file.size,
-        data: base64,
+        mimeType: file.type || 'image/jpeg',
+        data: e.target.result, // full data URL — no split needed, img src can use it directly
         savedAt: new Date().toISOString()
       };
       storedMaps.push(entry);
@@ -2661,7 +2593,7 @@ function uploadMap(event){
     }
   };
   reader.readAsDataURL(file);
-  event.target.value = ''; // reset input
+  event.target.value = '';
 }
 
 function deleteMap(idx){
@@ -2719,7 +2651,7 @@ function promptGeneratePDF(){
 
   modal.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:20px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto">'
     +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Attach a Map?</div>'
-    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">Map pages will be appended after the report and printed as one document. Rendering takes a few seconds.</p>'
+    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">The map image will be appended after the report as a full page. One print dialog, one document.</p>'
     +mapOptions
     +'<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:8px;cursor:pointer;margin-bottom:14px;background:var(--input-bg)">'
       +'<input type="radio" name="mapChoice" value="none" checked style="width:18px;height:18px;accent-color:var(--atlas-primary)">'
