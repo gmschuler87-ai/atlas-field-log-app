@@ -1148,7 +1148,7 @@ function resumeLibraryItem(idx) {
     let dateStr=si.siteDate;
     if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=(d.getMonth()+1)+'/'+(d.getDate())+'/'+(d.getFullYear());}
     const draftEntry={
-      title:'[Draft] '+(si.wellId||'Untitled')+' — '+(dateStr||new Date().toLocaleDateString()),
+      title:'[Draft] Air Monitoring Log — '+(si.wellId||'Untitled')+' — '+(dateStr||new Date().toLocaleDateString()),
       date:dateStr||new Date().toLocaleDateString(),
       readingCount:totalReadings,
       data:data,
@@ -1390,7 +1390,7 @@ function generatePDF(attachedMap) {
 
   // Save to library
   const libEntry = {
-    title: `${si.wellId||'Untitled'} — ${dateStr||'undated'}`,
+    title: `Air Monitoring Log — ${si.wellId||'Untitled'} — ${dateStr||'undated'}`,
     filename: 'ATLAS_AML_'+(si.siteDate?si.siteDate.replace(/-/g,''):'undated')+(si.wellId?'_'+si.wellId.replace(/[^a-zA-Z0-9]/g,'_'):''),
     date: dateStr || new Date().toLocaleDateString(),
     readingCount: totalReadings,
@@ -1448,7 +1448,7 @@ function promptEndSession(){
       let dateStr=si.siteDate;
       if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=(d.getMonth()+1)+'/'+(d.getDate())+'/'+(d.getFullYear());}
       const libEntry={
-        title:(si.wellId||'Untitled')+' — '+(dateStr||new Date().toLocaleDateString()),
+        title:'Air Monitoring Log — '+(si.wellId||'Untitled')+' — '+(dateStr||new Date().toLocaleDateString()),
         date:dateStr||new Date().toLocaleDateString(),
         readingCount:totalReadings,
         data:data,
