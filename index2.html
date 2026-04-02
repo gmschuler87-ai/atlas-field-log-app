@@ -666,6 +666,21 @@ async function saveLogs(){
         var e=document.getElementById('l'+lid+'-'+f);
         if(e)snap[f]=e.value||'';
       });
+      // Crew names
+      snap._atlasCrew=getCrew('l'+lid+'-atlas-crew');
+      snap._subCrew=getCrew('l'+lid+'-sub-crew');
+      // Visitor rows
+      var visRows=[];
+      var visContainer=document.getElementById('l'+lid+'-visitor-crew');
+      if(visContainer){
+        visContainer.querySelectorAll('.crew-row').forEach(function(row){
+          var ins=row.querySelectorAll('input');
+          var name=ins[0]?ins[0].value.trim():'';
+          var org=ins[1]?ins[1].value.trim():'';
+          if(name)visRows.push({name:name,org:org});
+        });
+      }
+      snap._visitorCrew=visRows;
       logs[lid]._fields=snap;
     });
 
@@ -777,8 +792,8 @@ function renderPills(lid){
     var arr=store.names[type]||[];
     if(!arr.length){chipCont.style.display='none';return;}
     chipCont.style.display='flex';
-    var label=el('span');label.style.cssText='font-size:11px;color:var(--atlas-text-secondary);flex-shrink:0;align-self:center';
-    label.textContent='Saved:';
+    var label=el('span');label.style.cssText='font-size:11px;color:var(--atlas-text-secondary);flex-shrink:0;align-self:center;width:100%;margin-bottom:4px;font-weight:600';
+    label.textContent='Saved names — tap to add:';
     chipCont.appendChild(label);
     arr.forEach(function(name,idx){
       var chip=div('pill');
@@ -3551,21 +3566,21 @@ function buildStage3(lid,F){
   var perCard=div('card');perCard.innerHTML='<div class="card-title">Field details</div>';
   makeAccSection(perCard,'Atlas Representatives',function(body){
     body.style.paddingTop='10px';
-    // Saved name chips
-    var atlasChips=div();atlasChips.id='l'+lid+'-atlas-saved-chips';
-    atlasChips.style.cssText='display:none;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--atlas-border)';
-    body.appendChild(atlasChips);
     body.appendChild(atlasCrew);body.appendChild(addAtlasLink);
     var atlasSaveRow=div('action-bar');atlasSaveRow.style.marginTop='4px';atlasSaveRow.appendChild(atlasMsg);atlasSaveRow.appendChild(saveAtlasBtn);body.appendChild(atlasSaveRow);
+    // Saved name chips — below the Save button so they don't look like existing entries
+    var atlasChips=div();atlasChips.id='l'+lid+'-atlas-saved-chips';
+    atlasChips.style.cssText='display:none;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--atlas-border)';
+    body.appendChild(atlasChips);
   },true);
   makeAccSection(perCard,'Subcontractors',function(body){
     body.style.paddingTop='10px';
-    // Saved name chips
-    var subChips=div();subChips.id='l'+lid+'-sub-saved-chips';
-    subChips.style.cssText='display:none;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--atlas-border)';
-    body.appendChild(subChips);
     body.appendChild(subCrew);body.appendChild(addSubLink);
     var subSaveRow=div('action-bar');subSaveRow.style.marginTop='4px';subSaveRow.appendChild(subMsg);subSaveRow.appendChild(saveSubBtn);body.appendChild(subSaveRow);
+    // Saved name chips — below the Save button
+    var subChips=div();subChips.id='l'+lid+'-sub-saved-chips';
+    subChips.style.cssText='display:none;flex-wrap:wrap;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--atlas-border)';
+    body.appendChild(subChips);
   },false);
   makeAccSection(perCard,'Visitors / Other',function(body){
     body.style.paddingTop='10px';
@@ -3777,7 +3792,7 @@ async function importBackup(file){
           if(backup.logs){logs=backup.logs.logs||{};logOrder=backup.logs.logOrder||[];await saveLogs();}
           if(backup.library){library=backup.library;await saveLibrary();}
           document.getElementById('log-container').innerHTML='';
-          if(!logOrder.length){showWelcome();}else{showMainUI();logOrder.forEach(function(lid){var F=logs[lid]&&logs[lid]._fields?logs[lid]._fields:{};buildLogDOM(lid,F);if(logs[lid]&&logs[lid]._fields){['sc-sampling','sc-monitoring','sc-cleanup-scope','sc-pa','sc-oversight'].forEach(function(f){var e=document.getElementById('l'+lid+'-'+f);if(e&&logs[lid]._fields[f]!==undefined)e.checked=!!logs[lid]._fields[f];});}});renderTabs();switchToLog(logOrder[0]);}
+          if(!logOrder.length){showWelcome();}else{showMainUI();logOrder.forEach(function(lid){var F=logs[lid]&&logs[lid]._fields?logs[lid]._fields:{};buildLogDOM(lid,F);if(F['sc-sampling']!==undefined){['sc-sampling','sc-monitoring','sc-cleanup-scope','sc-pa','sc-oversight'].forEach(function(f){var e=document.getElementById('l'+lid+'-'+f);if(e&&F[f]!==undefined)e.checked=!!F[f];});}if(F._atlasCrew&&F._atlasCrew.length){var ac=document.getElementById('l'+lid+'-atlas-crew');if(ac){ac.innerHTML='';F._atlasCrew.forEach(function(n){if(n)ac.appendChild(makeCrewRow(n));});if(!ac.children.length)ac.appendChild(makeCrewRow(''));}}if(F._subCrew&&F._subCrew.length){var sc2=document.getElementById('l'+lid+'-sub-crew');if(sc2){sc2.innerHTML='';F._subCrew.forEach(function(n){if(n)sc2.appendChild(makeCrewRow(n));});if(!sc2.children.length)sc2.appendChild(makeCrewRow(''));}}if(F._visitorCrew&&F._visitorCrew.length){var vc=document.getElementById('l'+lid+'-visitor-crew');if(vc){F._visitorCrew.forEach(function(v){vc.appendChild(makeVisitorRow(v.name,v.org));});}}});renderTabs();switchToLog(logOrder[0]);}
           renderLibrary();showAlert('Restore complete.');
         }catch(err){showAlert('Restore failed: '+err.message);}
       });
@@ -3844,15 +3859,27 @@ async function init(){
   if(!logOrder.length){showWelcome();}
   else{
     logOrder.forEach(function(lid){
-      // Restore field values from saved snapshot
       var F=logs[lid]&&logs[lid]._fields?logs[lid]._fields:{};
       buildLogDOM(lid,F);
-      // Restore scope checkboxes from snapshot
-      if(logs[lid]&&logs[lid]._fields){
+      // Restore scope checkboxes
+      if(F['sc-sampling']!==undefined){
         ['sc-sampling','sc-monitoring','sc-cleanup-scope','sc-pa','sc-oversight'].forEach(function(f){
           var e=document.getElementById('l'+lid+'-'+f);
-          if(e&&logs[lid]._fields[f]!==undefined)e.checked=!!logs[lid]._fields[f];
+          if(e&&F[f]!==undefined)e.checked=!!F[f];
         });
+      }
+      // Restore crew rows from snapshot
+      if(F._atlasCrew&&F._atlasCrew.length){
+        var ac=document.getElementById('l'+lid+'-atlas-crew');
+        if(ac){ac.innerHTML='';F._atlasCrew.forEach(function(n){if(n)ac.appendChild(makeCrewRow(n));});if(!ac.children.length)ac.appendChild(makeCrewRow(''));}
+      }
+      if(F._subCrew&&F._subCrew.length){
+        var sc=document.getElementById('l'+lid+'-sub-crew');
+        if(sc){sc.innerHTML='';F._subCrew.forEach(function(n){if(n)sc.appendChild(makeCrewRow(n));});if(!sc.children.length)sc.appendChild(makeCrewRow(''));}
+      }
+      if(F._visitorCrew&&F._visitorCrew.length){
+        var vc=document.getElementById('l'+lid+'-visitor-crew');
+        if(vc){F._visitorCrew.forEach(function(v){vc.appendChild(makeVisitorRow(v.name,v.org));});}
       }
     });
     renderTabs();switchToLog(logOrder[0]);
