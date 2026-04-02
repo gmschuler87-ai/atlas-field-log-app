@@ -203,9 +203,10 @@ body.dark .lib-item{border-color:#1c3347;}
       <div class="form-group"><label>Location ID</label>
         <div class="preset-row">
           <select id="wellIdSelect" onchange="selectWellId(this.value)" style="flex:1;"><option value="">-- Select saved --</option></select>
-          <input type="text" id="wellId" onchange="saveData()" placeholder="e.g. Site A, Parcel 12, Block 3" style="flex:1;">
+          <input type="text" id="wellId" onchange="saveData()" placeholder="Type new location..." style="flex:1;" oninput="showWellIdSaveHint(this)">
           <button class="btn btn-sm btn-outline" onclick="saveWellPreset()">Save</button>
         </div>
+        <div id="wellIdHint" style="display:none;font-size:11px;color:#d97706;margin-top:4px;font-weight:600">⚠ Unsaved — tap Save to lock this location name for consistent filing</div>
       </div>
     </div>
     <div class="form-row full" style="margin-bottom:10px;">
@@ -574,9 +575,19 @@ function showToast(msg) {
 // ===== WELL ID / API MAPPING =====
 function loadWellMap() { try { wellMap=JSON.parse(localStorage.getItem(SK_WELLS))||{}; } catch(e){ wellMap={}; } }
 function saveWellMap() { localStorage.setItem(SK_WELLS, JSON.stringify(wellMap)); }
+function showWellIdSaveHint(input){
+  const val = input.value.trim();
+  const hint = document.getElementById('wellIdHint');
+  if(!hint) return;
+  // Show hint if typed value doesn't match any saved preset
+  const saved = Object.keys(wellMap);
+  hint.style.display = (val && !saved.includes(val)) ? 'block' : 'none';
+}
 function selectWellId(val) {
   if(!val) return;
   document.getElementById('wellId').value = val;
+  const hint = document.getElementById('wellIdHint');
+  if(hint) hint.style.display = 'none';
   // Apply saved MP preset for this location if exists
   if(presets.mpPresets&&presets.mpPresets[val]){
     rounds.forEach(function(r){if(!r.customMPs||!r.customMPs.length)r.customMPs=presets.mpPresets[val];});
@@ -591,6 +602,8 @@ function saveWellPreset() {
   const sel = document.getElementById('wellIdSelect');
   const exists = Array.from(sel.options).some(o=>o.value===wid);
   if(!exists) { sel.add(new Option(wid, wid)); }
+  const hint = document.getElementById('wellIdHint');
+  if(hint) hint.style.display = 'none';
   saveData();
   showToast('Location saved');
 }
@@ -885,6 +898,10 @@ function updateReadingStatus(rid, readId) {
   const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
   const card = document.querySelector('[data-reading="'+readId+'"]');
   if(!card) return;
+
+  // Flush any uncommitted DOM input values into the data object before evaluating
+  flushReadingInputs(rid, readId);
+
   const missingMP = !rd.monitorPoint;
   const missingVoc = !rd.voc && rd.voc!=='0';
   const missingDust = !rd.dust && rd.dust!=='0';
@@ -916,16 +933,23 @@ function updateReadingStatus(rid, readId) {
   const noiseThresh = getNoiseActionLevel();
   const noiseAlert = noiseThresh>0 && parseFloat(rd.noise)>=noiseThresh;
   const fieldMap = [
-    {cls:'input-mp', missing:missingMP, danger:false},
-    {cls:'input-voc', missing:missingVoc, danger:vocAlert},
-    {cls:'input-dust', missing:missingDust, danger:dustAlert},
-    {cls:'input-visdust', missing:missingVis, danger:false},
-    {cls:'input-noise', missing:missingNoise, danger:noiseAlert},
-    {cls:'input-odors', missing:missingOdors, danger:false}
+    {cls:'input-mp', missing:missingMP, danger:false, isTapGroup:false},
+    {cls:'input-voc', missing:missingVoc, danger:vocAlert, isTapGroup:false},
+    {cls:'input-dust', missing:missingDust, danger:dustAlert, isTapGroup:false},
+    {cls:'input-visdust-yes', missing:missingVis, danger:false, isTapGroup:true},
+    {cls:'input-noise', missing:missingNoise, danger:noiseAlert, isTapGroup:false},
+    {cls:'input-odors-n', missing:missingOdors, danger:false, isTapGroup:true}
   ];
   fieldMap.forEach(f=>{
     const el = card.querySelector('.'+f.cls);
     if(!el) return;
+    // Tap button groups manage their own visual state via button classes — don't override with inline styles
+    if(f.isTapGroup) return;
+    // MP tap grid (div, not input) — use border only, no background tint which clashes with buttons
+    if(el.tagName !== 'INPUT' && el.tagName !== 'SELECT'){
+      el.style.cssText = f.missing ? 'border:2px solid #f59e0b;border-radius:8px;padding:2px;' : '';
+      return;
+    }
     if(f.danger) el.style.cssText = dangerMs;
     else if(f.missing) el.style.cssText = ms;
     else el.style.cssText = '';
@@ -962,7 +986,7 @@ function renderRounds() {
   // Split: background rounds pinned at top, perimeter rounds below
   const bgRounds = rounds.filter(r=>r.isBackground);
   const periRounds = rounds.filter(r=>!r.isBackground);
-  const orderedRounds = [...bgRounds, ...periRounds];
+  const orderedRounds = [...periRounds, ...bgRounds];
   c.innerHTML = orderedRounds.map((round,ri)=>{
     const totalInRound = round.readings.length;
     const readingsHtml = round.readings.map((rd,rdi)=>{
@@ -1022,14 +1046,29 @@ function renderRounds() {
             </div>
           </div>
         </div>
+        <div class="form-row full" style="margin-bottom:8px">
+          <div class="form-group">
+            <label>Comments?</label>
+            <div class="tap-btn-group input-comment-yn" data-next="input-dust" tabindex="-1">
+              <button class="tap-btn ${rd._commentNo===true&&!rd.comments?'tap-btn-no':'tap-btn-inactive'}" onclick="setCommentNo(this,${round.id},${rd.id})">No</button>
+              <button class="tap-btn ${rd.comments||rd._commentYes?'tap-btn-yes':'tap-btn-inactive'}" onclick="setCommentYes(this,${round.id},${rd.id})">Yes</button>
+            </div>
+          </div>
+        </div>
+        <div data-comment-container style="margin-bottom:${rd.comments||rd._commentYes?'8px':'0'}">
+          ${rd.comments||rd._commentYes ? `
+            <div class="form-group">
+              <label>Comment</label>
+              ${renderCommentPillsHtml(round.id, rd.id, rd.comments)}
+              <div style="display:flex;gap:6px;align-items:center">
+                <input class="input-comments" type="text" enterkeyhint="done" value="${rd.comments||''}" placeholder="Enter comment..." onchange="updateReading(${round.id},${rd.id},'comments',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="flex:1;font-size:14px">
+                <button onclick="saveCommentPill(${round.id},${rd.id})" style="padding:0 8px;height:36px;border:1.5px solid var(--atlas-primary);border-radius:6px;background:var(--input-bg);color:var(--atlas-primary);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Save pill</button>
+              </div>
+            </div>` : ''
+          }
+        </div>
         <div class="form-row full">
           <div class="form-group"><label>PM10 Dust (mg/m³)</label><input class="input-dust" type="number" step="0.001" inputmode="decimal" enterkeyhint="done" value="${rd.dust}" onblur="if(this._processing)return;this._processing=true;setTimeout(()=>{this._processing=false;},300);this.value=normalizeDust(this.value,this);updateReading(${round.id},${rd.id},'dust',this.value);setTimeout(function(){markReadingComplete(${round.id},${rd.id});},500);" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="${dustAlert?'border-color:var(--danger);background:#fee2e2':missingDust?missingStyle:''}"></div>
-        </div>
-        <div style="margin-top:6px" data-comment-container>
-          ${rd.comments
-            ? `<div class="form-group"><label>Comments</label><input class="input-comments" type="text" enterkeyhint="done" value="${rd.comments}" onchange="updateReading(${round.id},${rd.id},'comments',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();this.blur();}" style="font-size:14px"></div>`
-            : `<button onclick="expandComments(this,${round.id},${rd.id})" style="background:none;border:none;color:var(--text-dim);font-size:12px;font-weight:600;cursor:pointer;padding:4px 0;font-family:inherit">+ Add comment</button>`
-          }
         </div>
       </div>`;
     }).join('');
@@ -1127,7 +1166,7 @@ function renderLibrary() {
         <div class="lib-date">${item.date} · ${item.readingCount} reading${item.readingCount!==1?'s':''} · Saved ${item.savedAt ? (()=>{const d=new Date(item.savedAt);const now=new Date();const diff=Math.floor((now-d)/60000);if(diff<1)return'just now';if(diff<60)return diff+'m ago';if(diff<1440)return Math.floor(diff/60)+'h ago';return (d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear()+' '+d.toTimeString().slice(0,5);})() : ''}</div>
       </div>
       <div class="lib-actions" style="margin-top:10px">
-        <button class="btn btn-sm btn-primary" onclick="viewLibraryItem(${i})">Open</button>
+        <button class="btn btn-sm btn-primary" onclick="generateLibraryPDF(${i})">📄 Generate PDF</button>
         <button class="btn btn-sm btn-outline" onclick="resumeLibraryItem(${i})">Edit</button>
         <button class="btn btn-sm btn-danger" onclick="confirmDelete(this,function(){deleteLibraryItem(${i});})">Delete</button>
       </div>
@@ -1187,41 +1226,58 @@ function deleteLibraryItem(idx) {
   renderLibrary();
   showToast('Deleted');
 }
-function viewLibraryItem(idx) {
+function generateLibraryPDF(idx) {
   const item = library[idx];
-  const html = generatePdfHtml(item.data);
-  // Show in-app overlay — no popup needed
+  if(!item || !item.data){ showToast('No data in this report'); return; }
+  const reportHtml = generatePdfHtml(item.data);
+  const si = item.data.si || {};
+  const filename = 'ATLAS_AML_'+(si.siteDate?si.siteDate.replace(/-/g,''):'undated')+(si.wellId?'_'+si.wellId.replace(/[^a-zA-Z0-9]/g,'_'):'');
+
+  if(!storedMaps.length){
+    // No maps stored — generate directly
+    showPdfPreview(reportHtml);
+    return;
+  }
+
+  // Show map selection modal (same as promptGeneratePDF but works on library data)
   const modal = document.createElement('div');
-  modal.style.cssText = 'position:fixed;inset:0;background:var(--bg);z-index:300;display:flex;flex-direction:column';
-  const toolbar = document.createElement('div');
-  toolbar.style.cssText = 'background:var(--atlas-dark);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:8px';
-  const title = document.createElement('span');
-  title.style.cssText = 'color:#fff;font-weight:700;font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-  title.textContent = item.title;
-  const btnRow = document.createElement('div');
-  btnRow.style.cssText = 'display:flex;gap:6px;flex-shrink:0';
-  const printBtn = document.createElement('button');
-  printBtn.textContent = '🖨 Print';
-  printBtn.style.cssText = 'padding:7px 12px;background:var(--atlas-primary);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit';
-  printBtn.onclick = function(){
-    const w = window.open('','_blank');
-    if(!w){showToast('Allow popups to print');return;}
-    w.document.open();w.document.write(html);w.document.close();
-    setTimeout(function(){try{w.focus();w.print();}catch(e){}},600);
+  modal.className = 'exceedance-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+
+  const mapOptions = storedMaps.map(function(m,i){
+    return '<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:8px;cursor:pointer;margin-bottom:8px;background:var(--input-bg)">'
+      +'<input type="radio" name="libMapChoice" value="'+i+'" style="width:18px;height:18px;accent-color:var(--atlas-primary)">'
+      +'<div><div style="font-size:13px;font-weight:700;color:var(--text)">'+m.name+'</div>'
+        +'<div style="font-size:11px;color:var(--text-dim)">'+Math.round(m.size/1024)+'KB</div></div>'
+    +'</label>';
+  }).join('');
+
+  modal.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:20px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto">'
+    +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px">Attach a Map?</div>'
+    +'<div style="font-size:12px;color:var(--text-dim);margin-bottom:14px">'+item.title+'</div>'
+    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">The map image will be appended after the report as a full page. One print dialog, one document.</p>'
+    +mapOptions
+    +'<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:8px;cursor:pointer;margin-bottom:14px;background:var(--input-bg)">'
+      +'<input type="radio" name="libMapChoice" value="none" checked style="width:18px;height:18px;accent-color:var(--atlas-primary)">'
+      +'<div style="font-size:13px;font-weight:700;color:var(--text-dim)">No map — report only</div>'
+    +'</label>'
+    +'<div style="display:flex;gap:8px">'
+      +'<button onclick="closeTopModal()" style="flex:1;height:44px;border:1.5px solid var(--input-border);border-radius:8px;background:none;cursor:pointer;font-size:14px;font-weight:700;color:var(--text-dim);font-family:inherit">Cancel</button>'
+      +'<button id="libPdfConfirmBtn" style="flex:1;height:44px;border:none;border-radius:8px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit">Generate PDF</button>'
+    +'</div>'
+  +'</div>';
+
+  modal.querySelector('#libPdfConfirmBtn').onclick = function(){
+    const selected = modal.querySelector('input[name="libMapChoice"]:checked');
+    const mapIdx = selected ? selected.value : 'none';
+    closeTopModal();
+    if(mapIdx === 'none'){
+      showPdfPreview(reportHtml);
+    } else {
+      mergePdfWithMap(reportHtml, storedMaps[parseInt(mapIdx)], filename);
+    }
   };
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '✕';
-  closeBtn.style.cssText = 'padding:7px 10px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit';
-  closeBtn.onclick = function(){modal.remove();};
-  btnRow.appendChild(printBtn);
-  btnRow.appendChild(closeBtn);
-  toolbar.appendChild(title);
-  toolbar.appendChild(btnRow);
-  modal.appendChild(toolbar);
-  const frame = document.createElement('iframe');
-  frame.style.cssText = 'flex:1;border:none;background:#fff';
-  frame.srcdoc = html;
-  modal.appendChild(frame);
+  modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
   document.body.appendChild(modal);
 }
 
@@ -1270,9 +1326,12 @@ function generatePdfHtml(data) {
   if(dateStr){const d=new Date(dateStr+'T00:00:00');dateStr=(d.getMonth()+1)+'/'+d.getDate()+'/'+d.getFullYear();}
   function fmtDT(v){if(!v)return'';const d=new Date(v);return (d.getMonth()+1)+'/'+d.getDate()+' '+d.toTimeString().slice(0,5);}
 
-  // Flatten readings chronologically
+  // Flatten readings: BG round first, then perimeter rounds oldest→newest, readings within each round oldest→newest
   const allReadings=[];
-  [...savedRounds].reverse().forEach(function(round){
+  const bgRoundsPdf = savedRounds.filter(function(r){return r.isBackground;});
+  const periRoundsPdf = savedRounds.filter(function(r){return !r.isBackground;});
+  const orderedPdf = [...bgRoundsPdf, ...periRoundsPdf.slice().reverse()];
+  orderedPdf.forEach(function(round){
     [...round.readings].reverse().forEach(function(rd){
       const isBg=round.isBackground||false;
       const bgLoc=round.bgLocation||'';
@@ -1388,7 +1447,6 @@ function generatePDF(attachedMap) {
 
   const fullHtml = generatePdfHtml(data);
 
-  // Save to library
   const libEntry = {
     title: `Air Monitoring Log — ${si.wellId||'Untitled'} — ${dateStr||'undated'}`,
     filename: 'ATLAS_AML_'+(si.siteDate?si.siteDate.replace(/-/g,''):'undated')+(si.wellId?'_'+si.wellId.replace(/[^a-zA-Z0-9]/g,'_'):''),
@@ -1398,18 +1456,48 @@ function generatePDF(attachedMap) {
     savedAt: new Date().toISOString(),
     attachedMapName: attachedMap ? attachedMap.name : null
   };
-  library.unshift(libEntry);
-  saveLibrary();
-  renderLibrary();
 
-  document.getElementById('print-output').innerHTML = fullHtml;
+  // Check for existing entry with same title
+  const dupIdx = library.findIndex(function(e){ return e.title === libEntry.title; });
 
-  if(attachedMap){
-    showToast('Building report + map…');
-    mergePdfWithMap(fullHtml, attachedMap, libEntry.filename);
+  function proceedWithSave(){
+    if(dupIdx !== -1){
+      library.splice(dupIdx, 1); // remove old entry
+    }
+    library.unshift(libEntry);
+    saveLibrary();
+    renderLibrary();
+    document.getElementById('print-output').innerHTML = fullHtml;
+    if(attachedMap){
+      showToast('Building report + map…');
+      mergePdfWithMap(fullHtml, attachedMap, libEntry.filename);
+    } else {
+      showToast('Saved to library');
+      showPdfPreview(fullHtml);
+    }
+  }
+
+  if(dupIdx !== -1){
+    // Warn before replacing
+    const modal = document.createElement('div');
+    modal.className = 'exceedance-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+    modal.innerHTML = '<div style="background:var(--card);border-radius:12px;padding:20px;width:100%;max-width:340px">'
+      +'<div style="font-size:15px;font-weight:700;margin-bottom:8px;color:var(--text)">Replace existing report?</div>'
+      +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:6px;line-height:1.5">A saved report already exists for:</p>'
+      +'<p style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:16px">'+libEntry.title+'</p>'
+      +'<p style="font-size:12px;color:var(--text-dim);margin-bottom:16px;line-height:1.5">The existing entry will be replaced with this updated version.</p>'
+      +'<div style="display:flex;gap:8px">'
+        +'<button id="dupCancelBtn" style="flex:1;height:44px;border:1.5px solid var(--input-border);border-radius:8px;background:none;cursor:pointer;font-size:14px;font-weight:700;color:var(--text-dim);font-family:inherit">Cancel</button>'
+        +'<button id="dupReplaceBtn" style="flex:1;height:44px;border:none;border-radius:8px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:14px;font-weight:700;font-family:inherit">Replace</button>'
+      +'</div>'
+    +'</div>';
+    modal.querySelector('#dupCancelBtn').onclick = function(){ modal.remove(); };
+    modal.querySelector('#dupReplaceBtn').onclick = function(){ modal.remove(); proceedWithSave(); };
+    modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+    document.body.appendChild(modal);
   } else {
-    showToast('Saved to library');
-    showPdfPreview(fullHtml);
+    proceedWithSave();
   }
 }
 
@@ -1945,6 +2033,7 @@ function showManagePresets(){
       {label:'Employees', items:(presets.employees||[]), del:function(v){presets.employees=presets.employees.filter(x=>x!==v);savePresets();renderAllPresetDropdowns();}},
       {label:'Instruments', items:(presets.instruments||[]).map(function(p){return p.name;}), del:function(v){presets.instruments=presets.instruments.filter(p=>p.name!==v);savePresets();renderInstPresetDropdowns();}},
       {label:'Background Locations', items:(presets.bgLocations||[]), del:function(v){presets.bgLocations=presets.bgLocations.filter(x=>x!==v);savePresets();}},
+      {label:'Comment Pills', items:(presets.commentPills||[]).map(function(p){return p.label;}), del:function(v){presets.commentPills=presets.commentPills.filter(p=>p.label!==v);savePresets();}},
     ];
 
     let html = '<div style="background:var(--card);border-radius:14px;width:100%;max-width:380px;max-height:80vh;overflow-y:auto">'
@@ -2083,16 +2172,55 @@ function updateReadingsSummary(){
   items.push({val:totalReadings,label:'reading'+(totalReadings!==1?'s':''),color:'var(--atlas-primary)'});
   if(actionHits>0)items.push({val:'⚠',label:actionHits+' action level'+(actionHits!==1?' hits':'hit'),color:'#dc2626'});
   else if(totalReadings>0)items.push({val:'✓',label:'no action levels',color:'var(--success)'});
-  if(incomplete>0)items.push({val:incomplete,label:'reading'+(incomplete!==1?'s':'')+' incomplete',color:'#d97706'});
+  if(incomplete>0)items.push({val:incomplete,label:'incomplete — tap',color:'#d97706',action:'nextIncomplete'});
+  else _lastIncompleteId = null;
   el.innerHTML=items.map(function(it,i){
-    return '<div style="flex:1;text-align:center;padding:6px 4px'+(i>0?';border-left:1px solid var(--card-border)':'')+'">'
+    const clickable = it.action ? 'cursor:pointer;' : '';
+    const onclick = it.action ? ' onclick="'+it.action+'()"' : '';
+    return '<div'+onclick+' style="flex:1;text-align:center;padding:6px 4px'+clickable+(i>0?';border-left:1px solid var(--card-border)':'')+'">'
       +'<div style="font-size:18px;font-weight:800;color:'+it.color+';line-height:1">'+it.val+'</div>'
       +'<div style="font-size:11px;color:var(--text-dim);margin-top:2px">'+it.label+'</div>'
       +'</div>';
   }).join('');
 }
 
-// ===== FULLSCREEN READINGS =====
+// ===== NAVIGATE TO NEXT INCOMPLETE READING =====
+let _lastIncompleteId = null;
+function nextIncomplete(){
+  // Collect all incomplete reading IDs in current DOM order
+  const incompleteCards = [];
+  document.querySelectorAll('.reading-item').forEach(function(card){
+    const statusEl = card.querySelector('.reading-status');
+    if(statusEl && statusEl.textContent.includes('incomplete')){
+      incompleteCards.push(card);
+    }
+  });
+  if(!incompleteCards.length) return;
+
+  // Find the next one after the last visited
+  let targetCard = incompleteCards[0];
+  if(_lastIncompleteId){
+    const lastIdx = incompleteCards.findIndex(function(c){ return c.dataset.reading == _lastIncompleteId; });
+    if(lastIdx !== -1 && lastIdx < incompleteCards.length - 1){
+      targetCard = incompleteCards[lastIdx + 1];
+    }
+    // If last was the last in the list, wrap back to first
+  }
+  _lastIncompleteId = targetCard.dataset.reading;
+
+  // Scroll to it with offset for sticky header
+  const rect = targetCard.getBoundingClientRect();
+  const offset = 110;
+  const targetY = window.scrollY + rect.top - offset;
+  window.scrollTo({top: targetY, behavior: 'smooth'});
+
+  // Brief highlight flash to draw the eye
+  targetCard.style.transition = 'box-shadow .15s';
+  targetCard.style.boxShadow = '0 0 0 3px #f59e0b';
+  setTimeout(function(){ targetCard.style.boxShadow = ''; }, 800);
+}
+
+
 let _readingsFullscreen=false;
 function toggleReadingsFullscreen(){
   _readingsFullscreen=!_readingsFullscreen;
@@ -2218,6 +2346,121 @@ function expandComments(btn, rid, readId){
   inp.onchange = function(){updateReading(rid, readId, 'comments', this.value);};
   inp.onkeydown = function(e){if(e.key==='Enter'){e.preventDefault();this.blur();}};
   inp.focus();
+}
+
+// ===== COMMENT PILL HTML HELPER =====
+function renderCommentPillsHtml(rid, readId, currentComment){
+  if(!presets.commentPills||!presets.commentPills.length) return '';
+  const pills = presets.commentPills.map(function(p){
+    const active = currentComment===p.text;
+    const safeText = p.text.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+    return '<button onclick="applyCommentPill(this,'+rid+','+readId+',\''+safeText+'\')" '
+      +'style="padding:4px 10px;height:30px;border:1.5px solid var(--atlas-primary);border-radius:20px;'
+      +'background:'+(active?'var(--atlas-primary)':'var(--input-bg)')+';'
+      +'color:'+(active?'#fff':'var(--atlas-primary)')+';'
+      +'font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">'
+      +(p.label||p.text)+'</button>';
+  }).join('');
+  return '<div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px">'+pills+'</div>';
+}
+
+
+// ===== FLUSH PENDING DOM VALUES BEFORE RE-RENDER =====
+// Inputs use onblur not oninput — if user hasn't tabbed away, data object lags the DOM.
+// Call this before any renderRounds() triggered by a tap/button action on a live reading card.
+function flushReadingInputs(rid, readId){
+  const card = document.querySelector('[data-reading="'+readId+'"]');
+  if(!card) return;
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
+  const vocEl=card.querySelector('.input-voc');
+  const noiseEl=card.querySelector('.input-noise');
+  const dustEl=card.querySelector('.input-dust');
+  const mpEl=card.querySelector('select.input-mp');
+  const commentsEl=card.querySelector('.input-comments');
+  if(vocEl && vocEl.value!=='' && rd.voc!==vocEl.value) rd.voc=vocEl.value;
+  if(noiseEl && noiseEl.value!=='' && rd.noise!==noiseEl.value) rd.noise=noiseEl.value;
+  if(dustEl && dustEl.value!=='' && rd.dust!==dustEl.value) rd.dust=dustEl.value;
+  if(mpEl && mpEl.value && rd.monitorPoint!==mpEl.value) rd.monitorPoint=mpEl.value;
+  if(commentsEl && commentsEl.value!=='' && rd.comments!==commentsEl.value) rd.comments=commentsEl.value;
+}
+
+function setCommentNo(btn, rid, readId){
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
+  rd._commentNo=true; rd._commentYes=false; rd.comments='';
+  saveData();
+  // Surgical DOM update — no renderRounds, no re-amber
+  const card = document.querySelector('[data-reading="'+readId+'"]');
+  if(!card) return;
+  // Update button states
+  const group = btn.parentElement;
+  group.querySelectorAll('.tap-btn').forEach(function(b){ b.className='tap-btn tap-btn-unchosen'; });
+  btn.className='tap-btn tap-btn-no';
+  // Hide comment container
+  const container = card.querySelector('[data-comment-container]');
+  if(container){ container.innerHTML=''; container.style.marginBottom='0'; }
+  // Focus dust
+  setTimeout(function(){
+    const dustInput=card.querySelector('.input-dust');
+    if(dustInput){dustInput.focus();dustInput.scrollIntoView({behavior:'smooth',block:'center'});}
+  }, 80);
+  updateReadingStatus(rid, readId);
+}
+function setCommentYes(btn, rid, readId){
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
+  rd._commentYes=true; rd._commentNo=false;
+  saveData();
+  // Surgical DOM update — no renderRounds
+  const card = document.querySelector('[data-reading="'+readId+'"]');
+  if(!card) return;
+  // Update button states
+  const group = btn.parentElement;
+  group.querySelectorAll('.tap-btn').forEach(function(b){ b.className='tap-btn tap-btn-unchosen'; });
+  btn.className='tap-btn tap-btn-yes';
+  // Show comment container with pills + input
+  const container = card.querySelector('[data-comment-container]');
+  if(container){
+    container.style.marginBottom='8px';
+    const pillsHtml = renderCommentPillsHtml(rid, readId, rd.comments||'');
+    container.innerHTML = '<div class="form-group"><label>Comment</label>'
+      + pillsHtml
+      + '<div style="display:flex;gap:6px;align-items:center">'
+        + '<input class="input-comments" type="text" enterkeyhint="done" value="'+(rd.comments||'')+'" placeholder="Enter comment..." style="flex:1;font-size:14px">'
+        + '<button onclick="saveCommentPill('+rid+','+readId+')" style="padding:0 8px;height:36px;border:1.5px solid var(--atlas-primary);border-radius:6px;background:var(--input-bg);color:var(--atlas-primary);font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0">Save pill</button>'
+      + '</div></div>';
+    const inp = container.querySelector('.input-comments');
+    if(inp){
+      inp.onchange = function(){ updateReading(rid, readId, 'comments', this.value); };
+      inp.onkeydown = function(e){ if(e.key==='Enter'){e.preventDefault();this.blur();} };
+      setTimeout(function(){ inp.focus(); inp.scrollIntoView({behavior:'smooth',block:'center'}); }, 80);
+    }
+  }
+  updateReadingStatus(rid, readId);
+}
+
+// ===== COMMENT PILLS =====
+function applyCommentPill(btn, rid, readId, text){
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
+  flushReadingInputs(rid, readId);
+  rd.comments=text; rd._commentYes=true; rd._commentNo=false;
+  saveData(); renderRounds();
+}
+function saveCommentPill(rid, readId){
+  const r=rounds.find(r=>r.id===rid); if(!r) return;
+  const rd=r.readings.find(x=>x.id===readId); if(!rd) return;
+  const text=(rd.comments||'').trim();
+  if(!text){showToast('Enter a comment first'); return;}
+  if(!presets.commentPills) presets.commentPills=[];
+  if(presets.commentPills.some(function(p){return p.text===text;})){showToast('Already saved'); return;}
+  // Abbreviate label if over 22 chars
+  const label = text.length>22 ? text.slice(0,20).trimEnd()+'\u2026' : text;
+  presets.commentPills.push({text:text, label:label});
+  savePresets();
+  renderRounds();
+  showToast('Comment saved as pill');
 }
 
 // ===== TAP FIELD (visible dust / odors) =====
