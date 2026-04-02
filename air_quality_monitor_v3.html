@@ -170,6 +170,7 @@ body.dark .lib-item{border-color:#1c3347;}
 #print-output{display:none;}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -960,7 +961,7 @@ function deleteReading(rid, readId) {
 function renderRounds() {
   const c=document.getElementById('roundsContainer');
   // Split: background rounds pinned at top, perimeter rounds below
-  const bgRounds = rounds.filter(r=>r.isBackground && !r.bgCompleted);
+  const bgRounds = rounds.filter(r=>r.isBackground);
   const periRounds = rounds.filter(r=>!r.isBackground);
   const orderedRounds = [...bgRounds, ...periRounds];
   c.innerHTML = orderedRounds.map((round,ri)=>{
@@ -1054,7 +1055,7 @@ function renderRounds() {
           </div>
           <div style="display:flex;gap:6px;flex-shrink:0">
 
-            <button onclick="toggleRoundCollapse(${round.id})" style="padding:0 12px;height:32px;font-size:12px;font-weight:800;background:${round.collapsed?'rgba(255,255,255,.9)':'rgba(255,255,255,.95)'};border:none;color:var(--atlas-dark);border-radius:6px;cursor:pointer;font-family:inherit">${round.collapsed?'✎ Edit Round':'End Round'}</button>
+            <button onclick="toggleRoundCollapse(${round.id})" style="padding:0 12px;height:32px;font-size:12px;font-weight:800;background:${round.collapsed?'rgba(255,255,255,.9)':'rgba(255,255,255,.95)'};border:none;color:var(--atlas-dark);border-radius:6px;cursor:pointer;font-family:inherit">${round.collapsed?'✎ Edit':'End Round'}</button>
             <button onclick="confirmDelete(this,function(){deleteRound(${round.id});})" style="padding:0 10px;height:32px;font-size:12px;font-weight:700;background:rgba(220,38,38,.7);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:6px;cursor:pointer;font-family:inherit">Del</button>
           </div>
         </div>
@@ -1066,7 +1067,12 @@ function renderRounds() {
       ${round.isBackground && round.collapsed ? `<div style="padding:10px 14px;background:#eef2ff;border-top:1px solid #c7d2fe;font-size:12px;color:#3730a3">
         <span style="font-weight:700">Background values: </span>
         ${round.readings.length===0 ? '<span style=\"color:#4338ca\">No readings recorded</span>' :
-          round.readings.map(r=>`<span style=\"margin-right:12px\">${r.monitorPoint||'MP?'} — VOC: ${r.voc||'—'} ppm, Dust: ${r.dust||'—'} mg/m³</span>`).join('')}
+          round.readings.map(r=>`<span style=\"margin-right:12px\">${r.monitorPoint||'BG'} — VOC: ${r.voc||'—'} ppm, Dust: ${r.dust||'—'} mg/m³</span>`).join('')}
+        <span style="margin-left:8px;color:${(round.temp&&round.windDir&&round.windSpeed)?'#3730a3':'#dc2626'};font-weight:${(round.temp&&round.windDir&&round.windSpeed)?'400':'700'}">
+          ${(round.temp&&round.windDir&&round.windSpeed)
+            ? '· '+round.temp+'°F '+round.windDir+' '+round.windSpeed+' mph'
+            : '· ⚠ Weather missing — tap ✎ Edit'}
+        </span>
       </div>` : ''}
       <div class="round-body" style="${round.collapsed?'display:none':''}">
         ${round.isBackground?`<div style="background:#eef2ff;border:1.5px solid #818cf8;border-radius:8px;padding:12px 14px;margin-bottom:14px">
@@ -1399,7 +1405,7 @@ function generatePDF(attachedMap) {
   document.getElementById('print-output').innerHTML = fullHtml;
 
   if(attachedMap){
-    showToast('Preparing report + map...');
+    showToast('Building report + map…');
     mergePdfWithMap(fullHtml, attachedMap, libEntry.filename);
   } else {
     showToast('Saved to library');
@@ -1407,26 +1413,115 @@ function generatePDF(attachedMap) {
   }
 }
 
-function mergePdfWithMap(reportHtml, mapEntry, filename){
-  // Step 1: download the map PDF immediately
+async function mergePdfWithMap(reportHtml, mapEntry, filename){
+  // Set PDF.js worker source
   try {
-    const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
-    const blob = new Blob([mapBytes], {type:'application/pdf'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename+'_map.pdf';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
-  } catch(err){
-    console.error('Map download error:', err);
-    showToast('Map download failed');
+    if(typeof pdfjsLib !== 'undefined'){
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  } catch(e){}
+
+  // Show progress modal
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:24px 28px;width:100%;max-width:320px;text-align:center">'
+    + '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Building report + map…</div>'
+    + '<div id="mergeProgress" style="font-size:13px;color:var(--text-dim);line-height:1.6">Loading map…</div>'
+    + '<div style="margin-top:14px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden">'
+      + '<div id="mergeBar" style="height:100%;width:0%;background:var(--atlas-primary);border-radius:3px;transition:width .3s"></div>'
+    + '</div>'
+  + '</div>';
+  document.body.appendChild(overlay);
+
+  function setProgress(msg, pct){
+    const p = document.getElementById('mergeProgress');
+    const b = document.getElementById('mergeBar');
+    if(p) p.textContent = msg;
+    if(b) b.style.width = pct + '%';
   }
-  // Step 2: open report print dialog (slight delay so map download initiates first)
-  setTimeout(function(){ showPdfPreview(reportHtml); }, 400);
-  showToast('Map downloading — report opening...');
+
+  try {
+    if(typeof pdfjsLib === 'undefined'){
+      throw new Error('PDF.js not loaded');
+    }
+
+    // Decode map PDF bytes
+    const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
+    setProgress('Reading map pages…', 10);
+
+    const pdfDoc = await pdfjsLib.getDocument({data: mapBytes}).promise;
+    const numPages = pdfDoc.numPages;
+    const pageImgs = [];
+
+    // Render each map page to a canvas at 150 DPI scale (1 CSS pt = 1/72 in, 150 DPI = ~2.08x)
+    const SCALE = 150 / 72;
+
+    for(let i = 1; i <= numPages; i++){
+      setProgress('Rendering map page ' + i + ' of ' + numPages + '…', 10 + Math.round((i / numPages) * 70));
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({scale: SCALE});
+      const canvas = document.createElement('canvas');
+      canvas.width  = Math.round(viewport.width);
+      canvas.height = Math.round(viewport.height);
+      const ctx = canvas.getContext('2d');
+      await page.render({canvasContext: ctx, viewport: viewport}).promise;
+      // Convert to JPEG at 92% quality (smaller than PNG, fine for maps)
+      pageImgs.push({
+        dataUrl: canvas.toDataURL('image/jpeg', 0.92),
+        w: canvas.width,
+        h: canvas.height
+      });
+      // Release canvas memory
+      canvas.width = 0; canvas.height = 0;
+    }
+
+    setProgress('Assembling document…', 85);
+
+    // Build map page HTML — each image on its own print page, no margins, landscape if wider than tall
+    const mapPagesHtml = pageImgs.map(function(img){
+      const landscape = img.w > img.h;
+      return '<div style="page-break-before:always;margin:0;padding:0;'
+        + (landscape ? 'width:11in;height:8.5in;' : 'width:8.5in;height:11in;')
+        + 'display:flex;align-items:center;justify-content:center;overflow:hidden">'
+        + '<img src="' + img.dataUrl + '" style="max-width:100%;max-height:100%;display:block;margin:0 auto" />'
+        + '</div>';
+    }).join('');
+
+    // Inject map pages into report HTML — insert before </body>
+    // Also add @page landscape rule for map pages via a scoped style block
+    const mapStyle = '<style>.map-page{page-break-before:always;}@media print{'
+      + pageImgs.map(function(img, i){
+          return img.w > img.h
+            ? '' // handled inline, landscape pages need a separate @page but browser support is inconsistent
+            : '';
+        }).join('')
+      + '}</style>';
+
+    const combinedHtml = reportHtml.replace('</body>', mapStyle + mapPagesHtml + '</body>');
+
+    setProgress('Opening print dialog…', 100);
+    overlay.remove();
+
+    showPdfPreview(combinedHtml);
+
+  } catch(err){
+    console.error('Map merge error:', err);
+    overlay.remove();
+    // Graceful fallback: open report alone, download map separately
+    showToast('Map merge failed — opening report only');
+    showPdfPreview(reportHtml);
+    // Also download the raw map so nothing is lost
+    try {
+      const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
+      const blob = new Blob([mapBytes], {type:'application/pdf'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename+'_map.pdf';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+    } catch(e2){}
+  }
 }
 function promptEndSession(){
   const modal=document.createElement('div');
@@ -2654,7 +2749,7 @@ function promptGeneratePDF(){
 
   modal.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:20px;width:100%;max-width:380px;max-height:85vh;overflow-y:auto">'
     +'<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Attach a Map?</div>'
-    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">The map PDF downloads first, then the report opens for printing. Save or print both — report first, map last.</p>'
+    +'<p style="font-size:13px;color:var(--text-dim);margin-bottom:14px;line-height:1.5">Map pages will be appended after the report and printed as one document. Rendering takes a few seconds.</p>'
     +mapOptions
     +'<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;border:1.5px solid var(--input-border);border-radius:8px;cursor:pointer;margin-bottom:14px;background:var(--input-bg)">'
       +'<input type="radio" name="mapChoice" value="none" checked style="width:18px;height:18px;accent-color:var(--atlas-primary)">'
