@@ -646,6 +646,29 @@ async function persist(){try{await storageSet('atlas-store-v2',JSON.stringify(st
 async function loadLogs(){try{var raw=await storageGet('atlas-logs-v2');if(raw){var d=JSON.parse(raw);logs=d.logs||{};logOrder=d.logOrder||[];}}catch(e){}}
 async function saveLogs(){
   try{
+    // Snapshot all DOM field values into logs[lid]._fields before saving
+    logOrder.forEach(function(lid){
+      if(!logs[lid])return;
+      var snap={};
+      // Stage 1 fields
+      ['date','proj','phase','office','pm','loc','well','client','zip',
+       'wx','temp','wspd','wdir'].forEach(function(f){
+        var e=document.getElementById('l'+lid+'-'+f);
+        if(e)snap[f]=e.value||'';
+      });
+      // Scope checkboxes
+      ['sc-sampling','sc-monitoring','sc-cleanup-scope','sc-pa','sc-oversight'].forEach(function(f){
+        var e=document.getElementById('l'+lid+'-'+f);
+        if(e)snap[f]=e.checked;
+      });
+      // Stage 3 text fields
+      ['atlasscope','cleanup','waste','samples','miles'].forEach(function(f){
+        var e=document.getElementById('l'+lid+'-'+f);
+        if(e)snap[f]=e.value||'';
+      });
+      logs[lid]._fields=snap;
+    });
+
     var logsToSave={};
     Object.keys(logs).forEach(function(lid){
       var l=Object.assign({},logs[lid]);
@@ -2921,7 +2944,8 @@ function buildStage1(lid,F){
 
   // Header card
   var today=new Date().toISOString().split('T')[0];
-  var dateInp=document.createElement('input');dateInp.type='date';dateInp.id='l'+lid+'-date';dateInp.value=today;
+  var dateInp=document.createElement('input');dateInp.type='date';dateInp.id='l'+lid+'-date';
+  dateInp.value=F.date||today;
   dateInp.addEventListener('change',function(){updateBanner(lid);renderTabs();});
 
   var projInp=inp(F.proj||'','e.g. 2401','w');projInp.id='l'+lid+'-proj';
@@ -3023,10 +3047,10 @@ function buildStage1(lid,F){
   var wxFetchRow=div('wx-fetch-row');wxFetchRow.style.flexWrap='wrap';wxFetchRow.style.gap='8px';
   wxFetchRow.appendChild(fg('Zip code',zipInp));wxFetchRow.appendChild(wxBtn);wxFetchRow.appendChild(gpsBtn);
 
-  var wxInp=inp('','e.g. Clear','w');wxInp.id='l'+lid+'-wx';
-  var tempInp=inp('','e.g. 72 to 85','w');tempInp.id='l'+lid+'-temp';
-  var wspdInp=inp('','mph','w');wspdInp.id='l'+lid+'-wspd';
-  var wdirInp=inp('','e.g. NW','w');wdirInp.id='l'+lid+'-wdir';
+  var wxInp=inp(F.wx||'','e.g. Clear','w');wxInp.id='l'+lid+'-wx';
+  var tempInp=inp(F.temp||'','e.g. 72 to 85','w');tempInp.id='l'+lid+'-temp';
+  var wspdInp=inp(F.wspd||'','mph','w');wspdInp.id='l'+lid+'-wspd';
+  var wdirInp=inp(F.wdir||'','e.g. NW','w');wdirInp.id='l'+lid+'-wdir';
 
   var wxGrid=div('wx-grid');
   wxGrid.appendChild(fg('Conditions',wxInp));wxGrid.appendChild(fg('Temp (°F)',tempInp));
@@ -3753,7 +3777,7 @@ async function importBackup(file){
           if(backup.logs){logs=backup.logs.logs||{};logOrder=backup.logs.logOrder||[];await saveLogs();}
           if(backup.library){library=backup.library;await saveLibrary();}
           document.getElementById('log-container').innerHTML='';
-          if(!logOrder.length){showWelcome();}else{showMainUI();logOrder.forEach(function(lid){buildLogDOM(lid,null);});renderTabs();switchToLog(logOrder[0]);}
+          if(!logOrder.length){showWelcome();}else{showMainUI();logOrder.forEach(function(lid){var F=logs[lid]&&logs[lid]._fields?logs[lid]._fields:{};buildLogDOM(lid,F);if(logs[lid]&&logs[lid]._fields){['sc-sampling','sc-monitoring','sc-cleanup-scope','sc-pa','sc-oversight'].forEach(function(f){var e=document.getElementById('l'+lid+'-'+f);if(e&&logs[lid]._fields[f]!==undefined)e.checked=!!logs[lid]._fields[f];});}});renderTabs();switchToLog(logOrder[0]);}
           renderLibrary();showAlert('Restore complete.');
         }catch(err){showAlert('Restore failed: '+err.message);}
       });
@@ -3818,7 +3842,21 @@ async function init(){
   await loadStore();await loadLogs();await loadLibrary();
   initBottomSheet();
   if(!logOrder.length){showWelcome();}
-  else{logOrder.forEach(function(lid){buildLogDOM(lid,null);});renderTabs();switchToLog(logOrder[0]);}
+  else{
+    logOrder.forEach(function(lid){
+      // Restore field values from saved snapshot
+      var F=logs[lid]&&logs[lid]._fields?logs[lid]._fields:{};
+      buildLogDOM(lid,F);
+      // Restore scope checkboxes from snapshot
+      if(logs[lid]&&logs[lid]._fields){
+        ['sc-sampling','sc-monitoring','sc-cleanup-scope','sc-pa','sc-oversight'].forEach(function(f){
+          var e=document.getElementById('l'+lid+'-'+f);
+          if(e&&logs[lid]._fields[f]!==undefined)e.checked=!!logs[lid]._fields[f];
+        });
+      }
+    });
+    renderTabs();switchToLog(logOrder[0]);
+  }
   document.getElementById('new-log-btn').addEventListener('click',function(){showNewLogModal();});
   document.getElementById('lib-tab').addEventListener('click',function(){switchToLibrary();});
   document.getElementById('safety-tab').addEventListener('click',function(){switchToSafety();});
