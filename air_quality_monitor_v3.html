@@ -1285,7 +1285,7 @@ function generatePdfHtml(data) {
         voc:rd.voc||'', dust:rd.dust||'',
         vis:rd.visibleDust||'', noise:rd.noise||'', odors:rd.odors||'',
         background:isBg,
-        wind:(round.windDir||round.windSpeed)?((round.windDir||'')+(round.windSpeed?' '+round.windSpeed+' mph':'')):'',
+        windDir:round.windDir||'', windSpd:round.windSpeed||'',
         temp:round.temp||'', cond:round.conditions||'', comments:commentParts.join(' | ')
       });
     });
@@ -1336,10 +1336,10 @@ function generatePdfHtml(data) {
   }
 
   // Readings table
-  const readHdr='<tr><th style="width:7%">Time</th><th style="width:8%">MP</th>'
+  const readHdr='<tr><th style="width:7%">Time</th><th style="width:8%">Monitor<br>Point</th>'
     +'<th style="width:7%">VOC<br>(ppm)</th><th style="width:9%">PM10<br>(mg/m³)</th>'
-    +'<th style="width:6%">Vis<br>Dust</th><th style="width:7%">Noise<br>(dB)</th>'
-    +'<th style="width:5%">Odor</th><th style="width:10%">Wind/Spd</th>'
+    +'<th style="width:6%">Visible<br>Dust?</th><th style="width:7%">Noise<br>(dB)</th>'
+    +'<th style="width:5%">Odor<br>Y/N</th><th style="width:6%">Wind<br>Dir</th><th style="width:6%">Wind<br>(mph)</th>'
     +'<th style="width:6%">Temp<br>(\u00b0F)</th><th>Comments</th></tr>';
   function readRow(r){
     return '<tr>'
@@ -1350,11 +1350,12 @@ function generatePdfHtml(data) {
       +'<td style="text-align:center">'+r.vis+'</td>'
       +'<td style="text-align:center">'+r.noise+'</td>'
       +'<td style="text-align:center">'+r.odors+'</td>'
-      +'<td style="text-align:center">'+r.wind+'</td>'
+      +'<td style="text-align:center">'+r.windDir+'</td>'
+      +'<td style="text-align:center">'+r.windSpd+'</td>'
       +'<td style="text-align:center">'+r.temp+'</td>'
       +'<td>'+r.comments+'</td></tr>';
   }
-  function blankRow(){return '<tr>'+'<td style="height:14px">&nbsp;</td>'.repeat(10)+'</tr>';}
+  function blankRow(){return '<tr>'+'<td style="height:14px">&nbsp;</td>'.repeat(11)+'</tr>';}
 
   const foot='<div class="foot"><b>Note:</b> Check in with Atlas Field Staff when temperature reaches 95\u00b0F.</div>';
 
