@@ -1415,105 +1415,82 @@ function generatePDF(attachedMap) {
 }
 
 async function mergePdfWithMap(reportHtml, mapEntry, filename){
-  // Disable PDF.js worker — runs on main thread, avoids cross-origin worker issues on mobile
+  // Disable PDF.js worker
   try {
     if(typeof pdfjsLib !== 'undefined'){
       pdfjsLib.GlobalWorkerOptions.workerSrc = '';
     }
   } catch(e){}
 
-  // Show progress modal
+  // Show diagnostic overlay — stays visible until dismissed so you can read the log
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:24px 28px;width:100%;max-width:320px;text-align:center">'
-    + '<div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:8px">Building report + map\u2026</div>'
-    + '<div id="mergeProgress" style="font-size:13px;color:var(--text-dim);line-height:1.6">Loading map\u2026</div>'
-    + '<div style="margin-top:14px;height:6px;background:var(--bg);border-radius:3px;overflow:hidden">'
-      + '<div id="mergeBar" style="height:100%;width:0%;background:var(--atlas-primary);border-radius:3px;transition:width .3s"></div>'
-    + '</div>'
-  + '</div>';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px';
+  const diagLines = [];
+  overlay.innerHTML = '<div style="background:#fff;border-radius:14px;padding:20px;width:100%;max-width:360px;max-height:80vh;overflow-y:auto">'+
+    '<div style="font-size:14px;font-weight:800;color:#1a202c;margin-bottom:10px">Map Merge Diagnostic</div>'+
+    '<div id="diagLog" style="font-size:12px;font-family:monospace;color:#1a202c;line-height:1.8;word-break:break-all"></div>'+
+    '<button id="diagClose" style="margin-top:14px;width:100%;height:44px;background:#3a6b82;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">Close & Open Report</button>'+
+  '</div>';
   document.body.appendChild(overlay);
 
-  function setProgress(msg, pct){
-    const p = document.getElementById('mergeProgress');
-    const b = document.getElementById('mergeBar');
-    if(p) p.textContent = msg;
-    if(b) b.style.width = pct + '%';
+  let reportToOpen = reportHtml;
+
+  function log(msg){
+    diagLines.push(msg);
+    const el = document.getElementById('diagLog');
+    if(el) el.innerHTML = diagLines.map(function(l){ return '<div>'+l+'</div>'; }).join('');
   }
 
+  document.getElementById('diagClose').onclick = function(){
+    overlay.remove();
+    showPdfPreview(reportToOpen);
+  };
+
   try {
-    if(typeof pdfjsLib === 'undefined'){
-      throw new Error('PDF.js not loaded');
-    }
+    log('1. pdfjsLib: ' + (typeof pdfjsLib !== 'undefined' ? 'LOADED v'+pdfjsLib.version : 'NOT LOADED'));
+    if(typeof pdfjsLib === 'undefined') throw new Error('PDF.js not loaded');
 
-    // Decode map PDF bytes
     const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
-    setProgress('Reading map pages\u2026', 10);
+    log('2. Map bytes: ' + mapBytes.length);
 
-    const loadingTask = pdfjsLib.getDocument({
-      data: mapBytes,
-      disableWorker: true,        // run on main thread — avoids mobile worker CSP issues
-      isEvalSupported: false,      // safer on restricted mobile browsers
-    });
-    const pdfDoc = await loadingTask.promise;
-    const numPages = pdfDoc.numPages;
+    const pdfDoc = await pdfjsLib.getDocument({data: mapBytes, disableWorker: true, isEvalSupported: false}).promise;
+    log('3. PDF loaded. Pages: ' + pdfDoc.numPages);
+
+    const SCALE = 96 / 72;
     const pageImgs = [];
 
-    // 120 DPI on mobile is plenty for a map and avoids canvas memory limits
-    const SCALE = 120 / 72;
-
-    for(let i = 1; i <= numPages; i++){
-      setProgress('Rendering map page ' + i + ' of ' + numPages + '\u2026', 10 + Math.round((i / numPages) * 70));
+    for(let i = 1; i <= pdfDoc.numPages; i++){
       const page = await pdfDoc.getPage(i);
-      const viewport = page.getViewport({scale: SCALE});
+      const vp = page.getViewport({scale: SCALE});
+      log('4.'+i+'. Page '+i+' viewport: '+Math.round(vp.width)+'x'+Math.round(vp.height));
       const canvas = document.createElement('canvas');
-      canvas.width  = Math.round(viewport.width);
-      canvas.height = Math.round(viewport.height);
+      canvas.width = Math.round(vp.width);
+      canvas.height = Math.round(vp.height);
       const ctx = canvas.getContext('2d');
-      await page.render({canvasContext: ctx, viewport: viewport}).promise;
-      pageImgs.push({
-        dataUrl: canvas.toDataURL('image/jpeg', 0.90),
-        w: canvas.width,
-        h: canvas.height
-      });
-      // Release canvas memory immediately
+      await page.render({canvasContext: ctx, viewport: vp}).promise;
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+      log('5.'+i+'. Rendered. dataUrl length: '+dataUrl.length);
+      pageImgs.push({dataUrl: dataUrl, w: canvas.width, h: canvas.height});
       canvas.width = 0; canvas.height = 0;
     }
 
-    setProgress('Assembling document\u2026', 85);
-
-    // Each map page gets its own print page
+    // Embed data URLs directly into HTML (avoid blob: URL cross-origin issues)
     const mapPagesHtml = pageImgs.map(function(img){
       const landscape = img.w > img.h;
-      return '<div style="page-break-before:always;margin:0;padding:0;'
-        + (landscape ? 'width:11in;height:8.5in;' : 'width:8.5in;height:11in;')
-        + 'display:flex;align-items:center;justify-content:center;overflow:hidden">'
-        + '<img src="' + img.dataUrl + '" style="max-width:100%;max-height:100%;display:block;margin:0 auto" />'
-        + '</div>';
+      return '<div style="page-break-before:always;margin:0;padding:0;'+
+        (landscape ? 'width:11in;height:8.5in;' : 'width:8.5in;height:11in;')+
+        'display:flex;align-items:center;justify-content:center;overflow:hidden">'+
+        '<img src="'+img.dataUrl+'" style="max-width:100%;max-height:100%;display:block" /></div>';
     }).join('');
 
     const combinedHtml = reportHtml.replace('</body>', mapPagesHtml + '</body>');
+    log('6. Combined HTML length: '+combinedHtml.length);
 
-    setProgress('Opening print dialog\u2026', 100);
-    overlay.remove();
-
-    showPdfPreview(combinedHtml);
+    reportToOpen = combinedHtml;
+    log('7. DONE — tap Close & Open Report');
 
   } catch(err){
-    console.error('Map merge error:', err);
-    overlay.remove();
-    // Fallback: open report alone, download map separately
-    showToast('Map merge failed \u2014 opening report only');
-    showPdfPreview(reportHtml);
-    try {
-      const mapBytes = Uint8Array.from(atob(mapEntry.data), c=>c.charCodeAt(0));
-      const blob = new Blob([mapBytes], {type:'application/pdf'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url; a.download = filename+'_map.pdf';
-      document.body.appendChild(a); a.click(); document.body.removeChild(a);
-      setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
-    } catch(e2){}
+    log('ERROR: '+err.message);
   }
 }
 function promptEndSession(){
