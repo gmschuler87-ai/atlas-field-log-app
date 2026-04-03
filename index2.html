@@ -1297,34 +1297,15 @@ function buildHeatView(lid){
 
   if(!lid){var msg=div();msg.style.cssText='padding:2rem;text-align:center;color:var(--atlas-text-secondary);font-size:14px';msg.textContent='Start a log first to fill out this form.';view.appendChild(msg);return;}
 
-  // ── Weather section (first thing) ──
+  // ── Weather section ──
   var wxSec=div('form-section');
   wxSec.innerHTML='<div class="form-section-title">🌤 Weather — Get Forecast First</div>';
-  var wxGrid=div('wx-grid');wxGrid.style.marginBottom='8px';
-  // Existing wx fields from log (read-only display)
-  var wxVal=fv(lid,'wx')||D.WX||'';
-  var tempVal=fv(lid,'temp')||D.TEMP||'';
-  var wspdVal=fv(lid,'wspd')||D.WSPD||'';
-  var wdirVal=fv(lid,'wdir')||D.WDIR||'';
-  function makeWxDisp(label,val){
-    var fg=div('fg');fg.appendChild(lbl(label));
-    var i=el('input');i.type='text';i.value=val;i.readOnly=true;
-    i.style.background='var(--atlas-bg-subtle)';i.className='heat-wx-disp';
-    fg.appendChild(i);return{fg:fg,inp:i};
-  }
-  var wxD=makeWxDisp('Conditions',wxVal);
-  var tempD=makeWxDisp('Temp Range (°F)',tempVal);
-  var wspdD=makeWxDisp('Wind Speed (mph)',wspdVal);
-  var wdirD=makeWxDisp('Wind Direction',wdirVal);
-  wxGrid.appendChild(wxD.fg);wxGrid.appendChild(tempD.fg);
-  wxGrid.appendChild(wspdD.fg);wxGrid.appendChild(wdirD.fg);
-  wxSec.appendChild(wxGrid);
 
-  // Get weather button row
-  var wxBtnRow=div();wxBtnRow.style.cssText='display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px';
+  // Fetch buttons
+  var wxBtnRow=div();wxBtnRow.style.cssText='display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px';
   var gpsWxBtn=btn('📍 Get Weather (GPS)','btn-primary');
-  gpsWxBtn.style.cssText='font-size:14px;padding:10px 16px;flex:1';
-  var zipWxRow=div();zipWxRow.style.cssText='display:flex;gap:6px;flex:1;min-width:180px';
+  gpsWxBtn.style.cssText='font-size:14px;padding:10px 16px;flex:1;min-width:140px';
+  var zipWxRow=div();zipWxRow.style.cssText='display:flex;gap:6px;flex:1;min-width:160px';
   var zipInp=el('input');zipInp.type='text';zipInp.inputMode='numeric';zipInp.placeholder='ZIP code';
   zipInp.value=fv(lid,'zip')||'';
   zipInp.style.cssText='flex:1;padding:10px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:14px;font-family:inherit;background:var(--atlas-bg-card);color:var(--atlas-text)';
@@ -1333,10 +1314,137 @@ function buildHeatView(lid){
   wxBtnRow.appendChild(gpsWxBtn);wxBtnRow.appendChild(zipWxRow);
   wxSec.appendChild(wxBtnRow);
 
-  // Weather status line
+  // Status line
   var wxStatus=div();wxStatus.id='heat-wx-status-'+lid;
-  wxStatus.style.cssText='font-size:12px;margin-bottom:4px;min-height:18px;color:var(--atlas-text-secondary)';
+  wxStatus.style.cssText='font-size:12px;padding:8px 10px;border-radius:6px;min-height:36px;margin-bottom:10px;line-height:1.5';
+  var savedWxStatus=logs[lid]&&logs[lid]._wxStatusText;
+  if(savedWxStatus){
+    var isAdv0=savedWxStatus.indexOf('HEAT ADVISORY')>-1||savedWxStatus.indexOf('⚠')>-1;
+    wxStatus.style.cssText+=(isAdv0?';background:#FCEBEB;border:1px solid #f5b7b1;color:#922b21':';background:#eaf6ef;border:1px solid #a8d5b8;color:#1e6b3a');
+    wxStatus.innerHTML=savedWxStatus;
+  } else if(fv(lid,'temp')||D.TEMP){
+    wxStatus.style.cssText+=';background:#eaf6ef;border:1px solid #a8d5b8;color:#1e6b3a';
+    wxStatus.textContent='✓ Weather loaded — tap Get Weather to refresh with location & timestamp.';
+  } else {
+    wxStatus.style.cssText+=';background:#f5f5f5;border:1px solid #ddd;color:#777';
+    wxStatus.textContent='⬆ No weather data yet — tap Get Weather (GPS) or enter a ZIP above.';
+  }
   wxSec.appendChild(wxStatus);
+
+  function setWxStatus(html,type){
+    var styles={ok:';background:#eaf6ef;border:1px solid #a8d5b8;color:#1e6b3a',advisory:';background:#FCEBEB;border:1px solid #f5b7b1;color:#922b21',loading:';background:#eef4fb;border:1px solid #aac4e0;color:#2471a3',error:';background:#fff8e7;border:1px solid #f0c070;color:#7a4f00'};
+    wxStatus.style.cssText='font-size:12px;padding:8px 10px;border-radius:6px;min-height:36px;margin-bottom:10px;line-height:1.5'+(styles[type]||'');
+    wxStatus.innerHTML=html;
+    if(logs[lid])logs[lid]._wxStatusText=html;
+  }
+
+  // Editable weather fields
+  var wxVal=fv(lid,'wx')||D.WX||'';
+  var tempVal=fv(lid,'temp')||D.TEMP||'';
+  var wspdVal=fv(lid,'wspd')||D.WSPD||'';
+  var wdirVal=fv(lid,'wdir')||D.WDIR||'';
+
+  function makeWxField(labelTxt,val,placeholder){
+    var fg=div('fg');fg.appendChild(lbl(labelTxt));
+    var i=el('input');i.type='text';i.value=val||'';i.placeholder=placeholder||'';
+    i.style.cssText='width:100%;padding:8px 10px;border:1px solid var(--atlas-border-strong);border-radius:6px;font-size:14px;font-family:inherit;background:var(--atlas-bg-card);color:var(--atlas-text)';
+    fg.appendChild(i);return{fg:fg,inp:i};
+  }
+  var wxGrid2=div('wx-grid');
+  var wxD=makeWxField('Conditions',wxVal,'e.g. Sunny');
+  var tempD=makeWxField('Temp Range (°F)',tempVal,'e.g. 65 to 88');
+  var wspdD=makeWxField('Wind Speed (mph)',wspdVal,'e.g. 8');
+  var wdirD=makeWxField('Wind Direction',wdirVal,'e.g. SW');
+  wxGrid2.appendChild(wxD.fg);wxGrid2.appendChild(tempD.fg);
+  wxGrid2.appendChild(wspdD.fg);wxGrid2.appendChild(wdirD.fg);
+  wxSec.appendChild(wxGrid2);
+
+  // Sync manual edits back to log fields
+  function syncWxFieldToLog(inp,fieldId){
+    inp.addEventListener('input',function(){
+      var logEl=document.getElementById('l'+lid+'-'+fieldId);
+      if(logEl){logEl.value=inp.value;logEl.classList.toggle('has-value',!!inp.value.trim());logEl.dispatchEvent(new Event('input'));}
+      updateSectionVisibility();
+    });
+  }
+  syncWxFieldToLog(wxD.inp,'wx');
+  syncWxFieldToLog(tempD.inp,'temp');
+  syncWxFieldToLog(wspdD.inp,'wspd');
+  syncWxFieldToLog(wdirD.inp,'wdir');
+
+  // Hourly temperature chart
+  var chartWrap=div();chartWrap.id='heat-hourly-chart-'+lid;
+  chartWrap.style.cssText='margin-top:10px';
+  wxSec.appendChild(chartWrap);
+
+  function renderHourlyChart(hourlyTemps){
+    chartWrap.innerHTML='';
+    if(!hourlyTemps||!hourlyTemps.length)return;
+    var temps=hourlyTemps.slice(0,24).map(function(t){return Math.round(t);});
+    var maxT=Math.max.apply(null,temps);
+    var minT=Math.min.apply(null,temps);
+    var range=Math.max(maxT-minT,1);
+
+    var chartTitle=div();chartTitle.style.cssText='font-size:11px;font-weight:700;color:var(--atlas-text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px';
+    chartTitle.textContent='Hourly Forecast (°F)';chartWrap.appendChild(chartTitle);
+
+    var chart=div();chart.style.cssText='display:flex;align-items:flex-end;gap:2px;height:70px;padding:0 2px;background:rgba(0,0,0,0.03);border-radius:6px;border:1px solid var(--atlas-border);overflow:hidden';
+    var labelsRow=div();labelsRow.style.cssText='display:flex;gap:2px;padding:0 2px;margin-top:2px';
+
+    temps.forEach(function(t,h){
+      var pct=(t-minT)/range;
+      var barH=Math.max(8,Math.round(pct*60));
+      var is95=t>=95;var is80=t>=80&&t<95;
+      var color=is95?'#c0392b':is80?'#e67e22':'#3498db';
+
+      var barWrap=div();barWrap.style.cssText='flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:70px;cursor:default;position:relative';
+      var bar=div();bar.style.cssText='width:100%;border-radius:2px 2px 0 0;background:'+color+';height:'+barH+'px;transition:opacity 0.1s';
+      // Tooltip on hover
+      bar.title=formatHour(h)+': '+t+'°F'+(is95?' 🔴 ABOVE 95°F':is80?' 🟠 ABOVE 80°F':'');
+
+      // Show temp label on bars ≥95 or the max
+      if(is95||t===maxT){
+        var tlbl=div();tlbl.style.cssText='position:absolute;bottom:'+(barH+2)+'px;font-size:8px;font-weight:700;color:'+color+';white-space:nowrap;line-height:1';
+        tlbl.textContent=t+'°';barWrap.appendChild(tlbl);
+      }
+
+      barWrap.appendChild(bar);chart.appendChild(barWrap);
+
+      // Hour label (every 3 hours)
+      var ll=div();ll.style.cssText='flex:1;font-size:8px;text-align:center;color:var(--atlas-text-secondary);white-space:nowrap';
+      ll.textContent=(h%3===0)?formatHour(h).replace(':00',''):'';
+      labelsRow.appendChild(ll);
+    });
+
+    // 80°F and 95°F threshold lines
+    var line80pct=(80-minT)/range;var line95pct=(95-minT)/range;
+    var chartContainer=div();chartContainer.style.cssText='position:relative';
+    chartContainer.appendChild(chart);
+    if(maxT>=80){
+      var l80=div();l80.style.cssText='position:absolute;left:0;right:0;border-top:1px dashed #e67e22;pointer-events:none';
+      l80.style.bottom=Math.round(line80pct*60)+'px';
+      var l80lbl=el('span');l80lbl.style.cssText='position:absolute;right:2px;top:-10px;font-size:7px;color:#e67e22;font-weight:700;background:rgba(255,255,255,0.85);padding:0 2px';l80lbl.textContent='80°F';
+      l80.appendChild(l80lbl);chartContainer.appendChild(l80);
+    }
+    if(maxT>=95){
+      var l95=div();l95.style.cssText='position:absolute;left:0;right:0;border-top:1px dashed #c0392b;pointer-events:none';
+      l95.style.bottom=Math.round(line95pct*60)+'px';
+      var l95lbl=el('span');l95lbl.style.cssText='position:absolute;right:2px;top:-10px;font-size:7px;color:#c0392b;font-weight:700;background:rgba(255,255,255,0.85);padding:0 2px';l95lbl.textContent='95°F';
+      l95.appendChild(l95lbl);chartContainer.appendChild(l95);
+    }
+    chartWrap.appendChild(chartContainer);
+    chartWrap.appendChild(labelsRow);
+
+    // Legend
+    var legend=div();legend.style.cssText='display:flex;gap:12px;margin-top:4px;font-size:10px;color:var(--atlas-text-secondary)';
+    legend.innerHTML='<span style="color:#3498db">■ Below 80°F</span><span style="color:#e67e22">■ 80–95°F</span><span style="color:#c0392b">■ 95°F+</span>';
+    chartWrap.appendChild(legend);
+  }
+
+  // Render chart from stored hourly data if available
+  if(logs[lid]&&logs[lid]._hourlyTemps){
+    renderHourlyChart(logs[lid]._hourlyTemps);
+  }
   view.appendChild(wxSec);
 
   // Helper: parse high temp from range, update section visibility
@@ -1346,41 +1454,57 @@ function buildHeatView(lid){
     return m?parseInt(m[1]):(parseInt(t)||0);
   }
 
+  function setWatermark(el,text,show){
+    var existing=el.querySelector('.dim-watermark');
+    if(show){
+      if(!existing){
+        var wm=div('dim-watermark');
+        wm.style.cssText='position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:2';
+        var wmTxt=el.ownerDocument.createElement('span');
+        wmTxt.style.cssText='font-size:22px;font-weight:900;color:rgba(0,0,0,0.13);text-transform:uppercase;letter-spacing:0.05em;transform:rotate(-5deg);text-align:center;line-height:1.2;padding:0 1rem';
+        wmTxt.textContent=text;
+        wm.appendChild(wmTxt);
+        el.style.position='relative';
+        el.appendChild(wm);
+      }
+    } else {
+      if(existing)existing.remove();
+    }
+  }
+
   function updateSectionVisibility(){
     var hi=getHiVal();
-    // Sec3 (80+): dim if hi < 80
     if(sec3El){
       var dim3=hi>0&&hi<80;
       sec3El.style.opacity=dim3?'0.4':'1';
       sec3El.style.pointerEvents=dim3?'none':'';
-      sec3Title.textContent='3 · Rest/Shade Requirements — 80°F or above'+(dim3?' (not required — forecast below 80°F)':'');
+      sec3Title.innerHTML='3 · Rest/Shade Requirements — 80°F or above'+(dim3?'<span style="font-size:10px;font-weight:500;color:#e67e22;margin-left:8px">forecast below 80°F</span>':'');
+      setWatermark(sec3El,'Not Required Below 80°F',dim3);
     }
-    // Sec4 (95+): dim if hi < 95
     if(sec4El){
       var dim4=hi>0&&hi<95;
       sec4El.style.opacity=dim4?'0.4':'1';
       sec4El.style.pointerEvents=dim4?'none':'';
-      sec4Title.textContent='4 · High Heat Procedures — 95°F or above'+(dim4?' (not required — forecast below 95°F)':'');
+      sec4Title.innerHTML='4 · High Heat Procedures — 95°F or above'+(dim4?'<span style="font-size:10px;font-weight:500;color:#e67e22;margin-left:8px">forecast below 95°F</span>':'');
+      setWatermark(sec4El,'Not Required Below 95°F',dim4);
     }
-    // Time95 field
     if(time95Inp){
       if(hi>0&&hi<95){
-        time95Inp.value='';time95Inp.placeholder='Forecast below 95°F today';
+        time95Inp.value='Forecast below 95°F today';
         time95Inp.style.background='var(--atlas-bg-subtle)';time95Inp.readOnly=true;
       } else {
         time95Inp.readOnly=false;time95Inp.style.background='';
+        if(time95Inp.value==='Forecast below 95°F today')time95Inp.value='';
         time95Inp.placeholder='e.g. 1:00 PM';
       }
     }
-    // Temp display color
-    if(hi>=95){tempD.inp.style.cssText='background:#FCEBEB;border-color:#A32D2D;color:#A32D2D;font-weight:600;width:100%;padding:8px 10px;border-radius:6px;font-size:14px;font-family:inherit';}
-    else if(hi>=80){tempD.inp.style.cssText='background:#FFF8E7;border-color:#e67e22;color:#7a4f00;font-weight:600;width:100%;padding:8px 10px;border-radius:6px;font-size:14px;font-family:inherit';}
-    else{tempD.inp.style.cssText='background:var(--atlas-bg-subtle);width:100%;padding:8px 10px;border-radius:6px;font-size:14px;font-family:inherit;border:1px solid var(--atlas-border-strong)';}
+    if(hi>=95){tempD.inp.style.cssText='background:#FCEBEB;border-color:#A32D2D;color:#A32D2D;font-weight:600;width:100%;padding:8px 10px;border-radius:6px;font-size:14px;font-family:inherit;border:1px solid #A32D2D';}
+    else if(hi>=80){tempD.inp.style.cssText='background:#FFF8E7;border-color:#e67e22;color:#7a4f00;font-weight:600;width:100%;padding:8px 10px;border-radius:6px;font-size:14px;font-family:inherit;border:1px solid #e67e22';}
+    else{tempD.inp.style.cssText='width:100%;padding:8px 10px;border-radius:6px;font-size:14px;font-family:inherit;border:1px solid var(--atlas-border-strong);background:var(--atlas-bg-card)';}
   }
 
-  // Wire weather buttons to fetch AND update heat form displays
+  // Wire weather buttons
   function onWeatherFetched(){
-    // Refresh display values from log fields
     wxD.inp.value=fv(lid,'wx')||'';
     tempD.inp.value=fv(lid,'temp')||'';
     wspdD.inp.value=fv(lid,'wspd')||'';
@@ -1388,22 +1512,46 @@ function buildHeatView(lid){
     var hi=getHiVal();
     if(hi>=95){var t95=getHeatTime95(lid)||'';if(t95&&time95Inp)time95Inp.value=t95;}
     updateSectionVisibility();
+    // Re-render hourly chart
+    if(logs[lid]&&logs[lid]._hourlyTemps){
+      renderHourlyChart(logs[lid]._hourlyTemps);
+    }
+    // Pull status from log wx-status element
+    var logSt=document.getElementById('l'+lid+'-wx-status');
+    if(logSt&&logSt.textContent&&logSt.textContent.trim()){
+      var raw=logSt.innerHTML||logSt.textContent;
+      var isAdv=raw.indexOf('HEAT ADVISORY')>-1||raw.indexOf('&#9888;')>-1||raw.indexOf('⚠')>-1;
+      setWxStatus(raw,isAdv?'advisory':'ok');
+    }
   }
 
-  // Override wx-status to update heat form after fetch
   gpsWxBtn.addEventListener('click',function(){
-    fetchWeatherByGPS(lid).then(function(){setTimeout(onWeatherFetched,500);}).catch(function(){setTimeout(onWeatherFetched,500);});
-    // Status in log page — also show in heat form
-    var logSt=document.getElementById('l'+lid+'-wx-status');
-    if(logSt){logSt.addEventListener('DOMSubtreeModified',function(){wxStatus.textContent=logSt.textContent;},{once:true});}
+    setWxStatus('📍 Getting your location...','loading');
+    gpsWxBtn.disabled=true;gpsWxBtn.textContent='📍 Fetching...';
+    fetchWeatherByGPS(lid).then(function(){
+      setTimeout(function(){onWeatherFetched();gpsWxBtn.disabled=false;gpsWxBtn.textContent='📍 Get Weather (GPS)';},600);
+    }).catch(function(){
+      setWxStatus('⚠ Could not get weather — check location permissions.','error');
+      gpsWxBtn.disabled=false;gpsWxBtn.textContent='📍 Get Weather (GPS)';
+    });
   });
+
   zipWxBtn.addEventListener('click',function(){
-    // Sync zip to log field
+    var z=zipInp.value.trim();
+    if(!z||!/^\d{5}$/.test(z)){setWxStatus('⚠ Enter a valid 5-digit ZIP code.','error');return;}
+    setWxStatus('🔍 Looking up weather for ZIP '+z+'...','loading');
+    zipWxBtn.disabled=true;zipWxBtn.textContent='...';
     var zipEl=document.getElementById('l'+lid+'-zip');
-    if(zipEl){zipEl.value=zipInp.value;zipEl.dispatchEvent(new Event('input'));}
-    fetchWeather(lid).then(function(){setTimeout(onWeatherFetched,500);}).catch(function(){setTimeout(onWeatherFetched,500);});
+    if(zipEl){zipEl.value=z;zipEl.dispatchEvent(new Event('input'));}
+    fetchWeather(lid).then(function(){
+      setTimeout(function(){onWeatherFetched();zipWxBtn.disabled=false;zipWxBtn.textContent='Get';},600);
+    }).catch(function(){
+      setWxStatus('⚠ Could not get weather for that ZIP.','error');
+      zipWxBtn.disabled=false;zipWxBtn.textContent='Get';
+    });
   });
-  // Update immediately if weather already fetched
+
+  // On form open — restore values and update visibility
   setTimeout(onWeatherFetched,50);
 
   // ── Section 1 — Site Info ──
@@ -1533,9 +1681,19 @@ function buildHeatView(lid){
   var newPersVal=hd.hasNewPersonnel!==undefined?hd.hasNewPersonnel:null;
   var trainingBody=div();trainingBody.style.cssText='transition:opacity 0.2s';
   function updateTrainingBody(v){
-    if(v===false){trainingBody.style.opacity='0.35';trainingBody.style.pointerEvents='none';s5Title.textContent='5 · Training Requirements (not required — no new personnel)';}
-    else if(v===true){trainingBody.style.opacity='1';trainingBody.style.pointerEvents='';s5Title.textContent='5 · Training Requirements — Required for new personnel';}
-    else{trainingBody.style.opacity='0.5';trainingBody.style.pointerEvents='none';s5Title.textContent='5 · Training Requirements';}
+    if(v===false){
+      trainingBody.style.opacity='0.35';trainingBody.style.pointerEvents='none';
+      s5Title.textContent='5 · Training Requirements (not required — no new personnel)';
+      setWatermark(trainingBody,'No New Personnel',true);
+    } else if(v===true){
+      trainingBody.style.opacity='1';trainingBody.style.pointerEvents='';
+      s5Title.textContent='5 · Training Requirements — Required for new personnel';
+      setWatermark(trainingBody,'',false);
+    } else {
+      trainingBody.style.opacity='0.5';trainingBody.style.pointerEvents='none';
+      s5Title.textContent='5 · Training Requirements';
+      setWatermark(trainingBody,'Answer Question Above',true);
+    }
   }
   var newPersBtns=makeYNBtns('heat-newpers-'+lid,newPersVal,function(v){
     hd.hasNewPersonnel=v;updateTrainingBody(v);
@@ -2890,25 +3048,29 @@ async function fetchWeatherByGPS(lid){
       var ws=document.getElementById('l'+lid+'-wspd');if(ws)ws.value=Math.round(c.windspeed_10m);
       var wde=document.getElementById('l'+lid+'-wdir');if(wde)wde.value=deg2compass(c.winddirection_10m);
       [we,te,ws,wde].forEach(function(f){if(f)f.classList.toggle('has-value',f.value.trim().length>0);});
+      // Store hourly temps for chart
+      if(lid&&logs[lid]&&wd.hourly&&wd.hourly.temperature_2m){logs[lid]._hourlyTemps=wd.hourly.temperature_2m.slice(0,24);saveLogs();}
       var statusTxt='📍 '+locationName+' · fetched '+fetchedDateStr+' at '+fetchedAtStr+' · High: '+hi+'°F / Low: '+lo+'°F';
       if(hi>=95&&wd.hourly&&wd.hourly.temperature_2m){
         var hours=wd.hourly.temperature_2m;var heatHour=-1;
         for(var h=0;h<hours.length&&h<24;h++){if(Math.round(hours[h])>=95){heatHour=h;break;}}
         var heatTimeStr=heatHour>=0?formatHour(heatHour):'during the day';
-        // Store on log for Heat/Tailgate forms
         if(lid&&logs[lid]){logs[lid]._heatTime95=heatTimeStr;saveLogs();}
         if(we)we.value=wxCode(c.weathercode)+' — HEAT ADVISORY: Expected to reach '+hi+'°F by '+heatTimeStr;
         if(te){te.style.cssText='border-color:#A32D2D;background:#FCEBEB;color:#A32D2D;font-weight:500;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;font-family:inherit';}
-        if(st){st.innerHTML='<span style="color:#A32D2D;font-weight:500">&#9888; HEAT ADVISORY — '+hi+'°F expected by '+heatTimeStr+'. Ensure heat illness prevention protocols are in place.</span><br><span style="font-size:11px;color:var(--atlas-text-secondary)">'+statusTxt+'</span>';}
+        var advHtml='<span style="font-weight:600">&#9888; HEAT ADVISORY — '+hi+'°F expected by '+heatTimeStr+'.</span><br><span style="font-size:11px;opacity:0.85">'+statusTxt+'</span>';
+        if(st){st.innerHTML=advHtml;}
+        if(lid&&logs[lid]){logs[lid]._wxStatusText=advHtml;saveLogs();}
         showHeatWarning(lid,hi,heatTimeStr);
       }else{
-        // Store null so forms know no 95°F threshold today
         if(lid&&logs[lid]){logs[lid]._heatTime95='';saveLogs();}
         if(te)te.style.cssText='';removeHeatWarning(lid);
-        if(st){st.className='wx-status-ok';st.textContent='✓ '+statusTxt;}
+        var okHtml='✓ '+statusTxt;
+        if(st){st.className='wx-status-ok';st.textContent=okHtml;}
+        if(lid&&logs[lid]){logs[lid]._wxStatusText=okHtml;saveLogs();}
       }
     }catch(e){if(st){st.className='wx-status-err';st.textContent='⚠ Could not retrieve weather: '+(e.message||'');}}
-  },function(err){if(st){st.className='wx-status-err';st.textContent='⚠ Location access denied. Use zip code instead.';}});
+  },function(err){if(st){st.className='wx-status-err';st.textContent='⚠ Location access denied. Use zip code instead.';if(lid&&logs[lid]){logs[lid]._wxStatusText='';}}});
 }
 async function fetchWeather(lid){
   var zip=fv(lid,'zip').trim(),st=document.getElementById('l'+lid+'-wx-status');if(st)st.textContent='';
@@ -2926,21 +3088,28 @@ async function fetchWeather(lid){
     var ws=document.getElementById('l'+lid+'-wspd');if(ws)ws.value=Math.round(c.windspeed_10m);
     var wde=document.getElementById('l'+lid+'-wdir');if(wde)wde.value=deg2compass(c.winddirection_10m);
     [we,te,ws,wde].forEach(function(f){if(f)f.classList.toggle('has-value',f.value.trim().length>0);});
-    var statusTxt='Auto-filled for '+city+' — High: '+hi+'°F / Low: '+lo+'°F';
+    // Store hourly temps for chart
+    if(lid&&logs[lid]&&wd.hourly&&wd.hourly.temperature_2m){logs[lid]._hourlyTemps=wd.hourly.temperature_2m.slice(0,24);saveLogs();}
+    var now=new Date();
+    var nowStr=now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true})+' '+now.toLocaleDateString('en-US',{month:'numeric',day:'numeric',year:'2-digit'});
+    var statusTxt='📮 '+city+' (ZIP '+zip+') · fetched '+nowStr+' · High: '+hi+'°F / Low: '+lo+'°F';
     if(hi>=95&&wd.hourly&&wd.hourly.temperature_2m){
       var hours=wd.hourly.temperature_2m;var heatHour=-1;
       for(var h=0;h<hours.length&&h<24;h++){if(Math.round(hours[h])>=95){heatHour=h;break;}}
       var heatTimeStr=heatHour>=0?formatHour(heatHour):'during the day';
-      // Store on log for Heat/Tailgate forms
       if(lid&&logs[lid]){logs[lid]._heatTime95=heatTimeStr;saveLogs();}
       if(we)we.value=wxCode(c.weathercode)+' — HEAT ADVISORY: Expected to reach '+hi+'°F by '+heatTimeStr;
       if(te){te.style.cssText='border-color:#A32D2D;background:#FCEBEB;color:#A32D2D;font-weight:500;width:100%;padding:7px 10px;border-radius:8px;font-size:14px;font-family:inherit';}
-      if(st){st.innerHTML='<span style="color:#A32D2D;font-weight:500">&#9888; HEAT ADVISORY — '+hi+'°F expected by '+heatTimeStr+'. Ensure heat illness prevention protocols are in place.</span><br><span style="font-size:11px;color:var(--atlas-text-secondary)">'+statusTxt+'</span>';}
+      var advHtml='<span style="font-weight:600">&#9888; HEAT ADVISORY — '+hi+'°F expected by '+heatTimeStr+'.</span><br><span style="font-size:11px;opacity:0.85">'+statusTxt+'</span>';
+      if(st){st.innerHTML=advHtml;}
+      if(lid&&logs[lid]){logs[lid]._wxStatusText=advHtml;saveLogs();}
       showHeatWarning(lid,hi,heatTimeStr);
     }else{
       if(lid&&logs[lid]){logs[lid]._heatTime95='';saveLogs();}
       if(te)te.style.cssText='';removeHeatWarning(lid);
-      if(st){st.className='wx-status-ok';st.textContent='✓ '+statusTxt;}
+      var okHtml='✓ '+statusTxt;
+      if(st){st.className='wx-status-ok';st.textContent=okHtml;}
+      if(lid&&logs[lid]){logs[lid]._wxStatusText=okHtml;saveLogs();}
     }
   }catch(e){if(st){st.className='wx-status-err';st.textContent='⚠ '+(e.message||'Could not retrieve weather.');}}
 }
