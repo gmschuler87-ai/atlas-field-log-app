@@ -761,10 +761,44 @@ function restoreChecklists() {
 
 // ===== ROUNDS & READINGS =====
 function addRound() {
+  // Check for any open (uncollapsed) perimeter round
+  const openRound = rounds.find(r=>!r.isBackground && !r.collapsed);
+  if(openRound){
+    const modal = document.createElement('div');
+    modal.className = 'exceedance-modal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:flex;align-items:center;justify-content:center;padding:16px';
+    const roundNum = rounds.filter(r=>!r.isBackground).indexOf(openRound);
+    const label = 'Round '+(rounds.filter(r=>!r.isBackground).length - roundNum);
+    modal.innerHTML = '<div style="background:var(--card);border-radius:14px;padding:22px;width:100%;max-width:340px">'
+      +'<div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px">'+label+' is still open</div>'
+      +'<p style="font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:18px">End the current round before starting a new one, or start a new round anyway.</p>'
+      +'<div style="display:flex;gap:10px">'
+        +'<button id="endFirstBtn" style="flex:1;height:46px;border:1.5px solid var(--atlas-primary);border-radius:8px;background:none;cursor:pointer;font-size:13px;font-weight:700;color:var(--atlas-primary);font-family:inherit">End '+label+' first</button>'
+        +'<button id="newAnywayBtn" style="flex:1;height:46px;border:none;border-radius:8px;background:var(--atlas-primary);color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit">New round anyway</button>'
+      +'</div>'
+    +'</div>';
+    modal.querySelector('#endFirstBtn').onclick = function(){
+      modal.remove();
+      // Collapse the open round and scroll to it
+      openRound.collapsed = true;
+      saveData(); renderRounds();
+      const roundEl = document.querySelector('[data-round="'+openRound.id+'"]');
+      if(roundEl) roundEl.scrollIntoView({behavior:'smooth', block:'start'});
+    };
+    modal.querySelector('#newAnywayBtn').onclick = function(){
+      modal.remove();
+      _createRound();
+    };
+    modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+    document.body.appendChild(modal);
+    return;
+  }
+  _createRound();
+}
+function _createRound(){
   roundCounter++;
   const now = new Date();
   const rh=String(now.getHours()).padStart(2,'0'),rm=String(now.getMinutes()).padStart(2,'0');
-  const isFirstRound = rounds.filter(r=>!r.isBackground).length === 0;
   rounds.unshift({ id:roundCounter, time:rh+':'+rm, temp:'', windDir:'', windSpeed:'', conditions:'', wxZip:'', wxStatus:'', wxFetchInfo:'', customMPs:[], readings:[], isBackground:false });
   renderRounds(); saveData();
 }
@@ -786,7 +820,7 @@ function promptBackgroundOrSkip(){
   };
   modal.querySelector('#bgSkipBtn').onclick = function(){
     modal.remove();
-    addRound();
+    _createRound();
   };
   modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
   document.body.appendChild(modal);
