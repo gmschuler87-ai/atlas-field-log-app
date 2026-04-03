@@ -1725,7 +1725,7 @@ async function fetchWeatherForRound(rid){
     if(!gr.ok)throw new Error('ZIP not found');
     const gd=await gr.json();
     const lat=parseFloat(gd.places[0].latitude),lon=parseFloat(gd.places[0].longitude),city=gd.places[0]['place name'];
-    const wr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=weathercode,windspeed_10m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=1');
+    const wr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,weathercode,windspeed_10m,winddirection_10m&daily=temperature_2m_max&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=1');
     const wd=await wr.json();
     applyWeatherToRound(rid,wd,city,roundEl,statusEl);
   }catch(e){if(statusEl)statusEl.textContent='⚠ '+(e.message||'Error');}
@@ -1739,7 +1739,7 @@ async function fetchWeatherGPSForRound(rid){
   navigator.geolocation.getCurrentPosition(async function(pos){
     try{
       const lat=pos.coords.latitude,lon=pos.coords.longitude;
-      const wr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=weathercode,windspeed_10m,winddirection_10m&daily=temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=1');
+      const wr=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&current=temperature_2m,weathercode,windspeed_10m,winddirection_10m&daily=temperature_2m_max&temperature_unit=fahrenheit&windspeed_unit=mph&timezone=auto&forecast_days=1');
       const wd=await wr.json();
       applyWeatherToRound(rid,wd,'GPS',roundEl,statusEl);
     }catch(e){if(statusEl)statusEl.textContent='⚠ Could not get weather';}
@@ -1748,18 +1748,19 @@ async function fetchWeatherGPSForRound(rid){
 function applyWeatherToRound(rid,wd,location,roundEl,statusEl){
   const r=rounds.find(r=>r.id===rid);if(!r)return;
   const c=wd.current,daily=wd.daily;
-  const hi=Math.round(daily.temperature_2m_max[0]),lo=Math.round(daily.temperature_2m_min[0]);
+  const currentTemp=Math.round(c.temperature_2m);
+  const hi=Math.round(daily.temperature_2m_max[0]);
   const windSpd=Math.round(c.windspeed_10m);
   const windDir=deg2compass(c.winddirection_10m);
   const conditions=wxCode(c.weathercode);
   const now=new Date();
   const fetchTime=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
   const fetchDate=(now.getMonth()+1)+'/'+now.getDate()+'/'+now.getFullYear();
-  // Update data
-  r.temp=String(Math.round((hi+lo)/2));r.windDir=windDir;r.windSpeed=String(windSpd);r.conditions=conditions;
+  // Use actual current temp for the field — not a fixed daily average
+  r.temp=String(currentTemp);r.windDir=windDir;r.windSpeed=String(windSpd);r.conditions=conditions;
   const warn=hi>=95?' ⚠ HEAT ADVISORY':'';
-  r.wxStatus='✓ '+location+' — High: '+hi+'°F'+warn;
-  r.wxFetchInfo='Open-Meteo forecast · '+location+' · '+fetchDate+' '+fetchTime;
+  r.wxStatus='✓ '+location+' — '+currentTemp+'°F now, high '+hi+'°F'+warn;
+  r.wxFetchInfo='Open-Meteo · '+location+' · '+fetchDate+' '+fetchTime;
   saveData();
   // Update DOM directly - no full re-render
   const tempEl=roundEl.querySelector('.round-temp');if(tempEl)tempEl.value=r.temp;
